@@ -10,15 +10,26 @@ The project is split into three main component, as defined below.
 
 The marauder controller is the source of truth for marauder. It holds onto the current state of the network and its deployments as well as the
 target state of the network.
+The controller manages and stores [artefacts](#marauder-artefact) as well as the configuration of each server.
 
 ## Operator
 
-The marauder operator is responsible for applying the state defined by the controller. The operator hence is responsible for applying new deployments
-defined by the controller if asked to as well as managing the containers in which the actual servers run.
+The marauder operator is responsible for applying the state defined by the controller. The operator hence is responsible for applying
+new [artefact](#marauder-artefact) version defined by the controller if asked, as well as managing the containers in which the actual servers run.
+The operators general loop starts with a restart of a running server. 
+1. The operator shuts down and deletes the docker container of the server, leaving the server data intact as it is bind-mounted in.
+2. The operator queries the [controller](#controller) for updates its needs to install. The controller knows both the ***is*** and ***target*** state
+   of the server, so the controller can supply the exact difference to the operator.
+3. The operator requests the flattened files of the current artefacts that need updating from the controller to delete the exact files provided by
+   the currently installed artefact.
+4. The operator downloads the new artefacts and installs them into the server.
+5. The operator notifies the controller about the update, through which the controller can update its ***is*** state.
+6. The operator starts the server again.
 
 ## Builder
 
-The marauder builder is a simple cli tool that is capable of building [marauder artefacts]()
+The marauder builder is a simple cli tool that is capable of building [marauder artefacts](#marauder-artefact) and uploading them
+to the [controller](#controller).
 
 # Marauder artefact
 
@@ -38,10 +49,11 @@ spellcore-1.14.0+e0eef91.tar.gz
 ```
 
 where the `manifest.json` file might look like this
+
 ```json
 {
-  "identifier": "spellcore",
-  "version": "1.14.0+e0eef91",
+    "identifier": "spellcore",
+    "version": "1.14.0+e0eef91",
     "files": [
         {
             "target": "plugins/spellcore-plugin-{{.Version}}.jar",
