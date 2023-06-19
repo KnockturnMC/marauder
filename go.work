@@ -1,0 +1,8 @@
+go 1.20
+
+use (
+	./marauder-lib
+	./marauder-builder
+	./marauder-operator
+	./marauder-controller
+)
