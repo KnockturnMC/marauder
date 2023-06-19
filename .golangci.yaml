@@ -1,0 +1,22 @@
+linters:
+  enable-all: true
+  disable: [
+    # Archived
+    "maligned", "scopelint", "golint", "interfacer", "structcheck", "varcheck", "nosnakecase", "deadcode", "ifshort",
+    
+    # Linters simply not desirable
+    "exhaustivestruct", # This is a rather unnecessary linter, especially when working with the stellar sdk
+    "exhaustruct", # Literally the same as above
+    "ireturn", # While generally a useful linter, this linter is not ready for go 1.18 generic return types.
+    "gci", # The linter clashes with gofumpt and IDE support should handle all import related issues.
+    "wsl", # Cuddle as much as you want to. This linter generally has its purpose, however is not configurable enough to be used.
+    "gomnd", # Magic values are already properly abstracted into the constants packages. The linter is not doing anything useful here.
+    "godox", # Lines that indicate todos or other future work are perfectly fine.
+  ]
+linters-settings:
+  lll:
+    line-length: 150
+  nlreturn:
+    block-size: 2 # A two line block is fine, especially for unit tests that may only increase counter and then return.
+  funlen:
+    lines: 120 # 60 is a rather small line count for bigger reactor style avior taskimpl. Thank you go middleware handling and logging for that one!
