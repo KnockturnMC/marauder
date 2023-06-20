@@ -24,9 +24,8 @@ type Manifest struct {
 // This uses golang templating engine to resolve the templates that may exist in the manifest.
 func (m Manifest) ResolveTemplates() (Manifest, error) {
 	mappedFiles := make([]FileReference, len(m.Files))
-	data := FileReferenceTemplateData{Version: m.Version}
 	for i, file := range m.Files {
-		updated, err := file.ResolveTemplates(data)
+		updated, err := file.ResolveTemplates(m)
 		if err != nil {
 			return Manifest{}, fmt.Errorf("failed to resolve file ref %d: %w", i, err)
 		}
@@ -50,15 +49,9 @@ type FileReference struct {
 	CISourceGlob string `json:"ciSourceGlob"`
 }
 
-// FileReferenceTemplateData represents the data marauder may feed into a file reference to resolve its template placeholders.
-type FileReferenceTemplateData struct {
-	// The Version of the projects manifest as defined by Manifest.Version.
-	Version string
-}
-
 // ResolveTemplates constructs a new file reference that has its go templates resolved.
 // This uses golang templating engine to resolve the templates that may exist in the file reference.
-func (f FileReference) ResolveTemplates(data FileReferenceTemplateData) (FileReference, error) {
+func (f FileReference) ResolveTemplates(data Manifest) (FileReference, error) {
 	resolvedTarget, err := utils.ExecuteStringTemplateToString(f.Target, data)
 	if err != nil {
 		return FileReference{}, fmt.Errorf("failed to resolve `target`: %w", err)

@@ -45,7 +45,6 @@ spellcore-1.14.0+e0eef91.tar.gz
 │       │       └── spellcore-api.jar
 │       └── spellcore-plugin.jar
 └── manifest.json
-
 ```
 
 where the `manifest.json` file might look like this
@@ -57,16 +56,15 @@ where the `manifest.json` file might look like this
     "files": [
         {
             "target": "plugins/spellcore-plugin.jar",
-            "ciSourceGlob": "./spell-plugin/build/libs/spell-plugin-*-final.jar",
-            "sha"
+            "ciSourceGlob": "./spell-plugin/build/libs/spell-plugin-*-final.jar"
         },
         {
             "target": "plugins/KnockturnCore/modules/spellcore-api.jar",
-            "ciSourceGlob": "./spell-api/build/libs/spell-api-*-final.jar "
+            "ciSourceGlob": "./spell-api/build/libs/spell-api-*-final.jar"
         },
         {
             "target": "plugins/",
-            "ciSourceGlob": "configs/ "
+            "ciSourceGlob": "configs/"
         }
     ]
 }
