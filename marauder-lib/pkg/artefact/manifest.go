@@ -23,7 +23,7 @@ type Manifest struct {
 // ResolveTemplates constructs a new manifest that has its go templates resolved.
 // This uses golang templating engine to resolve the templates that may exist in the manifest.
 func (m Manifest) ResolveTemplates() (Manifest, error) {
-	mappedFiles := make([]FileReference, len(m.Files))
+	mappedFiles := make([]FileReference, 0, len(m.Files))
 	for i, file := range m.Files {
 		updated, err := file.ResolveTemplates(m)
 		if err != nil {

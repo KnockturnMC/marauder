@@ -24,8 +24,8 @@ func NewShortestGlobPathCache() *ShortestGlobPathCache {
 
 // FindShortestMatch finds the shortest match of the glob against the file.
 func (s *ShortestGlobPathCache) FindShortestMatch(glob string, file string) (string, error) {
-	cached, ok := s.Cache[glob]
-	if ok {
+	cached, globCachedBefore := s.Cache[glob]
+	if globCachedBefore {
 		// Check if we have the shortest path cached already for the file.
 		// E.g. the glob /build/v* could have previously matched /build/v12/server.jar.
 		// This would yield a cache entry of /build/v12 for the glob /build/v*.
@@ -66,12 +66,13 @@ func (s *ShortestGlobPathCache) FindShortestMatch(glob string, file string) (str
 			continue
 		}
 
-		if !ok {
+		if !globCachedBefore {
 			cached = make([]string, 0)
 		}
 
 		cached = append(cached, buildAsString)
 		s.Cache[glob] = cached
+
 		return buildAsString, nil
 	}
 

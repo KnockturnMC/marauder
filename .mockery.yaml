@@ -1,0 +1,6 @@
+testonly: False
+with-expecter: True
+keeptree: False
+case: underscore
+inpackage: False
+inpackage-suffix: true

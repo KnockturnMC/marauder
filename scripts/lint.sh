@@ -16,10 +16,10 @@ if [ ! $(command -v staticcheck) ]; then
 fi
 
 go list -f '{{.Dir}}' -m | while read module; do
-  pushd "$module"
+  pushd "$module" >/dev/null
 
   golangci-lint --timeout 3m0s run
   staticcheck ./...
 
-  popd
+  popd >/dev/null
 done

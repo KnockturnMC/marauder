@@ -16,6 +16,8 @@ type ClosableWriter interface {
 }
 
 // The FriendlyTarballWriter interface represents a writer to a tarfile.
+//
+//go:generate mockery --name FriendlyTarballWriter
 type FriendlyTarballWriter interface {
 	io.Closer
 
@@ -37,6 +39,7 @@ type FriendlyTarballWriterImpl struct {
 func NewFriendlyTarballWriterGZ(writer ClosableWriter) *FriendlyTarballWriterImpl {
 	gzipWriter := gzip.NewWriter(writer)
 	tarballWriter := tar.NewWriter(gzipWriter)
+
 	return &FriendlyTarballWriterImpl{
 		writerChain:   []ClosableWriter{writer, gzipWriter},
 		tarballWriter: tarballWriter,
