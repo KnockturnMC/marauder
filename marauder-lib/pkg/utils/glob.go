@@ -3,8 +3,9 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"path"
 	"strings"
+
+	"github.com/gobwas/glob"
 )
 
 // ErrFailedToFindShortestPath is returned by FindShortestMatch if the file does not match the glob.
@@ -23,12 +24,12 @@ func NewShortestGlobPathCache() *ShortestGlobPathCache {
 }
 
 // FindShortestMatch finds the shortest match of the glob against the file.
-func (s *ShortestGlobPathCache) FindShortestMatch(glob string, file string) (string, error) {
-	cached, globCachedBefore := s.Cache[glob]
+func (s *ShortestGlobPathCache) FindShortestMatch(pattern string, file string) (string, error) {
+	cached, globCachedBefore := s.Cache[pattern]
 	if globCachedBefore {
 		// Check if we have the shortest path cached already for the file.
-		// E.g. the glob /build/v* could have previously matched /build/v12/server.jar.
-		// This would yield a cache entry of /build/v12 for the glob /build/v*.
+		// E.g. the pattern /build/v* could have previously matched /build/v12/server.jar.
+		// This would yield a cache entry of /build/v12 for the pattern /build/v*.
 		// If a new file is tried by this method, e.g. /build/v12/client.jar, the cache is used in combination with a cheap strings.HasPrefix check
 		// To determine the shortest match being /build/v12
 		for _, cachedStart := range cached {
@@ -36,6 +37,11 @@ func (s *ShortestGlobPathCache) FindShortestMatch(glob string, file string) (str
 				return cachedStart, nil
 			}
 		}
+	}
+
+	compiledGlob, err := glob.Compile(pattern, '/')
+	if err != nil {
+		return "", fmt.Errorf("failed to compile pattern %s: %w", pattern, err)
 	}
 
 	directorySplit := strings.SplitAfter(file, "/")
@@ -51,16 +57,13 @@ func (s *ShortestGlobPathCache) FindShortestMatch(glob string, file string) (str
 		directorySplitIncludingSlashes = append(directorySplitIncludingSlashes, "/")
 	}
 
-	// Iterate over the directory split, the shortest one that satisfies the glob is returned.
+	// Iterate over the directory split, the shortest one that satisfies the pattern is returned.
 	var builder strings.Builder
 	for _, pathPart := range directorySplitIncludingSlashes {
 		builder.WriteString(pathPart)
 
 		buildAsString := builder.String()
-		matched, err := path.Match(glob, buildAsString)
-		if err != nil {
-			return "", fmt.Errorf("failed to match glob %s: %w", glob, err)
-		}
+		matched := compiledGlob.Match(buildAsString)
 
 		if !matched {
 			continue
@@ -71,7 +74,7 @@ func (s *ShortestGlobPathCache) FindShortestMatch(glob string, file string) (str
 		}
 
 		cached = append(cached, buildAsString)
-		s.Cache[glob] = cached
+		s.Cache[pattern] = cached
 
 		return buildAsString, nil
 	}

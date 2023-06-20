@@ -3,6 +3,7 @@
 package mocks
 
 import (
+	tar "archive/tar"
 	fs "io/fs"
 
 	mock "github.com/stretchr/testify/mock"
@@ -19,6 +20,50 @@ type FriendlyTarballWriter_Expecter struct {
 
 func (_m *FriendlyTarballWriter) EXPECT() *FriendlyTarballWriter_Expecter {
 	return &FriendlyTarballWriter_Expecter{mock: &_m.Mock}
+}
+
+// Add provides a mock function with given fields: rootFs, filePathInFS, filePathInTarball
+func (_m *FriendlyTarballWriter) Add(rootFs fs.FS, filePathInFS string, filePathInTarball string) error {
+	ret := _m.Called(rootFs, filePathInFS, filePathInTarball)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(fs.FS, string, string) error); ok {
+		r0 = rf(rootFs, filePathInFS, filePathInTarball)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// FriendlyTarballWriter_Add_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Add'
+type FriendlyTarballWriter_Add_Call struct {
+	*mock.Call
+}
+
+// Add is a helper method to define mock.On call
+//   - rootFs fs.FS
+//   - filePathInFS string
+//   - filePathInTarball string
+func (_e *FriendlyTarballWriter_Expecter) Add(rootFs interface{}, filePathInFS interface{}, filePathInTarball interface{}) *FriendlyTarballWriter_Add_Call {
+	return &FriendlyTarballWriter_Add_Call{Call: _e.mock.On("Add", rootFs, filePathInFS, filePathInTarball)}
+}
+
+func (_c *FriendlyTarballWriter_Add_Call) Run(run func(rootFs fs.FS, filePathInFS string, filePathInTarball string)) *FriendlyTarballWriter_Add_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(fs.FS), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *FriendlyTarballWriter_Add_Call) Return(_a0 error) *FriendlyTarballWriter_Add_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *FriendlyTarballWriter_Add_Call) RunAndReturn(run func(fs.FS, string, string) error) *FriendlyTarballWriter_Add_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // AddFile provides a mock function with given fields: rootFs, filePathInFS, filePathInTarball
@@ -146,6 +191,49 @@ func (_c *FriendlyTarballWriter_Close_Call) Return(_a0 error) *FriendlyTarballWr
 }
 
 func (_c *FriendlyTarballWriter_Close_Call) RunAndReturn(run func() error) *FriendlyTarballWriter_Close_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Write provides a mock function with given fields: fileContent, header
+func (_m *FriendlyTarballWriter) Write(fileContent []byte, header tar.Header) error {
+	ret := _m.Called(fileContent, header)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func([]byte, tar.Header) error); ok {
+		r0 = rf(fileContent, header)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// FriendlyTarballWriter_Write_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Write'
+type FriendlyTarballWriter_Write_Call struct {
+	*mock.Call
+}
+
+// Write is a helper method to define mock.On call
+//   - fileContent []byte
+//   - header tar.Header
+func (_e *FriendlyTarballWriter_Expecter) Write(fileContent interface{}, header interface{}) *FriendlyTarballWriter_Write_Call {
+	return &FriendlyTarballWriter_Write_Call{Call: _e.mock.On("Write", fileContent, header)}
+}
+
+func (_c *FriendlyTarballWriter_Write_Call) Run(run func(fileContent []byte, header tar.Header)) *FriendlyTarballWriter_Write_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]byte), args[1].(tar.Header))
+	})
+	return _c
+}
+
+func (_c *FriendlyTarballWriter_Write_Call) Return(_a0 error) *FriendlyTarballWriter_Write_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *FriendlyTarballWriter_Write_Call) RunAndReturn(run func([]byte, tar.Header) error) *FriendlyTarballWriter_Write_Call {
 	_c.Call.Return(run)
 	return _c
 }

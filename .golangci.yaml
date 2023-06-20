@@ -12,6 +12,10 @@ linters:
     "wsl", # Cuddle as much as you want to. This linter generally has its purpose, however is not configurable enough to be used.
     "gomnd", # Magic values are already properly abstracted into the constants packages. The linter is not doing anything useful here.
     "godox", # Lines that indicate todos or other future work are perfectly fine.
+
+    # Linters disabled due to generic support missing
+    "rowserrcheck",
+    "wastedassign"
   ]
 linters-settings:
   lll:

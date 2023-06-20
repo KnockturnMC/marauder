@@ -1,10 +1,14 @@
 package builder
 
 import (
+	"archive/tar"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/goreleaser/fileglob"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
@@ -27,6 +31,22 @@ func CreateArtefactTarball(rootFs fs.FS, targetPath string, manifest artefact.Ma
 	}
 
 	tarballWriter := utils.NewFriendlyTarballWriterGZ(tarFileHandle)
+	defer utils.SwallowClose(tarballWriter)
+
+	// Include manifest in tarball
+	serialisedManifest, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to serialise manifest: %w", err)
+	}
+
+	if err := tarballWriter.Write(serialisedManifest, tar.Header{
+		Name: "manifest.json",
+		Mode: 0o777,
+	}); err != nil {
+		return fmt.Errorf("failed to write manifest to tarball: %w", err)
+	}
+
+	// Include files specified in tarball.
 	globCache := utils.NewShortestGlobPathCache()
 
 	err = IncludeArtefactFiles(rootFs, resolvedManifest, globCache, tarballWriter)
@@ -47,7 +67,7 @@ func IncludeArtefactFiles(
 ) error {
 	// Add files defined in manifest
 	for _, file := range resolvedManifest.Files {
-		matches, err := fs.Glob(rootFs, file.CISourceGlob)
+		matches, err := fileglob.Glob(file.CISourceGlob, fileglob.WithFs(rootFs))
 		if err != nil {
 			return fmt.Errorf("failed to glob manifest defined file %s: %w", file.CISourceGlob, err)
 		}
@@ -64,7 +84,7 @@ func IncludeArtefactFiles(
 			}
 
 			pathInTarball := filepath.Join(file.Target, relativePath)
-			if err := tarballWriter.AddFile(rootFs, match, FileParentDirectory+pathInTarball); err != nil {
+			if err := tarballWriter.Add(rootFs, match, FileParentDirectory+pathInTarball); err != nil {
 				return fmt.Errorf("failed to add file %s to tarball: %w", matches, err)
 			}
 		}
