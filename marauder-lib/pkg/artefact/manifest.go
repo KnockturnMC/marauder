@@ -18,6 +18,10 @@ type Manifest struct {
 	// The Files included in this artefact, not flattened.
 	// The file reference may hence include specific files or references to whole folders in the artefact.
 	Files []FileReference `json:"files"`
+
+	// BuildInformation holds additional information about the manifest based on a potential build.
+	// This field is optional as artefacts might be constructed without build information attached.
+	BuildInformation BuildInformation `json:"buildInformation,omitempty"`
 }
 
 // ResolveTemplates constructs a new manifest that has its go templates resolved.
@@ -39,6 +43,9 @@ func (m Manifest) ResolveTemplates() (Manifest, error) {
 		Files:      mappedFiles,
 	}, nil
 }
+
+// The BuildInformation struct holds potential
+type BuildInformation struct{}
 
 // FileReference defines a specific configuration of an artefacts file as defined by its manifest.
 type FileReference struct {

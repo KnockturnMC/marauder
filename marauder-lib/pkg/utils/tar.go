@@ -41,13 +41,12 @@ type FriendlyTarballWriterImpl struct {
 }
 
 // NewFriendlyTarballWriterGZ constructs a new FriendlyTarballWriter that writes to the passed writer.
-// The passed writer will be owned by the friendly tarball writer, meaning it will be closed upon calling FriendlyTarballWriter.Close.
-func NewFriendlyTarballWriterGZ(writer ClosableWriter) *FriendlyTarballWriterImpl {
+func NewFriendlyTarballWriterGZ(writer io.Writer) *FriendlyTarballWriterImpl {
 	gzipWriter := gzip.NewWriter(writer)
 	tarballWriter := tar.NewWriter(gzipWriter)
 
 	return &FriendlyTarballWriterImpl{
-		writerChain:   []ClosableWriter{gzipWriter, writer},
+		writerChain:   []ClosableWriter{gzipWriter},
 		tarballWriter: tarballWriter,
 	}
 }

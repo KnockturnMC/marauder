@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+
 	"gitea.knockturnmc.com/marauder/client/pkg/builder"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
@@ -29,7 +31,13 @@ tarball and uploading said artefact to the marauder controller.`,
 				return fmt.Errorf("failed to parse manifest: %w", err)
 			}
 
-			if err := builder.CreateArtefactTarball(os.DirFS("."), "artefact.tar.gz", manifest); err != nil {
+			tarballFileRef, err := os.Create("artefact.tar.gz")
+			if err != nil {
+				return fmt.Errorf("failed to open output tarball: %w", err)
+			}
+			defer utils.SwallowClose(tarballFileRef)
+
+			if err := builder.CreateArtefactTarball(os.DirFS("."), manifest, tarballFileRef); err != nil {
 				return fmt.Errorf("failed to create artefact tarball: %w", err)
 			}
 

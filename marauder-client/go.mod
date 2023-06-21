@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/Goldziher/go-utils v1.7.2 // indirect
+	github.com/ProtonMail/gopenpgp/v2 v2.7.1 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect

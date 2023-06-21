@@ -4,8 +4,8 @@ import (
 	"archive/tar"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
-	"os"
 	"path/filepath"
 
 	"github.com/goreleaser/fileglob"
@@ -19,18 +19,13 @@ const FileParentDirectory = "files/"
 // CreateArtefactTarball creates a new tar ball given a manifest at the specified target path.
 // The method takes a rootFs file system in which it resolves the ci globs.
 // The target path is relative to the current working directory.
-func CreateArtefactTarball(rootFs fs.FS, targetPath string, manifest artefact.Manifest) error {
+func CreateArtefactTarball(rootFs fs.FS, manifest artefact.Manifest, writer io.Writer) error {
 	resolvedManifest, err := manifest.ResolveTemplates()
 	if err != nil {
 		return fmt.Errorf("failed to resolve manifest templates: %w", err)
 	}
 
-	tarFileHandle, err := os.Create(targetPath)
-	if err != nil {
-		return fmt.Errorf("failed to create target archive %s: %w", targetPath, err)
-	}
-
-	tarballWriter := utils.NewFriendlyTarballWriterGZ(tarFileHandle)
+	tarballWriter := utils.NewFriendlyTarballWriterGZ(writer)
 	defer utils.SwallowClose(tarballWriter)
 
 	// Include manifest in tarball
