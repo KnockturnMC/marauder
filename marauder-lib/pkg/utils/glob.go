@@ -13,19 +13,19 @@ var ErrFailedToFindShortestPath = errors.New("files does not match glob")
 
 // ShortestGlobPathCache holds a map of globs to a list of existing shortest matches.
 type ShortestGlobPathCache struct {
-	Cache map[string][]string
+	cache map[string][]string
 }
 
 // NewShortestGlobPathCache creates a new cache for computing the shortest glob path.
 func NewShortestGlobPathCache() *ShortestGlobPathCache {
 	return &ShortestGlobPathCache{
-		Cache: make(map[string][]string),
+		cache: make(map[string][]string),
 	}
 }
 
 // FindShortestMatch finds the shortest match of the glob against the file.
 func (s *ShortestGlobPathCache) FindShortestMatch(pattern string, file string) (string, error) {
-	cached, globCachedBefore := s.Cache[pattern]
+	cached, globCachedBefore := s.cache[pattern]
 	if globCachedBefore {
 		// Check if we have the shortest path cached already for the file.
 		// E.g. the pattern /build/v* could have previously matched /build/v12/server.jar.
@@ -74,7 +74,7 @@ func (s *ShortestGlobPathCache) FindShortestMatch(pattern string, file string) (
 		}
 
 		cached = append(cached, buildAsString)
-		s.Cache[pattern] = cached
+		s.cache[pattern] = cached
 
 		return buildAsString, nil
 	}
