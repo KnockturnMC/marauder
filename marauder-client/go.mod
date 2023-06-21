@@ -1,4 +1,4 @@
-module gitea.knockturnmc.com/marauder/builder
+module gitea.knockturnmc.com/marauder/client
 
 go 1.20
 

@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"gitea.knockturnmc.com/marauder/builder/cmd"
+	"gitea.knockturnmc.com/marauder/client/cmd"
 )
 
 func main() {

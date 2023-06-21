@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"gitea.knockturnmc.com/marauder/builder/pkg/builder"
+	"gitea.knockturnmc.com/marauder/client/pkg/builder"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
 	"github.com/spf13/cobra"
 )
@@ -13,9 +14,9 @@ import (
 // RootCommand is the root entry command for the builder tool.
 func RootCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "marauder-builder",
-		Short: "Marauder builder is a command line tool capable of constructing artefacts",
-		Long: `Marauder builder is a command line tool capable of packing together a locally defined artefact into a
+		Use:   "marauder",
+		Short: "Marauder is a command line tool capable of constructing artefacts",
+		Long: `Marauder is a command line tool capable of packing together a locally defined artefact into a
 tarball and uploading said artefact to the marauder controller.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			file, err := os.ReadFile("manifest.json")

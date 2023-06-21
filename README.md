@@ -26,9 +26,9 @@ The operators general loop starts with a restart of a running server.
 5. The operator notifies the controller about the update, through which the controller can update its ***is*** state.
 6. The operator starts the server again.
 
-## Builder
+## Client
 
-The marauder builder is a simple cli tool that is capable of building [marauder artefacts](#marauder-artefact) and uploading them
+The marauder client is a simple cli tool that is capable of building [marauder artefacts](#marauder-artefact) and uploading them
 to the [controller](#controller).
 
 # Marauder artefact
