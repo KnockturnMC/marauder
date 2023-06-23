@@ -1,6 +1,8 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 // The ServerModel struct represents a servers configuration in the database model.
 type ServerModel struct {
@@ -17,29 +19,31 @@ type ServerModel struct {
 	// Host represents the host the server can be found on. This may be an internal url, however does not need to be.
 	// The controller simply has to be able to locate an operator based on the host defined for the server.
 	Host string `db:"host"`
+
+	// The Memory the server should allocate, defined in megabytes.
+	Memory int64 `db:"memory"`
+
+	// Image defines the docker image the server should be spun up with.
+	Image string `db:"image"`
 }
 
-// The ServerDependencyModel struct represents a servers dependency on a given artefact by its identifier.
-// This is not versioned as it does neither represent the *is*  and *target* state, it simply configures the server to have the artefact installed.
-type ServerDependencyModel struct {
-	// The Server uuid references the server this dependency configures.
-	Server uuid.UUID `db:"server"`
+// ServerCPUAllocation represents a specific cpu allocation for a server.
+type ServerCPUAllocation struct {
+	// UUID is a unique identifier of the server cpu allocation.
+	UUID uuid.UUID `db:"uuid"`
 
-	// The ArtefactIdentifier represents the identifier of the artefact that the server requires to operate.
-	ArtefactIdentifier string `db:"artefact_identifier"`
+	// CPUCore defines the specific cpu core that the server should be allocated on.
+	CPUCore int64 `db:"cpu_core"`
+
+	// The ServerUUID references the server this allocation is for by its uuid.
+	ServerUUID uuid.UUID `db:"server_uuid"`
+
+	// The ServerHost specifies which host this allocation is expected to be on.
+	ServerHost string `db:"server_host"`
 }
 
 // The ServerDockerConfigurationModel represents a configuration for a specific server, detailing its docker container configuration.
 type ServerDockerConfigurationModel struct {
 	// The Server uuid references the server this docker configuration belongs to.
 	Server uuid.UUID `db:"server"`
-
-	// Image defines the docker image the server should be spun up with.
-	Image string `db:"image"`
-
-	// CPUs defines how many cpus the server instance should be allocated with when running.
-	CPUs float64 `db:"cpus"`
-
-	// The Memory the server should allocate, defined in megabytes.
-	Memory int64 `db:"memory"`
 }

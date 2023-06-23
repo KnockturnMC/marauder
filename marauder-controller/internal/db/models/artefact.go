@@ -1,9 +1,16 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 // ArtefactModel represents an artefact entry in the database.
 type ArtefactModel struct {
+	// The unique identifier of the artefacts record in the database.
+	UUID uuid.UUID `db:"uuid"`
+
 	// A unique, string based Identifier of the artefact as laid out in its manifest. Examples include `spellcore` or `knockturncore`.
 	Identifier string `db:"identifier"`
 

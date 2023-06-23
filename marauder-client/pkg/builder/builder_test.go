@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var _ = Describe("Building the artefact", func() {
+var _ = Describe("Building the artefact", Label("unittest"), func() {
 	Describe("copying the files described into a tarball", func() {
 		var rootFS fstest.MapFS
 
@@ -27,8 +27,8 @@ var _ = Describe("Building the artefact", func() {
 				rootFS["spell-api/build/libs/spellbook-1.14.jar"] = &fstest.MapFile{Data: []byte("api")}
 
 				writer := mocks.NewFriendlyTarballWriter(GinkgoT())
-				writer.EXPECT().AddFile(mock.Anything, "spell-plugin/build/libs/spellcore-1.14.jar", "files/spellcore.jar").Return(nil)
-				writer.EXPECT().AddFile(mock.Anything, "spell-api/build/libs/spellbook-1.14.jar", "files/spellapi.jar").Return(nil)
+				writer.EXPECT().Add(mock.Anything, "spell-plugin/build/libs/spellcore-1.14.jar", "files/spellcore.jar").Return(nil)
+				writer.EXPECT().Add(mock.Anything, "spell-api/build/libs/spellbook-1.14.jar", "files/spellapi.jar").Return(nil)
 
 				err := builder.IncludeArtefactFiles(&rootFS, artefact.Manifest{
 					Identifier: "spellcore",

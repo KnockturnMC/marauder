@@ -44,8 +44,26 @@ func (m Manifest) ResolveTemplates() (Manifest, error) {
 	}, nil
 }
 
-// The BuildInformation struct holds potential
-type BuildInformation struct{}
+// The BuildInformation struct holds potential additional information about the build the manifest was generated for.
+type BuildInformation struct {
+	// Repository represents a reference to the git repository this build originated from.
+	Repository string `json:"repository"`
+
+	// Branch defines the branch the build originated from.
+	Branch string `json:"branch"`
+
+	// CommitUser holds the user.name of the committer authoring the commit this build was produced from.
+	CommitUser string `json:"commitUser"`
+
+	// CommitEmail provides the email of the committer authoring the commit this build was produced from.
+	CommitEmail string `json:"commitEmail"`
+
+	// CommitUser holds the hash of the commit this build was produced from.
+	CommitHash string `json:"commitHash"`
+
+	// CommitMessage provides the full message of the commit this build was produced from.
+	CommitMessage string `json:"commitMessage"`
+}
 
 // FileReference defines a specific configuration of an artefacts file as defined by its manifest.
 type FileReference struct {
