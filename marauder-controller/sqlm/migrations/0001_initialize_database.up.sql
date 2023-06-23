@@ -4,14 +4,22 @@ CREATE TYPE SERVER_STATE_TYPE AS ENUM ('TARGET', 'IS', 'HISTORY');
 
 CREATE TABLE artefact
 (
-    uuid         UUID          NOT NULL DEFAULT gen_random_uuid(),
-    identifier   VARCHAR       NOT NULL,
-    version      VARCHAR       NOT NULL,
-    upload_date  CREATION_DATE NOT NULL,
-    storage_path VARCHAR       NOT NULL,
+    uuid        UUID          NOT NULL DEFAULT gen_random_uuid(),
+    identifier  VARCHAR       NOT NULL,
+    version     VARCHAR       NOT NULL,
+    upload_date CREATION_DATE NOT NULL,
 
     CONSTRAINT pk_artefact PRIMARY KEY (uuid),
     CONSTRAINT un_artefact_identifier_version UNIQUE (identifier, version)
+);
+
+CREATE TABLE artefact_file
+(
+    artefact uuid  NOT NULL,
+    tarball  BYTEA NOT NULL,
+
+    CONSTRAINT pk_artefact_file PRIMARY KEY (artefact),
+    CONSTRAINT fk_artefact_file_artefact_uuid FOREIGN KEY (artefact) REFERENCES artefact (uuid)
 );
 
 CREATE TABLE server

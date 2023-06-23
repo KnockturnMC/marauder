@@ -20,8 +20,11 @@ type ArtefactModel struct {
 
 	// The UploadDate of the artefact to the controller.
 	UploadDate time.Time `db:"upload_date"`
+}
 
-	// The StoragePath of the artefact tarball in the controllers main storage directory.
-	// This might be a combination of the identifier and version, but is not guaranteed and hence is defined here.
-	StoragePath string `db:"storage_path"`
+type ArtefactModelWithBinary struct {
+	ArtefactModel
+
+	// The TarballBlob holds the entire tarball of the artefact
+	TarballBlob []byte `db:"tarball"`
 }
