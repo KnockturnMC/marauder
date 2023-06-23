@@ -10,53 +10,61 @@ import (
 	"github.com/google/uuid"
 )
 
-// FindServer locates a server based on its uuid.
+// FetchServer locates a server based on its uuid.
 // sql.ErrNoRows is returned if no server exists with the passed uuid.
-func FindServer(ctx context.Context, db *sqlm.DB, uuid uuid.UUID) (models.ServerModel, error) {
+func FetchServer(ctx context.Context, db *sqlm.DB, uuid uuid.UUID) (models.ServerModel, error) {
 	var result models.ServerModel
-	if err := db.GetContext(ctx, &result, "SELECT * FROM server WHERE uuid = $1", uuid); err != nil {
+	if err := db.GetContext(ctx, &result, `
+    SELECT uuid, environment, name, host, memory, cpu, image FROM server WHERE uuid = $1
+    `, uuid); err != nil {
 		return models.ServerModel{}, fmt.Errorf("failed to find server: %w", err)
 	}
 
 	return result, nil
 }
 
-// FindServerByNameAndEnv looks up a single server based on its name and environment.
+// FetchServerByNameAndEnv looks up a single server based on its name and environment.
 // sql.ErrNoRows is returned if no server exists with the passed name and environment.
-func FindServerByNameAndEnv(ctx context.Context, db *sqlm.DB, name string, environment string) (models.ServerModel, error) {
+func FetchServerByNameAndEnv(ctx context.Context, db *sqlm.DB, name string, environment string) (models.ServerModel, error) {
 	var result models.ServerModel
-	if err := db.GetContext(ctx, &result, "SELECT * FROM server WHERE name = $1 AND environment = $2", name, environment); err != nil {
+	if err := db.GetContext(ctx, &result, `
+    SELECT uuid, environment, name, host, memory, cpu, image FROM server WHERE name = $1 AND environment = $2
+    `, name, environment); err != nil {
 		return models.ServerModel{}, fmt.Errorf("failed to find server: %w", err)
 	}
 
 	return result, nil
 }
 
-// QueryServersByName queries the database for a collection of servers by their name.
-func QueryServersByName(ctx context.Context, db *sqlm.DB, name string) ([]models.ServerModel, error) {
+// FetchServersByName queries the database for a collection of servers by their name.
+func FetchServersByName(ctx context.Context, db *sqlm.DB, name string) ([]models.ServerModel, error) {
 	var result []models.ServerModel
-	if err := db.SelectContext(ctx, &result, "SELECT * FROM server WHERE name = $1", name); err != nil {
+	if err := db.SelectContext(ctx, &result, `
+    SELECT * FROM server WHERE name = $1
+    `, name); err != nil {
 		return result, fmt.Errorf("failed to find servers: %w", err)
 	}
 
 	return result, nil
 }
 
-// QueryServersByEnvironment queries the database for a collection of servers by their environment.
-func QueryServersByEnvironment(ctx context.Context, db *sqlm.DB, environment string) ([]models.ServerModel, error) {
+// FetchServersByEnvironment queries the database for a collection of servers by their environment.
+func FetchServersByEnvironment(ctx context.Context, db *sqlm.DB, environment string) ([]models.ServerModel, error) {
 	var result []models.ServerModel
-	if err := db.SelectContext(ctx, &result, "SELECT * FROM server WHERE environment = $1", environment); err != nil {
+	if err := db.SelectContext(ctx, &result, `
+    SELECT * FROM server WHERE environment = $1
+    `, environment); err != nil {
 		return result, fmt.Errorf("failed to find servers: %w", err)
 	}
 
 	return result, nil
 }
 
-// CreateServer creates a new server instance on the database.
-func CreateServer(ctx context.Context, db *sqlm.DB, server models.ServerModel) (models.ServerModel, error) {
+// InsertServer creates a new server instance on the database.
+func InsertServer(ctx context.Context, db *sqlm.DB, server models.ServerModel) (models.ServerModel, error) {
 	if err := db.NamedGetContext(ctx, &server, `
-            INSERT INTO server (environment, name, host, memory, image)
-            VALUES (:environment, :name, :host, :memory, :image)
+            INSERT INTO server (environment, name, host, memory, cpu, image)
+            VALUES (:environment, :name, :host, :memory, :cpu, :image)
             RETURNING *; 
             `, server); err != nil {
 		return models.ServerModel{}, fmt.Errorf("failed to insert server: %w", err)

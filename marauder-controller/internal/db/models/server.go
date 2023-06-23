@@ -23,27 +23,9 @@ type ServerModel struct {
 	// The Memory the server should allocate, defined in megabytes.
 	Memory int64 `db:"memory"`
 
+	// CPU represents the amount of cpu load the server may use.
+	CPU float64 `db:"cpu"`
+
 	// Image defines the docker image the server should be spun up with.
 	Image string `db:"image"`
-}
-
-// ServerCPUAllocation represents a specific cpu allocation for a server.
-type ServerCPUAllocation struct {
-	// UUID is a unique identifier of the server cpu allocation.
-	UUID uuid.UUID `db:"uuid"`
-
-	// CPUCore defines the specific cpu core that the server should be allocated on.
-	CPUCore int64 `db:"cpu_core"`
-
-	// The ServerUUID references the server this allocation is for by its uuid.
-	ServerUUID uuid.UUID `db:"server_uuid"`
-
-	// The ServerHost specifies which host this allocation is expected to be on.
-	ServerHost string `db:"server_host"`
-}
-
-// The ServerDockerConfigurationModel represents a configuration for a specific server, detailing its docker container configuration.
-type ServerDockerConfigurationModel struct {
-	// The Server uuid references the server this docker configuration belongs to.
-	Server uuid.UUID `db:"server"`
 }

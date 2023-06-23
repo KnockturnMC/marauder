@@ -38,18 +38,18 @@ func (db *Tx) NamedGetContext(ctx context.Context, dest interface{}, query strin
 }
 
 func NamedGetContext(ctx context.Context, e sqlx.ExtContext, dest interface{}, query string, args interface{}) error {
-	queryContext, err := sqlx.NamedQueryContext(ctx, e, query, args)
+	rows, err := sqlx.NamedQueryContext(ctx, e, query, args)
 	if err != nil {
 		return fmt.Errorf("failed to run named query: %w", err)
 	}
 
-	defer func() { _ = queryContext.Close() }()
+	defer func() { _ = rows.Close() }()
 
-	if !queryContext.Next() {
+	if !rows.Next() {
 		return fmt.Errorf("could not find row: %w", sql.ErrNoRows)
 	}
 
-	if err := queryContext.StructScan(dest); err != nil {
+	if err := rows.StructScan(dest); err != nil {
 		return fmt.Errorf("failed to scan result: %w", err)
 	}
 

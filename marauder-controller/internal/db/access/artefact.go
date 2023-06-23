@@ -11,8 +11,8 @@ import (
 	"gitea.knockturnmc.com/marauder/controller/internal/db/models"
 )
 
-// FindArtefact locates a specific artefact based on its identifier and version in the database.
-func FindArtefact(ctx context.Context, db *sqlm.DB, identifier string, version string) (models.ArtefactModel, error) {
+// FetchArtefact locates a specific artefact based on its identifier and version in the database.
+func FetchArtefact(ctx context.Context, db *sqlm.DB, identifier string, version string) (models.ArtefactModel, error) {
 	var result models.ArtefactModel
 	if err := db.GetContext(ctx, &result, `
     SELECT * FROM artefact WHERE identifier = $1 AND version = $2
@@ -23,8 +23,8 @@ func FindArtefact(ctx context.Context, db *sqlm.DB, identifier string, version s
 	return result, nil
 }
 
-// QueryArtefactVersions queries the database for all currently hosted versions of the artefact.
-func QueryArtefactVersions(ctx context.Context, db *sqlm.DB, identifier string) ([]models.ArtefactModel, error) {
+// FetchArtefactVersions queries the database for all currently hosted versions of the artefact.
+func FetchArtefactVersions(ctx context.Context, db *sqlm.DB, identifier string) ([]models.ArtefactModel, error) {
 	result := make([]models.ArtefactModel, 0)
 	if err := db.SelectContext(ctx, &result, `
     SELECT uuid, identifier, version, upload_date FROM artefact WHERE identifier = $1
@@ -68,5 +68,12 @@ func InsertArtefact(ctx context.Context, db *sqlm.DB, model models.ArtefactModel
 
 // FetchArtefactTarball fetches a full ArtefactModelWithBinary from the database including the full tarball binary.
 func FetchArtefactTarball(ctx context.Context, db *sqlm.DB, uuid uuid.UUID) (models.ArtefactModelWithBinary, error) {
-	panic("Implement me!")
+	var result models.ArtefactModelWithBinary
+	if err := db.GetContext(ctx, &result, `
+        SELECT uuid, identifier, version, upload_date, tarball FROM artefact JOIN artefact_file af on artefact.uuid = af.artefact WHERE af.artefact = $1
+        `, uuid); err != nil {
+		return models.ArtefactModelWithBinary{}, fmt.Errorf("failed to fetch artefact model with binary from database: %w", err)
+	}
+
+	return result, nil
 }

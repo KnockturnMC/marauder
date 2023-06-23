@@ -3,6 +3,7 @@ package access_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"strconv"
 	"testing"
 	"time"
@@ -21,7 +22,10 @@ import (
 	"github.com/phayes/freeport"
 )
 
-const MARAUDER = "marauder"
+const (
+	Marauder      = "marauder"
+	DbDockerImage = "postgres:15.3"
+)
 
 var (
 	databaseClient       *sqlm.DB
@@ -50,17 +54,22 @@ var _ = BeforeSuite(func() {
 	port, err := freeport.GetFreePort()
 	Expect(err).To(Not(HaveOccurred()))
 
-	databaseStartupCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(10*time.Second))
+	databaseStartupCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(2*time.Minute))
 	defer cancelFunc()
+
+	pullReader, err := dockerClientInstance.ImagePull(databaseStartupCtx, DbDockerImage, types.ImagePullOptions{})
+	Expect(err).To(Not(HaveOccurred()))
+	_, _ = io.ReadAll(pullReader)
+	defer func() { _ = pullReader.Close() }()
 
 	dockerContainer, err = dockerClientInstance.ContainerCreate(
 		databaseStartupCtx,
 		&container.Config{
-			Image:        "postgres",
+			Image:        DbDockerImage,
 			ExposedPorts: map[nat.Port]struct{}{"5432": {}},
 			Env: []string{
-				"POSTGRES_PASSWORD=" + MARAUDER,
-				"POSTGRES_USER=" + MARAUDER,
+				"POSTGRES_PASSWORD=" + Marauder,
+				"POSTGRES_USER=" + Marauder,
 			},
 		},
 		&container.HostConfig{
@@ -78,7 +87,7 @@ var _ = BeforeSuite(func() {
 
 	databaseConnectionString := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		"0.0.0.0", port, MARAUDER, MARAUDER, MARAUDER,
+		"0.0.0.0", port, Marauder, Marauder, Marauder,
 	)
 
 	err = retry.Do(func() error {
