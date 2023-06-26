@@ -24,7 +24,7 @@ import (
 
 const (
 	Marauder      = "marauder"
-	DbDockerImage = "postgres:15.3"
+	DBDockerImage = "postgres:15.3"
 )
 
 var (
@@ -57,7 +57,7 @@ var _ = BeforeSuite(func() {
 	databaseStartupCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(2*time.Minute))
 	defer cancelFunc()
 
-	pullReader, err := dockerClientInstance.ImagePull(databaseStartupCtx, DbDockerImage, types.ImagePullOptions{})
+	pullReader, err := dockerClientInstance.ImagePull(databaseStartupCtx, DBDockerImage, types.ImagePullOptions{})
 	Expect(err).To(Not(HaveOccurred()))
 	_, _ = io.ReadAll(pullReader)
 	defer func() { _ = pullReader.Close() }()
@@ -65,7 +65,7 @@ var _ = BeforeSuite(func() {
 	dockerContainer, err = dockerClientInstance.ContainerCreate(
 		databaseStartupCtx,
 		&container.Config{
-			Image:        DbDockerImage,
+			Image:        DBDockerImage,
 			ExposedPorts: map[nat.Port]struct{}{"5432": {}},
 			Env: []string{
 				"POSTGRES_PASSWORD=" + Marauder,

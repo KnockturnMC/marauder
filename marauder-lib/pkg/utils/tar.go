@@ -15,6 +15,14 @@ type ClosableWriter interface {
 	io.Closer
 }
 
+// WriteResult represents a file written to the tarball.
+type WriteResult struct {
+	// PathInRootFS represents the path the file was read from
+	PathInRootFS string
+	// PathInTarball represents the path of the file in the tarball.
+	PathInTarball string
+}
+
 // The FriendlyTarballWriter interface represents a writer to a tarfile.
 //
 //go:generate mockery --name FriendlyTarballWriter
@@ -22,16 +30,16 @@ type FriendlyTarballWriter interface {
 	io.Closer
 
 	// Add writes a file from the root fs located at the filePathInFS to the tar ball at the filePathInTarball path.
-	Add(rootFs fs.FS, filePathInFS string, filePathInTarball string) error
+	Add(rootFs fs.FS, filePathInFS string, filePathInTarball string) ([]WriteResult, error)
 
 	// AddFile writes a file from the root fs located at the filePathInFS to the tar ball at the filePathInTarball path.
-	AddFile(rootFs fs.FS, filePathInFS string, filePathInTarball string) error
+	AddFile(rootFs fs.FS, filePathInFS string, filePathInTarball string) (WriteResult, error)
 
 	// Write writes the specific file content and the passed header directly to the tarball.
 	Write(fileContent []byte, header tar.Header) error
 
 	// AddFolder writes a whole from the root fs located at the filePathInFS to the tar ball at the filePathInTarball path.
-	AddFolder(rootFs fs.FS, folderPathInFS string, folderPathInTarball string) error
+	AddFolder(rootFs fs.FS, folderPathInFS string, folderPathInTarball string) ([]WriteResult, error)
 }
 
 // The FriendlyTarballWriterImpl struct acts as a utility for creating a tarball and implements the friendly tarball writer interface.
@@ -84,59 +92,68 @@ func (f *FriendlyTarballWriterImpl) Write(fileContent []byte, header tar.Header)
 }
 
 // Add writes a file from the root fs located at the filePathInFS to the tar ball at the filePathInTarball path.
-func (f *FriendlyTarballWriterImpl) Add(rootFs fs.FS, filePathInFS string, filePathInTarball string) error {
+func (f *FriendlyTarballWriterImpl) Add(rootFs fs.FS, filePathInFS string, filePathInTarball string) ([]WriteResult, error) {
 	fileHandle, err := rootFs.Open(filePathInFS)
 	if err != nil {
-		return fmt.Errorf("failed to open file %s: %w", filePathInFS, err)
+		return nil, fmt.Errorf("failed to open file %s: %w", filePathInFS, err)
 	}
 
 	defer SwallowClose(fileHandle)
 
 	stat, err := fileHandle.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to retrieve state from file %s: %w", filePathInFS, err)
+		return nil, fmt.Errorf("failed to retrieve state from file %s: %w", filePathInFS, err)
 	}
 
 	if stat.IsDir() {
 		return f.AddFolder(rootFs, filePathInFS, filePathInTarball)
 	}
 
-	return f.AddFile(rootFs, filePathInFS, filePathInTarball)
+	file, err := f.AddFile(rootFs, filePathInFS, filePathInTarball)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add single file: %w", err)
+	}
+
+	return []WriteResult{file}, nil
 }
 
 // AddFile writes a file from the passed file system found at the filePathInFS to the tarball.
-func (f *FriendlyTarballWriterImpl) AddFile(rootFs fs.FS, filePathInFS string, filePathInTarball string) error {
+func (f *FriendlyTarballWriterImpl) AddFile(rootFs fs.FS, filePathInFS string, filePathInTarball string) (WriteResult, error) {
 	open, err := rootFs.Open(filePathInFS)
 	if err != nil {
-		return fmt.Errorf("failed to write file to tarball, cannot open %s: %w", filePathInFS, err)
+		return WriteResult{}, fmt.Errorf("failed to write file to tarball, cannot open %s: %w", filePathInFS, err)
 	}
 
 	defer SwallowClose(open)
 
 	stat, err := open.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to read stat of file %s: %w", filePathInFS, err)
+		return WriteResult{}, fmt.Errorf("failed to read stat of file %s: %w", filePathInFS, err)
 	}
 
 	header, err := tar.FileInfoHeader(stat, "")
 	if err != nil {
-		return fmt.Errorf("failed to construct tar header for %s: %w", filePathInFS, err)
+		return WriteResult{}, fmt.Errorf("failed to construct tar header for %s: %w", filePathInFS, err)
 	}
 
 	header.Name = filePathInTarball
 	if err := f.tarballWriter.WriteHeader(header); err != nil {
-		return fmt.Errorf("failed to write tarball header for %s: %w", filePathInFS, err)
+		return WriteResult{}, fmt.Errorf("failed to write tarball header for %s: %w", filePathInFS, err)
 	}
 
 	if _, err := io.Copy(f.tarballWriter, open); err != nil {
-		return fmt.Errorf("failed to write file %s to tarball: %w", filePathInFS, err)
+		return WriteResult{}, fmt.Errorf("failed to write file %s to tarball: %w", filePathInFS, err)
 	}
 
-	return nil
+	return WriteResult{
+		PathInRootFS:  filePathInFS,
+		PathInTarball: filePathInTarball,
+	}, nil
 }
 
 // AddFolder writes the entire folder found in the fs into the tarball.
-func (f *FriendlyTarballWriterImpl) AddFolder(rootFs fs.FS, folderPathInFS string, folderPathInTarball string) error {
+func (f *FriendlyTarballWriterImpl) AddFolder(rootFs fs.FS, folderPathInFS string, folderPathInTarball string) ([]WriteResult, error) {
+	results := make([]WriteResult, 0)
 	if err := fs.WalkDir(rootFs, folderPathInFS, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to walk folder %s: %w", path, err)
@@ -147,14 +164,17 @@ func (f *FriendlyTarballWriterImpl) AddFolder(rootFs fs.FS, folderPathInFS strin
 		}
 
 		nameInTarball := strings.Replace(path, folderPathInFS, folderPathInTarball, 1)
-		if err := f.AddFile(rootFs, path, nameInTarball); err != nil {
+		file, err := f.AddFile(rootFs, path, nameInTarball)
+		if err != nil {
 			return fmt.Errorf("failed to add file %s to tarball: %w", path, err)
 		}
 
+		results = append(results, file)
+
 		return nil
 	}); err != nil {
-		return fmt.Errorf("failed to walk folder %s in fs: %w", folderPathInFS, err)
+		return nil, fmt.Errorf("failed to walk folder %s in fs: %w", folderPathInFS, err)
 	}
 
-	return nil
+	return results, nil
 }

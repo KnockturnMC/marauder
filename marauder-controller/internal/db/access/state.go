@@ -43,7 +43,7 @@ func fetchServerStateSingleRow(
 	if err := db.GetContext(ctx, &result, `
         SELECT * FROM server_state WHERE type = $1 AND server = $2
         `, state, serverUUID); err != nil {
-		return models.ServerArtefactStateModel{}, fmt.Errorf("failed to find %d state for %s: %w", state, serverUUID.String(), err)
+		return models.ServerArtefactStateModel{}, fmt.Errorf("failed to find %s state for %s: %w", state, serverUUID.String(), err)
 	}
 
 	return result, nil

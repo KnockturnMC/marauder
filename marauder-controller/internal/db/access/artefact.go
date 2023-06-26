@@ -70,7 +70,8 @@ func InsertArtefact(ctx context.Context, db *sqlm.DB, model models.ArtefactModel
 func FetchArtefactTarball(ctx context.Context, db *sqlm.DB, uuid uuid.UUID) (models.ArtefactModelWithBinary, error) {
 	var result models.ArtefactModelWithBinary
 	if err := db.GetContext(ctx, &result, `
-        SELECT uuid, identifier, version, upload_date, tarball FROM artefact JOIN artefact_file af on artefact.uuid = af.artefact WHERE af.artefact = $1
+        SELECT uuid, identifier, version, upload_date, tarball FROM artefact
+            JOIN artefact_file af on artefact.uuid = af.artefact WHERE af.artefact = $1
         `, uuid); err != nil {
 		return models.ArtefactModelWithBinary{}, fmt.Errorf("failed to fetch artefact model with binary from database: %w", err)
 	}

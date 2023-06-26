@@ -20,7 +20,7 @@ var serverModel = models.ServerModel{
 	Image:       "minecraft:paper",
 }
 
-var _ = Describe("managing servers", func() {
+var _ = Describe("managing servers", Label("functiontest"), func() {
 	BeforeEach(func() {
 		databaseClient.MustExec("DELETE FROM server;")
 	})

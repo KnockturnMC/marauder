@@ -47,7 +47,6 @@ CREATE TABLE server_state
     type            SERVER_STATE_TYPE NOT NULL,
 
     CONSTRAINT pk_server_state PRIMARY KEY (uuid),
-    CONSTRAINT un_server_state UNIQUE (server, artefact),
     CONSTRAINT fk_server FOREIGN KEY (server) REFERENCES server (uuid)
         ON DELETE CASCADE,
     CONSTRAINT fk_artefact FOREIGN KEY (artefact) REFERENCES artefact (uuid)
@@ -56,5 +55,5 @@ CREATE TABLE server_state
 
 CREATE INDEX idx_server_state_non_history_state_server ON server_state (server) WHERE type != 'HISTORY';
 CREATE INDEX idx_server_state_non_history_state_artefact ON server_state (artefact) WHERE type != 'HISTORY';
-CREATE UNIQUE INDEX idx_server_state_is_uniq ON server_state (server, artefact) WHERE type = 'IS';
-CREATE UNIQUE INDEX idx_server_state_target_uniq ON server_state (server, artefact) WHERE type = 'TARGET';
+CREATE UNIQUE INDEX idx_server_state_is_uniq ON server_state (server) WHERE type = 'IS';
+CREATE UNIQUE INDEX idx_server_state_target_uniq ON server_state (server) WHERE type = 'TARGET';

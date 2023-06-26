@@ -6,6 +6,9 @@ import (
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 )
 
+// The Hashes type holds the hashes of a collections of files.
+type Hashes map[string]string
+
 // The Manifest type defines an artefact's manifest managed by marauder.
 type Manifest struct {
 	// The unique, marauder wide Identifier of the artefact, usually the name of the plugin the artefact is created for.
@@ -21,7 +24,13 @@ type Manifest struct {
 
 	// BuildInformation holds additional information about the manifest based on a potential build.
 	// This field is optional as artefacts might be constructed without build information attached.
-	BuildInformation BuildInformation `json:"buildInformation,omitempty"`
+	BuildInformation *BuildInformation `json:"buildInformation,omitempty"`
+
+	// Hashes contains a collection of hashes for each fully resolved file in the manifest.
+	// While the Files field may hold the globs and targets of specific files, this
+	// field holds a full list of all included files with their hashes.
+	// This cannot be archived on a folder level, as deployments might deploy into folders holding other data.
+	Hashes Hashes `json:"hashes,omitempty"`
 }
 
 // ResolveTemplates constructs a new manifest that has its go templates resolved.

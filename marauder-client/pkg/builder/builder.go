@@ -2,6 +2,8 @@ package builder
 
 import (
 	"archive/tar"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -28,8 +30,15 @@ func CreateArtefactTarball(rootFs fs.FS, manifest artefact.Manifest, writer io.W
 	tarballWriter := utils.NewFriendlyTarballWriterGZ(writer)
 	defer utils.SwallowClose(tarballWriter)
 
+	// Include files specified in tarball.
+	globCache := utils.NewShortestGlobPathCache()
+	resolvedManifest, err = IncludeArtefactFiles(rootFs, resolvedManifest, globCache, tarballWriter)
+	if err != nil {
+		return fmt.Errorf("failed to include artefact files in tarball: %w", err)
+	}
+
 	// Include manifest in tarball
-	serialisedManifest, err := json.MarshalIndent(manifest, "", "  ")
+	serialisedManifest, err := json.MarshalIndent(resolvedManifest, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to serialise manifest: %w", err)
 	}
@@ -39,14 +48,6 @@ func CreateArtefactTarball(rootFs fs.FS, manifest artefact.Manifest, writer io.W
 		Mode: 0o777,
 	}); err != nil {
 		return fmt.Errorf("failed to write manifest to tarball: %w", err)
-	}
-
-	// Include files specified in tarball.
-	globCache := utils.NewShortestGlobPathCache()
-
-	err = IncludeArtefactFiles(rootFs, resolvedManifest, globCache, tarballWriter)
-	if err != nil {
-		return fmt.Errorf("failed to include artefact files in tarball: %w", err)
 	}
 
 	return nil
@@ -59,31 +60,63 @@ func IncludeArtefactFiles(
 	resolvedManifest artefact.Manifest,
 	globCache *utils.ShortestGlobPathCache,
 	tarballWriter utils.FriendlyTarballWriter,
-) error {
+) (artefact.Manifest, error) {
+	// Create Hashes map if needed.
+	if resolvedManifest.Hashes == nil {
+		resolvedManifest.Hashes = make(map[string]string)
+	}
+
 	// Add files defined in manifest
 	for _, file := range resolvedManifest.Files {
 		matches, err := fileglob.Glob(file.CISourceGlob, fileglob.WithFs(rootFs))
 		if err != nil {
-			return fmt.Errorf("failed to glob manifest defined file %s: %w", file.CISourceGlob, err)
+			return artefact.Manifest{}, fmt.Errorf("failed to glob manifest defined file %s: %w", file.CISourceGlob, err)
 		}
 
 		for _, match := range matches {
 			shortestMatch, err := globCache.FindShortestMatch(file.CISourceGlob, match)
 			if err != nil {
-				return fmt.Errorf("failed to compute shortest path for file %s under glob %s: %w", match, file.CISourceGlob, err)
+				return artefact.Manifest{}, fmt.Errorf("failed to compute shortest path for file %s under glob %s: %w", match, file.CISourceGlob, err)
 			}
 
 			relativePath, err := filepath.Rel(shortestMatch, match)
 			if err != nil {
-				return fmt.Errorf("failed to compute relative path of %s to glob %s: %w", match, shortestMatch, err)
+				return artefact.Manifest{}, fmt.Errorf("failed to compute relative path of %s to glob %s: %w", match, shortestMatch, err)
 			}
 
 			pathInTarball := filepath.Join(file.Target, relativePath)
-			if err := tarballWriter.Add(rootFs, match, FileParentDirectory+pathInTarball); err != nil {
-				return fmt.Errorf("failed to add file %s to tarball: %w", matches, err)
+			addedFiles, err := tarballWriter.Add(rootFs, match, FileParentDirectory+pathInTarball)
+			if err != nil {
+				return artefact.Manifest{}, fmt.Errorf("failed to add file %s to tarball: %w", matches, err)
+			}
+
+			// Write hashes
+			for _, addedFile := range addedFiles {
+				hashArray, err := computeHashFor(rootFs, addedFile.PathInRootFS)
+				if err != nil {
+					return artefact.Manifest{}, fmt.Errorf("faild to compute hash for %s: %w", addedFile.PathInRootFS, err)
+				}
+
+				resolvedManifest.Hashes[addedFile.PathInTarball] = hex.EncodeToString(hashArray)
 			}
 		}
 	}
 
-	return nil
+	return resolvedManifest, nil
+}
+
+// computeHashFor computes a sha256 hash for the file located at the given path in the given file system.
+func computeHashFor(rootFs fs.FS, path string) ([]byte, error) {
+	open, err := rootFs.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file %s for hashsum computation: %w", path, err)
+	}
+
+	defer func() { _ = open.Close() }()
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, open); err != nil {
+		return nil, fmt.Errorf("failed to write file content to hasher instance: %w", err)
+	}
+
+	return hasher.Sum(nil), nil
 }

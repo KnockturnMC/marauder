@@ -22,6 +22,7 @@ type ArtefactModel struct {
 	UploadDate time.Time `db:"upload_date"`
 }
 
+// The ArtefactModelWithBinary struct represents a full artefact, including its tarball.
 type ArtefactModelWithBinary struct {
 	ArtefactModel
 
