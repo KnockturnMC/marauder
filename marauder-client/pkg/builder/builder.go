@@ -2,6 +2,7 @@ package builder
 
 import (
 	"archive/tar"
+	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -22,23 +23,22 @@ const FileParentDirectory = "files/"
 // The method takes a rootFs file system in which it resolves the ci globs.
 // The target path is relative to the current working directory.
 func CreateArtefactTarball(rootFs fs.FS, manifest artefact.Manifest, writer io.Writer) error {
-	resolvedManifest, err := manifest.ResolveTemplates()
+	tarballWriter, err := utils.NewFriendlyTarballWriterGZ(writer, gzip.BestCompression)
 	if err != nil {
-		return fmt.Errorf("failed to resolve manifest templates: %w", err)
+		return fmt.Errorf("faild to create friendly tarball writer: %w", err)
 	}
 
-	tarballWriter := utils.NewFriendlyTarballWriterGZ(writer)
 	defer utils.SwallowClose(tarballWriter)
 
 	// Include files specified in tarball.
 	globCache := utils.NewShortestGlobPathCache()
-	resolvedManifest, err = IncludeArtefactFiles(rootFs, resolvedManifest, globCache, tarballWriter)
+	manifest, err = IncludeArtefactFiles(rootFs, manifest, globCache, tarballWriter)
 	if err != nil {
 		return fmt.Errorf("failed to include artefact files in tarball: %w", err)
 	}
 
 	// Include manifest in tarball
-	serialisedManifest, err := json.MarshalIndent(resolvedManifest, "", "  ")
+	serialisedManifest, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to serialise manifest: %w", err)
 	}

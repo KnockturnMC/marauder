@@ -8,6 +8,7 @@ builds:
       - "arm64"
     main: "main.go"
     dir: "marauder-client"
+    binary: "marauder-client"
     flags:
       - '-trimpath'
     ldflags:

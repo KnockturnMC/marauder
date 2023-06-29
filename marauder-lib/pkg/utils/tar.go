@@ -49,14 +49,18 @@ type FriendlyTarballWriterImpl struct {
 }
 
 // NewFriendlyTarballWriterGZ constructs a new FriendlyTarballWriter that writes to the passed writer.
-func NewFriendlyTarballWriterGZ(writer io.Writer) *FriendlyTarballWriterImpl {
-	gzipWriter := gzip.NewWriter(writer)
+func NewFriendlyTarballWriterGZ(writer io.Writer, level int) (*FriendlyTarballWriterImpl, error) {
+	gzipWriter, err := gzip.NewWriterLevel(writer, level)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gzip writer for level %d: %w", level, err)
+	}
+
 	tarballWriter := tar.NewWriter(gzipWriter)
 
 	return &FriendlyTarballWriterImpl{
 		writerChain:   []ClosableWriter{gzipWriter},
 		tarballWriter: tarballWriter,
-	}
+	}, nil
 }
 
 // Close closes the friendly tarball writer and all owned writers of it.

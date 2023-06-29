@@ -1,18 +1,18 @@
 package main
 
 import (
-    "log"
+	"log"
 
-    "gitea.knockturnmc.com/marauder/client/cmd"
+	"gitea.knockturnmc.com/marauder/client/cmd"
 )
 
 func main() {
-    root := cmd.RootCommand()
-    build := cmd.BuildCommand()
-    build.AddCommand(cmd.BuildCommand())
-    root.AddCommand(build)
+	root := cmd.RootCommand()
+	build := cmd.BuildCommand()
+	build.AddCommand(cmd.BuildArtefactCommand())
+	root.AddCommand(build)
 
-    if err := root.Execute(); err != nil {
-        log.Fatal(err)
-    }
+	if err := root.Execute(); err != nil {
+		log.Fatal(err)
+	}
 }
