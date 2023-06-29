@@ -32,3 +32,6 @@ issues:
         - 'dupword'
         - 'dupl'
         - 'unparam'
+    - linters:
+        - "varnamelen"
+      text: "db"

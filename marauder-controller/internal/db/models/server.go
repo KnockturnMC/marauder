@@ -28,4 +28,23 @@ type ServerModel struct {
 
 	// Image defines the docker image the server should be spun up with.
 	Image string `db:"image"`
+
+	// The Networks struct holds all networks the server model is part of.
+	Networks []ServerNetwork
+}
+
+// The ServerNetwork configuration defines what docker networks a server instance should be connected to.
+type ServerNetwork struct {
+	// The UUID of the network, uniquely identifying it across all existing network configurations.
+	UUID uuid.UUID `db:"uuid"`
+
+	// The ServerUUID holds the uuid of the server this network belongs to.
+	ServerUUID uuid.UUID `db:"server"`
+
+	// NetworkName holds the name of the external docker network.
+	NetworkName string `db:"network_name"`
+
+	// The IPV4Address holds the potential ipv4 address of the container in the network.
+	// If no address is specified, the string is empty.
+	IPV4Address string `db:"ipv4_address"`
 }

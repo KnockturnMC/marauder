@@ -18,11 +18,17 @@ var serverModel = models.ServerModel{
 	Host:        "falk0.servers.knockturnmc.com",
 	Memory:      1024,
 	Image:       "minecraft:paper",
+	Networks: []models.ServerNetwork{
+		{
+			NetworkName: "services",
+			IPV4Address: "172.18.0.4",
+		},
+	},
 }
 
 var _ = Describe("managing servers", Label("functiontest"), func() {
 	BeforeEach(func() {
-		databaseClient.MustExec("DELETE FROM server;")
+		databaseClient.MustExec("DELETE FROM server; DELETE FROM server_network;")
 	})
 
 	Context("when inserting a new server", func() {
@@ -35,8 +41,17 @@ var _ = Describe("managing servers", Label("functiontest"), func() {
             SELECT uuid, environment, name, host, memory, image FROM server WHERE uuid = $1`,
 				insertedModel.UUID,
 			)
-
 			Expect(err).To(Not(HaveOccurred()))
+
+			var networks []models.ServerNetwork
+			err = databaseClient.SelectContext(context.Background(), &networks, `
+            SELECT uuid, server, network_name, ipv4_address
+            FROM server_network
+            WHERE server = $1`, insertedModel.UUID)
+			Expect(err).To(Not(HaveOccurred()))
+
+			result.Networks = networks
+
 			Expect(result).To(BeEquivalentTo(insertedModel))
 		})
 

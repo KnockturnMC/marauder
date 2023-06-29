@@ -38,6 +38,19 @@ CREATE TABLE server
     CONSTRAINT un_server_uuid_host UNIQUE (uuid, host)
 );
 
+CREATE TABLE server_network
+(
+    uuid         UUID    NOT NULL DEFAULT gen_random_uuid(),
+    server       UUID    NOT NULL,
+    network_name VARCHAR NOT NULL,
+    ipv4_address VARCHAR NOT NULL,
+
+    CONSTRAINT pk_server_network_uuid PRIMARY KEY (uuid),
+    CONSTRAINT un_server_network_server_network_name UNIQUE (server, network_name),
+    CONSTRAINT fk_server_network_server FOREIGN KEY (server) REFERENCES server (uuid) ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
 CREATE TABLE server_state
 (
     uuid            UUID              NOT NULL DEFAULT gen_random_uuid(),

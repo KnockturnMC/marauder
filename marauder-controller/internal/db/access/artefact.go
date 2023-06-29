@@ -42,6 +42,8 @@ func InsertArtefact(ctx context.Context, db *sqlm.DB, model models.ArtefactModel
 		return models.ArtefactModel{}, fmt.Errorf("failed to begin insertion transaction: %w", err)
 	}
 
+	defer func() { _ = transaction.Rollback() }() // Rollback in case, this explodes. If Commit is called prior, this is a noop.
+
 	var result models.ArtefactModel
 	if err := transaction.NamedGetContext(ctx, &result, `
         INSERT INTO artefact (identifier, version, upload_date)

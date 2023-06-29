@@ -23,7 +23,7 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 	)
 
 	BeforeEach(func() {
-		databaseClient.MustExec("DELETE FROM server; DELETE FROM artefact;")
+		databaseClient.MustExec("DELETE FROM server; DELETE FROM server_network; DELETE FROM artefact;")
 
 		var err error
 		server, err = access.InsertServer(context.Background(), databaseClient, serverModel)
