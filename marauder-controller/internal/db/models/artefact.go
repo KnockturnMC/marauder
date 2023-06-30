@@ -20,6 +20,9 @@ type ArtefactModel struct {
 
 	// The UploadDate of the artefact to the controller.
 	UploadDate time.Time `db:"upload_date"`
+
+	// The Hash of the tarball this artefact represents in the format of a sha256 hash.,
+	Hash []byte `db:"hash"`
 }
 
 // The ArtefactModelWithBinary struct represents a full artefact, including its tarball.

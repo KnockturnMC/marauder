@@ -2,6 +2,7 @@ package builder
 
 import (
 	"fmt"
+	"strings"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
 	"github.com/go-git/go-git/v5"
@@ -33,7 +34,7 @@ func InsertBuildInformation(path string, manifest artefact.Manifest) (artefact.M
 
 	information := artefact.BuildInformation{
 		Repository:    remote.Config().URLs[0],
-		Branch:        head.Name().String(),
+		Branch:        strings.Replace(head.Name().String(), "refs/head/", "", 1),
 		CommitUser:    commit.Author.Name,
 		CommitEmail:   commit.Author.Email,
 		CommitHash:    commit.Hash.String(),

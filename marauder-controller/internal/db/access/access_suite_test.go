@@ -86,7 +86,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).To(Not(HaveOccurred()))
 
 	databaseConnectionString := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable binary_parameters=yes",
 		"0.0.0.0", port, Marauder, Marauder, Marauder,
 	)
 

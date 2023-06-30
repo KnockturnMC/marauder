@@ -1,5 +1,6 @@
 CREATE DOMAIN CREATION_DATE AS TIMESTAMPTZ DEFAULT NOW()::TIMESTAMPTZ(0);
 CREATE DOMAIN CPU_CORE AS INTEGER CHECK ( value >= 0);
+CREATE DOMAIN SHA_256_HASH AS BYTEA CHECK ( length(value) = 32 );
 CREATE TYPE SERVER_STATE_TYPE AS ENUM ('TARGET', 'IS', 'HISTORY');
 
 CREATE TABLE artefact
@@ -15,8 +16,9 @@ CREATE TABLE artefact
 
 CREATE TABLE artefact_file
 (
-    artefact uuid  NOT NULL,
-    tarball  BYTEA NOT NULL,
+    artefact UUID         NOT NULL,
+    tarball  BYTEA        NOT NULL,
+    hash     SHA_256_HASH NOT NULL,
 
     CONSTRAINT pk_artefact_file PRIMARY KEY (artefact),
     CONSTRAINT fk_artefact_file_artefact_uuid FOREIGN KEY (artefact) REFERENCES artefact (uuid)

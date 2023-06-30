@@ -1,16 +1,33 @@
 builds:
+  # The client
   - goos:
       - "windows"
       - "linux"
-      - "darwin"
     goarch:
       - "amd64"
-      - "arm64"
     main: "main.go"
+    id: "marauder-client"
     dir: "marauder-client"
-    binary: "marauder-client"
+    binary: "marauder"
     flags:
       - '-trimpath'
     ldflags:
       - '-s -w -extldflags "-static"'
+      - "-X gitea.knockturnmc.com/marauder/client/cmd.version={{.Version}}"
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+  # The controller
+  - goos:
+      - "linux"
+    goarch:
+      - "amd64"
+    main: "main.go"
+    id: "marauder-controller"
+    dir: "marauder-controller"
+    binary: "marauderctl"
+    flags:
+      - '-trimpath'
+    ldflags:
+      - '-s -w -extldflags "-static"'
+      - "-X gitea.knockturnmc.com/marauder/controller/cmd.version={{.Version}}"
     mod_timestamp: '{{ .CommitTimestamp }}'

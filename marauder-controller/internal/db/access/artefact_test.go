@@ -3,6 +3,7 @@ package access_test
 import (
 	"context"
 	"database/sql"
+	"encoding/hex"
 	"strconv"
 	"time"
 
@@ -13,11 +14,21 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+func MustHexDecode(val string) []byte {
+	decodeString, err := hex.DecodeString(val)
+	if err != nil {
+		panic(err)
+	}
+
+	return decodeString
+}
+
 var fullArtefact = models.ArtefactModelWithBinary{
 	ArtefactModel: models.ArtefactModel{
 		Identifier: "spellcore",
 		Version:    "1.0.0+hello",
 		UploadDate: time.Now(),
+		Hash:       MustHexDecode("ebbc0ce59cea35533cfb2d63443fb3db650e9d263ba3f91aee70110a108a6ff9"),
 	},
 	TarballBlob: []byte("example data"),
 }

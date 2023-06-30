@@ -46,7 +46,7 @@ func StartMarauderControllerServer(configuration ServerConfiguration) error {
 			MinVersion: tls.VersionTLS13,
 		},
 	}
-	serverListenAndServeErr := engine.ListenAndServeTLS(configuration.ServerCertPath, configuration.ServerKeyPath)
+	serverListenAndServeErr := engine.ListenAndServe()
 	if serverListenAndServeErr != nil {
 		return fmt.Errorf("failed to listen and serve: %w", serverListenAndServeErr)
 	}
