@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/endpoints"
+
 	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -22,7 +24,7 @@ type ServerConfiguration struct {
 }
 
 // StartMarauderControllerServer starts the marauder controller server instance.
-func StartMarauderControllerServer(configuration ServerConfiguration) error {
+func StartMarauderControllerServer(configuration ServerConfiguration, dependencies ServerDependencies) error {
 	server := gin.New()
 	if err := server.SetTrustedProxies(nil); err != nil {
 		return fmt.Errorf("failed to set server trusted proxies: %w", err)
@@ -35,7 +37,8 @@ func StartMarauderControllerServer(configuration ServerConfiguration) error {
 	server.Use(middleware.ErrorHandler())
 
 	logrus.Debug("registering routs on gin server")
-	// TODO: Register routes.
+	group := server.Group("/v1")
+	group.GET("/version", endpoints.VersionEndpoint(dependencies.Version))
 
 	logrus.Info("staring server on port ", configuration.Port)
 	engine := &http.Server{

@@ -1,13 +1,25 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/rest"
+	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
+
+func defaultConfiguration() rest.ServerConfiguration {
+	return rest.ServerConfiguration{
+		Host:           "localhost",
+		Port:           8080,
+		ServerCertPath: "",
+		ServerKeyPath:  "",
+	}
+}
 
 // ServeCommand generates the serve command for marauder controller, serving the rest server instance.
 func ServeCommand() *cobra.Command {
@@ -19,17 +31,27 @@ func ServeCommand() *cobra.Command {
 	var configurationPath string
 	cmd.PersistentFlags().StringVarP(&configurationPath, "configuration", "c", "marauderctl.yml", "the path to the configuration file of the server")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		var configuration rest.ServerConfiguration
+
 		file, err := os.ReadFile(configurationPath)
 		if err != nil {
-			return fmt.Errorf("failed to read configuration file %s: %w", configurationPath, err)
+			if errors.Is(err, fs.ErrNotExist) {
+				cmd.Println(bunt.Sprint("Gray{configuration not found, using inbuilt one}"))
+				configuration = defaultConfiguration()
+			} else {
+				return fmt.Errorf("failed to read configuration file %s: %w", configurationPath, err)
+			}
+		} else {
+			if err := yaml.Unmarshal(file, &configuration); err != nil {
+				return fmt.Errorf("failed to parse configuration file %s: %w", configurationPath, err)
+			}
 		}
 
-		var configuration rest.ServerConfiguration
-		if err := yaml.Unmarshal(file, &configuration); err != nil {
-			return fmt.Errorf("failed to parse configuration file %s: %w", configurationPath, err)
+		dependencies := rest.ServerDependencies{
+			Version: version,
 		}
 
-		if err := rest.StartMarauderControllerServer(configuration); err != nil {
+		if err := rest.StartMarauderControllerServer(configuration, dependencies); err != nil {
 			return fmt.Errorf("failed to serve rest server: %w", err)
 		}
 
