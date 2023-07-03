@@ -19,8 +19,9 @@ type ServerConfiguration struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 
-	ServerCertPath string `yaml:"serverCertPath"`
-	ServerKeyPath  string `yaml:"serverKeyPath"`
+	ServerCertPath    string `yaml:"serverCertPath"`
+	ServerKeyPath     string `yaml:"serverKeyPath"`
+	AuthorizedKeyPath string `yaml:"authorizedKeyPath"`
 }
 
 // StartMarauderControllerServer starts the marauder controller server instance.
@@ -39,6 +40,7 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 	logrus.Debug("registering routs on gin server")
 	group := server.Group("/v1")
 	group.GET("/version", endpoints.VersionEndpoint(dependencies.Version))
+	group.POST("/artefact/upload", endpoints.ArtefactUpload(dependencies.DatabaseHandle, dependencies.ArtefactValidator))
 
 	logrus.Info("staring server on port ", configuration.Port)
 	engine := &http.Server{

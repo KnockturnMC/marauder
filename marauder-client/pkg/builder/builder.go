@@ -3,7 +3,6 @@ package builder
 import (
 	"archive/tar"
 	"compress/gzip"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -113,10 +112,10 @@ func computeHashFor(rootFs fs.FS, path string) ([]byte, error) {
 	}
 
 	defer func() { _ = open.Close() }()
-	hasher := sha256.New()
-	if _, err := io.Copy(hasher, open); err != nil {
-		return nil, fmt.Errorf("failed to write file content to hasher instance: %w", err)
+	sha256, err := utils.ComputeSha256(open)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compute sha 256 hash for file: %w", err)
 	}
 
-	return hasher.Sum(nil), nil
+	return sha256, nil
 }

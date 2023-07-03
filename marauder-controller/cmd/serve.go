@@ -14,10 +14,11 @@ import (
 
 func defaultConfiguration() rest.ServerConfiguration {
 	return rest.ServerConfiguration{
-		Host:           "localhost",
-		Port:           8080,
-		ServerCertPath: "",
-		ServerKeyPath:  "",
+		Host:              "localhost",
+		Port:              8080,
+		ServerCertPath:    "",
+		ServerKeyPath:     "",
+		AuthorizedKeyPath: "authorized_keys",
 	}
 }
 
@@ -47,8 +48,9 @@ func ServeCommand() *cobra.Command {
 			}
 		}
 
-		dependencies := rest.ServerDependencies{
-			Version: version,
+		dependencies, err := rest.CreateServerDependencies(version, configuration)
+		if err != nil {
+			return fmt.Errorf("failed to create server dependencies: %w", err)
 		}
 
 		if err := rest.StartMarauderControllerServer(configuration, dependencies); err != nil {
