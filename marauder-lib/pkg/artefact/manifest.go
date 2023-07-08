@@ -1,10 +1,6 @@
 package artefact
 
-import (
-	"fmt"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-)
+import "time"
 
 // The Hashes type holds the hashes of a collections of files.
 type Hashes map[string]string
@@ -33,26 +29,6 @@ type Manifest struct {
 	Hashes Hashes `json:"hashes,omitempty"`
 }
 
-// ResolveTemplates constructs a new manifest that has its go templates resolved.
-// This uses golang templating engine to resolve the templates that may exist in the manifest.
-func (m Manifest) ResolveTemplates() (Manifest, error) {
-	mappedFiles := make([]FileReference, 0, len(m.Files))
-	for i, file := range m.Files {
-		updated, err := file.ResolveTemplates(m)
-		if err != nil {
-			return Manifest{}, fmt.Errorf("failed to resolve file ref %d: %w", i, err)
-		}
-
-		mappedFiles = append(mappedFiles, updated)
-	}
-
-	return Manifest{
-		Identifier: m.Identifier,
-		Version:    m.Version,
-		Files:      mappedFiles,
-	}, nil
-}
-
 // The BuildInformation struct holds potential additional information about the build the manifest was generated for.
 type BuildInformation struct {
 	// Repository represents a reference to the git repository this build originated from.
@@ -72,6 +48,13 @@ type BuildInformation struct {
 
 	// CommitMessage provides the full message of the commit this build was produced from.
 	CommitMessage string `json:"commitMessage"`
+
+	// Timestamp represents the time at which the build information were gathered.
+	Timestamp time.Time `json:"timestamp"`
+
+	// The BuildSpecificVersion represents a unique version string generated specifically for this build.
+	// This value may be based on either the CommitHash or the Timestamp.
+	BuildSpecificVersion string `json:"buildSpecificVersion"`
 }
 
 // FileReference defines a specific configuration of an artefacts file as defined by its manifest.
@@ -81,23 +64,4 @@ type FileReference struct {
 
 	// A string representation of a glob that identifies the files during the ci build of the project that produces the artefact.
 	CISourceGlob string `json:"ciSourceGlob"`
-}
-
-// ResolveTemplates constructs a new file reference that has its go templates resolved.
-// This uses golang templating engine to resolve the templates that may exist in the file reference.
-func (f FileReference) ResolveTemplates(data Manifest) (FileReference, error) {
-	resolvedTarget, err := utils.ExecuteStringTemplateToString(f.Target, data)
-	if err != nil {
-		return FileReference{}, fmt.Errorf("failed to resolve `target`: %w", err)
-	}
-
-	resolvedCISourceGlob, err := utils.ExecuteStringTemplateToString(f.CISourceGlob, data)
-	if err != nil {
-		return FileReference{}, fmt.Errorf("failed to resolve `ciSourceGlob`: %w", err)
-	}
-
-	return FileReference{
-		Target:       resolvedTarget,
-		CISourceGlob: resolvedCISourceGlob,
-	}, nil
 }

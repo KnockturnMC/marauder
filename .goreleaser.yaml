@@ -2,9 +2,11 @@ builds:
   # The client
   - goos:
       - "windows"
+      - "darwin"
       - "linux"
     goarch:
       - "amd64"
+      - "arm64"
     main: "main.go"
     id: "marauder-client"
     dir: "marauder-client"

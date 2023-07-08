@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
-	"text/template"
+	"strconv"
+	"time"
 
 	"gitea.knockturnmc.com/marauder/client/pkg/builder"
 	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
@@ -45,37 +45,51 @@ func BuildArtefactCommand() *cobra.Command {
 			return fmt.Errorf("failed to read %s: %w", manifestFileLocation, err)
 		}
 
-		cmd.Println(bunt.Sprintf("Gray{parsing manifest file %s}", manifestFileLocation))
-		var manifest artefact.Manifest
-		if err := json.Unmarshal(file, &manifest); err != nil {
-			return fmt.Errorf("failed to parse manifest: %w", err)
-		}
-
-		tarballNameTemplate, err := template.New("").Parse(tarballName)
-		if err != nil {
-			return fmt.Errorf("failed to parse output name as template: %w", err)
-		}
-
-		var stringWriter strings.Builder
-		if err := tarballNameTemplate.Execute(&stringWriter, OutputNameData{
-			Identifier: manifest.Identifier,
-			Version:    manifest.Version,
-		}); err != nil {
-			return fmt.Errorf("failed to execute template for output file location: %w", err)
-		}
-
 		cmd.Println(bunt.Sprintf("Gray{fetching build information from project}"))
-		{
-			updatedManifest, err := builder.InsertBuildInformation(workDirectory, manifest)
-			if err != nil {
-				cmd.Println(bunt.Sprintf("Red{failed to parse build information, excluding them: %s}", err.Error()))
-			} else {
-				manifest = updatedManifest
+		buildInformation, err := builder.FetchBuildInformation(workDirectory)
+		if err != nil {
+			cmd.Println(bunt.Sprintf("Red{failed to parse build information, excluding them: %s}", err.Error()))
+			timestamp := time.Now()
+			buildInformation = artefact.BuildInformation{
+				Repository:           "nan",
+				Branch:               "nan",
+				CommitUser:           "nan",
+				CommitEmail:          "nan",
+				CommitHash:           "nan",
+				CommitMessage:        "nan",
+				Timestamp:            timestamp,
+				BuildSpecificVersion: "t" + strconv.FormatInt(timestamp.Unix(), 10),
 			}
 		}
 
-		cmd.Println(bunt.Sprintf("Gray{creating output artefact tarball *%s*}", stringWriter.String()))
-		tarballFileRef, err := os.Create(stringWriter.String())
+		// Parse the manifest file
+		cmd.Println(bunt.Sprintf("Gray{parsing manifest file %s}", manifestFileLocation))
+
+		templatedManifestContent, err := utils.ExecuteStringTemplateToString(string(file), struct {
+			Build artefact.BuildInformation
+		}{
+			Build: buildInformation,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to resolve templates in manifest file: %w", err)
+		}
+
+		var manifest artefact.Manifest
+		if err := json.Unmarshal([]byte(templatedManifestContent), &manifest); err != nil {
+			return fmt.Errorf("failed to parse manifest: %w", err)
+		}
+
+		// Parse the tarball name from the commandline flag
+		finalTarballName, err := utils.ExecuteStringTemplateToString(tarballName, OutputNameData{
+			Identifier: manifest.Identifier,
+			Version:    manifest.Version,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to execute template for tarball output name: %w", err)
+		}
+
+		cmd.Println(bunt.Sprintf("Gray{creating output artefact tarball *%s*}", finalTarballName))
+		tarballFileRef, err := os.Create(finalTarballName)
 		if err != nil {
 			return fmt.Errorf("failed to open output tarball: %w", err)
 		}
@@ -85,7 +99,7 @@ func BuildArtefactCommand() *cobra.Command {
 			return fmt.Errorf("failed to create artefact tarball: %w", err)
 		}
 
-		cmd.Println(bunt.Sprintf("LimeGreen{created artefact} *%s* LimeGreen{successfully!}", stringWriter.String()))
+		cmd.Println(bunt.Sprintf("LimeGreen{created artefact} *%s* LimeGreen{successfully!}", finalTarballName))
 
 		return nil
 	}
