@@ -3,6 +3,7 @@ module gitea.knockturnmc.com/marauder/controller
 go 1.20
 
 require (
+	github.com/Goldziher/go-utils v1.7.2
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/docker/docker v24.0.2+incompatible
 	github.com/docker/go-connections v0.4.0
@@ -18,7 +19,8 @@ require (
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
-	gopkg.in/yaml.v2 v2.4.0
+	golang.org/x/crypto v0.10.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -61,7 +63,6 @@ require (
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
@@ -70,6 +71,5 @@ require (
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.9.3 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 )

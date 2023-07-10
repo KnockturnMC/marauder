@@ -3,16 +3,20 @@ package artefact
 import (
 	"errors"
 	"fmt"
-	"io"
-	"os"
-
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
 	"golang.org/x/crypto/ssh"
+	"io"
+	"os"
 )
 
-// ErrUnknownSignature is returned if a signature on an artefact is unknown to the validator.
-var ErrUnknownSignature = errors.New("unknown signature")
+var (
+	// ErrUnknownSignature is returned if a signature on an artefact is unknown to the validator.
+	ErrUnknownSignature = errors.New("unknown signature")
+
+	// ErrHashMismatch is returned if the hashes of a manifest do not match the content of the artefact.
+	ErrHashMismatch = errors.New("mismatching hashes")
+)
 
 // The ValidationResult is returned by the Validator via a channel once the validation is completed.
 type ValidationResult struct{}
@@ -53,10 +57,17 @@ func (w *WorkedBasedValidator) SubmitArtefact(artefactPath, signaturePath string
 			return ValidationResult{}, fmt.Errorf("failed to verify artefact signature: %w", err)
 		}
 
+		if err := w.verifyArtefactManifestHashes(artefactFile); err != nil {
+			return ValidationResult{}, fmt.Errorf("failed to verify hashes of artefact: %w", err)
+		}
+
 		return ValidationResult{}, nil
 	})
 }
 
+// verifyArtefactSignature verifies the uploaded signature against the artefact file by checking if the signature is
+// a) valid for the artefact file
+// b) belongs to a known public key of marauderctl
 func (w *WorkedBasedValidator) verifyArtefactSignature(artefact *os.File, signatureBytes []byte) error {
 	if _, err := artefact.Seek(0, io.SeekStart); err != nil {
 		return fmt.Errorf("failed to reset artefact file ref to start: %w", err)

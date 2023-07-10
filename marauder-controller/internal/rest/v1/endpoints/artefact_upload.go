@@ -26,17 +26,23 @@ func ArtefactUpload(
 			return
 		}
 
+		defer func() { _ = os.Remove(pathToArtefact) }()
+
 		pathToSignature, err := saveUploadInto(context, "signature", os.TempDir()+"/marauder", "signature-*.tar.gz.sig")
 		if err != nil {
 			_ = context.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to save signature file: %w", err)))
 			return
 		}
 
+		defer func() { _ = os.Remove(pathToSignature) }()
+
 		validationResult := <-validator.SubmitArtefact(pathToArtefact, pathToSignature)
 		if validationResult.Err != nil {
 			_ = context.Error(response.RestErrorFromErr(http.StatusBadRequest, fmt.Errorf("uploaded artefact did not validate: %w", validationResult.Err)))
 			return
 		}
+
+		context.String(http.StatusOK, "ok!")
 	}
 }
 

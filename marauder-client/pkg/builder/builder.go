@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"gitea.knockturnmc.com/marauder/lib/pkg"
 	"io"
 	"io/fs"
 	"path/filepath"
@@ -43,7 +44,7 @@ func CreateArtefactTarball(rootFs fs.FS, manifest artefact.Manifest, writer io.W
 	}
 
 	if err := tarballWriter.Write(serialisedManifest, tar.Header{
-		Name: "manifest.json",
+		Name: pkg.ManifestFileName,
 		Mode: 0o777,
 	}); err != nil {
 		return fmt.Errorf("failed to write manifest to tarball: %w", err)

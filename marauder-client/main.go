@@ -8,10 +8,11 @@ import (
 
 func main() {
 	root := cmd.RootCommand()
-	build := cmd.BuildCommand()
-	build.AddCommand(cmd.BuildArtefactCommand())
-	root.AddCommand(build)
-	root.AddCommand(cmd.SignCommand())
+	artefactCommand := cmd.ArtefactCommand()
+	artefactCommand.AddCommand(cmd.ArtefactBuildCommand())
+	artefactCommand.AddCommand(cmd.ArtefactSignCommand())
+	artefactCommand.AddCommand(cmd.ArtefactPublishCommand())
+	root.AddCommand(artefactCommand)
 
 	if err := root.Execute(); err != nil {
 		log.Fatal(err)

@@ -12,21 +12,22 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func SignCommand() *cobra.Command {
+func ArtefactSignCommand() *cobra.Command {
 	var (
 		privateKeyFilePath string
 		outputFileTemplate string
 	)
 	command := &cobra.Command{
 		Use:   "sign",
-		Short: "Allows marauder to sign files for controller",
+		Short: "Allows marauder to sign artefacts for controller",
 		Args:  cobra.ExactArgs(1),
 	}
 	command.PersistentFlags().StringVarP(
-		&privateKeyFilePath, "privateKey", "p", "{{.User.HomeDir}}/.config/marauder/key",
+		&privateKeyFilePath, "privateKey", "p", "{{.User.HomeDir}}/.config/marauder/signingKey",
 		"the private key file used for signing the file.",
 	)
-	_ = command.MarkFlagRequired("privateKey")
+	_ = command.MarkPersistentFlagRequired("privateKey")
+
 	command.PersistentFlags().StringVarP(
 		&outputFileTemplate, "outputName", "o", "{{.File}}.sig",
 		"the name of the output file relative to the signed file",

@@ -1,7 +1,6 @@
 builds:
   # The client
   - goos:
-      - "windows"
       - "darwin"
       - "linux"
     goarch:
@@ -21,8 +20,10 @@ builds:
   # The controller
   - goos:
       - "linux"
+      - "darwin"
     goarch:
       - "amd64"
+      - "arm64"
     main: "main.go"
     id: "marauder-controller"
     dir: "marauder-controller"

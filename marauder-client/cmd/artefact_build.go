@@ -19,15 +19,15 @@ type OutputNameData struct {
 	Version    string
 }
 
-// BuildArtefactCommand constructs the command logic for the artefact creation.
-func BuildArtefactCommand() *cobra.Command {
+// ArtefactBuildCommand constructs the command logic for the artefact creation.
+func ArtefactBuildCommand() *cobra.Command {
 	var (
 		manifestFileLocation string
 		tarballName          string
 	)
 
 	command := &cobra.Command{
-		Use:   "artefact",
+		Use:   "build",
 		Short: "Builds a marauder artefact into a tarball ready for publishing.",
 		Args:  cobra.MaximumNArgs(1),
 	}
@@ -45,6 +45,8 @@ func BuildArtefactCommand() *cobra.Command {
 			return fmt.Errorf("failed to read %s: %w", manifestFileLocation, err)
 		}
 
+		var manifest artefact.Manifest
+
 		cmd.Println(bunt.Sprintf("Gray{fetching build information from project}"))
 		buildInformation, err := builder.FetchBuildInformation(workDirectory)
 		if err != nil {
@@ -60,6 +62,8 @@ func BuildArtefactCommand() *cobra.Command {
 				Timestamp:            timestamp,
 				BuildSpecificVersion: "t" + strconv.FormatInt(timestamp.Unix(), 10),
 			}
+		} else {
+			manifest.BuildInformation = &buildInformation
 		}
 
 		// Parse the manifest file
@@ -74,7 +78,6 @@ func BuildArtefactCommand() *cobra.Command {
 			return fmt.Errorf("failed to resolve templates in manifest file: %w", err)
 		}
 
-		var manifest artefact.Manifest
 		if err := json.Unmarshal([]byte(templatedManifestContent), &manifest); err != nil {
 			return fmt.Errorf("failed to parse manifest: %w", err)
 		}
