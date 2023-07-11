@@ -28,9 +28,9 @@ var fullArtefact = models.ArtefactModelWithBinary{
 		Identifier: "spellcore",
 		Version:    "1.0.0+hello",
 		UploadDate: time.Now(),
-		Hash:       MustHexDecode("ebbc0ce59cea35533cfb2d63443fb3db650e9d263ba3f91aee70110a108a6ff9"),
 	},
 	TarballBlob: []byte("example data"),
+	Hash:        MustHexDecode("ebbc0ce59cea35533cfb2d63443fb3db650e9d263ba3f91aee70110a108a6ff9"),
 }
 
 var _ = Describe("managing artefacts on the db", Label("functiontest"), func() {

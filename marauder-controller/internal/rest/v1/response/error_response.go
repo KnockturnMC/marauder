@@ -11,7 +11,7 @@ var ErrDescriptiveRequestError = errors.New("server rest error")
 
 // The RestRequestError contains a middleware that occurred while processing a request.
 type RestRequestError struct {
-	Description   string `json:"description"`
+	Description   string `json:"description,omitempty"`
 	Identifier    string `json:"identifier"`
 	internalError error
 
@@ -35,7 +35,7 @@ func (e RestRequestError) ResponseCode() int {
 
 // RestErrorFromErr creates a new middleware response from a passed go middleware.
 func RestErrorFromErr(responseCode int, err error) *RestRequestError {
-	return RestErrorFrom(responseCode, err.Error(), err)
+	return RestErrorFrom(responseCode, "", err)
 }
 
 // RestErrorFrom creates a new middleware response from a passed go middleware and the passed description.

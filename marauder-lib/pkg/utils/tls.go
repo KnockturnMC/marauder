@@ -4,9 +4,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"gitea.knockturnmc.com/marauder/lib/pkg"
 	"os"
 	"path/filepath"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg"
 )
 
 // ParseTLSConfiguration parses a bare bone tls configuration from a folder.
@@ -44,5 +45,6 @@ func ParseTLSConfiguration(tlsPath string) (*tls.Config, error) {
 	return &tls.Config{
 		RootCAs:      certPool,
 		Certificates: []tls.Certificate{certificate},
+		MinVersion:   tls.VersionTLS13,
 	}, nil
 }

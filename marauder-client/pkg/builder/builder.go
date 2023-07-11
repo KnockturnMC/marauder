@@ -6,10 +6,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"gitea.knockturnmc.com/marauder/lib/pkg"
 	"io"
 	"io/fs"
 	"path/filepath"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg"
 
 	"github.com/goreleaser/fileglob"
 

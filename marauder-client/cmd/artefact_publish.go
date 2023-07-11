@@ -1,130 +1,166 @@
 package cmd
 
 import (
-    "bytes"
-    "fmt"
-    "gitea.knockturnmc.com/marauder/lib/pkg/utils"
-    "github.com/gonvenience/bunt"
-    "github.com/spf13/cobra"
-    "io"
-    "mime/multipart"
-    "net/http"
-    "os"
-    "os/user"
+	"bytes"
+	"context"
+	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"os"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/gonvenience/bunt"
+	"github.com/spf13/cobra"
 )
 
-func ArtefactPublishCommand() *cobra.Command {
-    var (
-        tlsPath                   string
-        artefactFilePath          string
-        artefactFileSignaturePath string
-    )
+// ArtefactPublishCommand constructs the artefact publish subcommand.
+//
+//nolint:funlen
+func ArtefactPublishCommand(
+	ctx context.Context,
+) *cobra.Command {
+	var (
+		tlsPath        string
+		controllerHost string
+	)
 
-    command := &cobra.Command{
-        Use:   "publish",
-        Short: "Publishes a marauder artefact to a controller",
-        Args:  cobra.ExactArgs(1),
-    }
-    command.PersistentFlags().StringVar(
-        &tlsPath, "tls", "{{.User.HomeDir}}/.config/marauder/tls",
-        "the root folder for the tls file expected by marauder, specifically a cert.pem and a key.pem.",
-    )
-    command.PersistentFlags().StringVarP(
-        &artefactFilePath, "artefactFile", "f", "",
-        "the name of the output file relative to the signed file",
-    )
-    command.PersistentFlags().StringVarP(
-        &artefactFilePath, "artefactSignature", "s", "",
-        "the name of the output file relative to the signed file",
-    )
+	command := &cobra.Command{
+		Use:   "publish",
+		Short: "Publishes a marauder artefact to a controller",
+		Args:  cobra.RangeArgs(1, 2),
+	}
+	command.PersistentFlags().StringVar(
+		&tlsPath, "tls", "{{.User.HomeDir}}/.config/marauder/tls",
+		"the root folder for the tls file expected by marauder, specifically a cert.pem and a key.pem.",
+	)
+	command.PersistentFlags().StringVarP(
+		&controllerHost, "controller", "c", "http://localhost:8080",
+		"the url of the controller",
+	)
 
-    _ = command.MarkPersistentFlagRequired("artefactFile")
+	command.PreRunE = func(cmd *cobra.Command, args []string) error {
+		evaluatedTLSPath, err := utils.EvaluateFilePathTemplate(tlsPath)
+		if err != nil {
+			return fmt.Errorf("failed to evaluate tls path flag: %w", err)
+		}
+		tlsPath = evaluatedTLSPath
 
-    command.RunE = func(cmd *cobra.Command, args []string) error {
-        // default signature path
-        if artefactFileSignaturePath == "" {
-            artefactFileSignaturePath = artefactFilePath + ".sig"
-        }
+		return nil
+	}
 
-        userAccount, err := user.Current()
-        if err != nil {
-            return fmt.Errorf("failed to fetch current user: %w", err)
-        }
-        tlsPath, err = utils.ExecuteStringTemplateToString(tlsPath, struct{ User *user.User }{User: userAccount})
-        if err != nil {
-            return fmt.Errorf("failed to evaluate tls file path: %w", err)
-        }
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		// Parse the paths to the files to publish
+		artefactFilePath := args[0]
+		artefactFileSignaturePath := artefactFilePath + ".sig"
+		if len(args) > 1 {
+			artefactFileSignaturePath = args[1]
+		}
 
-        controllerHost := args[0]
-        httpClient, err := httpClientWithPotentialTLS(tlsPath)
-        if err != nil {
-            cmd.Println(bunt.Sprintf("Red{failed to enable tls: %s}", err))
-        }
+		// create http client
+		httpClient, err := httpClientWithPotentialTLS(tlsPath)
+		if err != nil {
+			cmd.Println(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
+		}
 
-        artefactFile, err := os.Open(artefactFilePath)
-        if err != nil {
-            return fmt.Errorf("failed to open artefact file %s: %w", artefactFilePath, err)
-        }
+		// Create multipart writer
+		var body bytes.Buffer
+		multipartWriter := multipart.NewWriter(&body)
 
-        defer func() { _ = artefactFile.Close() }()
+		// Write artefact
+		err = writeFileToMultipart(multipartWriter, artefactFilePath, "artefact")
+		if err != nil {
+			return fmt.Errorf("failed to write artefact to request body: %w", err)
+		}
 
-        artefactSignature, err := os.Open(artefactFileSignaturePath)
-        if err != nil {
-            return fmt.Errorf("failed to open artefact signature file %s: %w", artefactFileSignaturePath, err)
-        }
+		// Write signature
+		err = writeFileToMultipart(multipartWriter, artefactFileSignaturePath, "signature")
+		if err != nil {
+			return fmt.Errorf("failed to write signature to request body: %w", err)
+		}
 
-        defer func() { _ = artefactSignature.Close() }()
+		// Close the writer to finalise writing and flush to the bytes.Buffer
+		if err := multipartWriter.Close(); err != nil {
+			return fmt.Errorf("failed to close multipart writer: %w", err)
+		}
 
-        var body bytes.Buffer
-        multipartWriter := multipart.NewWriter(&body)
+		// post the to controller
+		uploadEndpoint := fmt.Sprintf("%s/v1/artefact", controllerHost)
+		response, err := doPost(ctx, httpClient, uploadEndpoint, multipartWriter.FormDataContentType(), body)
+		if err != nil {
+			return fmt.Errorf("failed to post to controller: %w", err)
+		}
 
-        // Write artefact
-        artefactFileUpload, err := multipartWriter.CreateFormFile("upload", "artefact")
-        if err != nil {
-            return fmt.Errorf("failed to create form file for artefact: %w", err)
-        }
+		defer func() { _ = response.Body.Close() }()
 
-        if _, err := io.Copy(artefactFileUpload, artefactFile); err != nil {
-            return fmt.Errorf("failed to write artefaact to form header: %w", err)
-        }
+		bodyBytes, _ := io.ReadAll(response.Body)
+		if response.StatusCode >= http.StatusBadRequest || response.StatusCode < http.StatusOK {
+			cmd.Println(bunt.Sprintf("Red{failed to upload artefact, controller error: %s}", string(bodyBytes)))
 
-        // write signature
-        artefactSigUpload, err := multipartWriter.CreateFormFile("upload", "signature")
-        if err != nil {
-            return fmt.Errorf("failed to create form file for artefact signature: %w", err)
-        }
+			return nil
+		}
 
-        if _, err := io.Copy(artefactSigUpload, artefactSignature); err != nil {
-            return fmt.Errorf("failed to write artefaact signature to form header: %w", err)
-        }
+		cmd.Println(bunt.Sprintf("LimeGreen{successfully uploaded artefact to controller}"))
 
-        response, err := httpClient.Post(controllerHost, multipartWriter.FormDataContentType(), &body)
-        if err != nil {
-            return fmt.Errorf("failed to execute post request: %w", err)
-        }
+		// We are done printing info, this is the result of the command
+		cmd.SetOut(os.Stdout)
+		cmd.Println(string(bodyBytes))
 
-        if response.StatusCode >= 300 {
-            return nil
-        }
+		return nil
+	}
 
-        cmd.Println(bunt.Sprintf("LimeGreen{Uploaded artefact %s to controller!}", artefactFilePath))
-        return nil
-    }
+	return command
+}
 
-    return command
+// doPost creates a post request and publishes it to the passed http client.
+func doPost(ctx context.Context, httpClient *http.Client, controllerHost string, contentType string, body bytes.Buffer) (*http.Response, error) {
+	postRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, controllerHost, &body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create post request: %w", err)
+	}
+
+	postRequest.Header.Set("Content-Type", contentType)
+
+	response, err := httpClient.Do(postRequest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute post request: %w", err)
+	}
+
+	return response, nil
+}
+
+// writeFileToMultipart writes the passed file to the multipart writer.
+func writeFileToMultipart(multipartWriter *multipart.Writer, filePath string, name string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to open file to upload: %w", err)
+	}
+
+	defer func() { _ = file.Close() }()
+
+	artefactSigUpload, err := multipartWriter.CreateFormFile(name, name)
+	if err != nil {
+		return fmt.Errorf("failed to create form file for %s: %w", name, err)
+	}
+
+	if _, err := io.Copy(artefactSigUpload, file); err != nil {
+		return fmt.Errorf("failed to write %s to form header: %w", name, err)
+	}
+
+	return nil
 }
 
 // httpClientWithPotentialTLS creates a new http client given the cert.pem and key.pem files.
 // This method will always return a usable http client, potentially with an error if no tls could be configured.
 func httpClientWithPotentialTLS(tlsPath string) (*http.Client, error) {
-    configuration, err := utils.ParseTLSConfiguration(tlsPath)
-    if err != nil {
-        return http.DefaultClient, err
-    }
+	configuration, err := utils.ParseTLSConfiguration(tlsPath)
+	if err != nil {
+		return http.DefaultClient, fmt.Errorf("failed to parse tls config: %w", err)
+	}
 
-    return &http.Client{
-        Transport: &http.Transport{
-            TLSClientConfig: configuration,
-        },
-    }, nil
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: configuration,
+		},
+	}, nil
 }

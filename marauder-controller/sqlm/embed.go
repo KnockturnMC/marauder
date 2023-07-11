@@ -2,6 +2,7 @@ package sqlm
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -27,6 +28,10 @@ func ApplyMigrations(databaseDriver database.Driver, database string) error {
 	}
 
 	if err := instance.Up(); err != nil {
+		if errors.Is(err, migrate.ErrNoChange) {
+			return nil // We are fine with no changes
+		}
+
 		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
 

@@ -28,7 +28,7 @@ func ErrorHandler() gin.HandlerFunc {
 				"endpointUri":     context.Request.RequestURI,
 				"clientIP":        context.ClientIP(),
 			})
-			logger.Logf(logLevelForRequestErr(aviorErr), "%s: %s", aviorErr.Description, aviorErr.Error())
+			logger.Logf(logLevelForRequestErr(aviorErr), "err: %s", aviorErr.Error())
 
 			context.PureJSON(aviorErr.ResponseCode(), aviorErr)
 		}

@@ -3,11 +3,14 @@ package artefact
 import (
 	"errors"
 	"fmt"
+	"io"
+	"os"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
 	"golang.org/x/crypto/ssh"
-	"io"
-	"os"
 )
 
 var (
@@ -19,7 +22,10 @@ var (
 )
 
 // The ValidationResult is returned by the Validator via a channel once the validation is completed.
-type ValidationResult struct{}
+type ValidationResult struct {
+	Manifest     artefact.Manifest
+	ArtefactHash []byte
+}
 
 // The Validator is a worker queue responsible for validating a newly uploaded artefact.
 type Validator interface {
@@ -39,6 +45,7 @@ func NewWorkedBasedValidator(dispatcher *worker.Dispatcher[ValidationResult], kn
 	return &WorkedBasedValidator{dispatcher: dispatcher, knownPublicKeys: knownPublicKeys}
 }
 
+// SubmitArtefact submits the artefact and its signature to the validator.
 func (w *WorkedBasedValidator) SubmitArtefact(artefactPath, signaturePath string) <-chan worker.Outcome[ValidationResult] {
 	return w.dispatcher.Dispatch(func() (ValidationResult, error) {
 		signature, err := os.ReadFile(signaturePath)
@@ -53,34 +60,39 @@ func (w *WorkedBasedValidator) SubmitArtefact(artefactPath, signaturePath string
 
 		defer func() { _ = artefactFile.Close() }()
 
-		if err := w.verifyArtefactSignature(artefactFile, signature); err != nil {
+		artefactHash, err := w.verifyArtefactSignature(artefactFile, signature)
+		if err != nil {
 			return ValidationResult{}, fmt.Errorf("failed to verify artefact signature: %w", err)
 		}
 
-		if err := w.verifyArtefactManifestHashes(artefactFile); err != nil {
+		manifest, err := w.verifyArtefactManifestHashes(artefactFile)
+		if err != nil {
 			return ValidationResult{}, fmt.Errorf("failed to verify hashes of artefact: %w", err)
 		}
 
-		return ValidationResult{}, nil
+		return ValidationResult{
+			Manifest:     manifest,
+			ArtefactHash: artefactHash,
+		}, nil
 	})
 }
 
 // verifyArtefactSignature verifies the uploaded signature against the artefact file by checking if the signature is
-// a) valid for the artefact file
-// b) belongs to a known public key of marauderctl
-func (w *WorkedBasedValidator) verifyArtefactSignature(artefact *os.File, signatureBytes []byte) error {
+// a) valid for the artefact file.
+// b) belongs to a known public key of marauderctl.
+func (w *WorkedBasedValidator) verifyArtefactSignature(artefact *os.File, signatureBytes []byte) ([]byte, error) {
 	if _, err := artefact.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("failed to reset artefact file ref to start: %w", err)
+		return nil, fmt.Errorf("failed to reset artefact file ref to start: %w", err)
 	}
 
 	var signature ssh.Signature
 	if err := ssh.Unmarshal(signatureBytes, &signature); err != nil {
-		return fmt.Errorf("failed to unmarshal signature bytes: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal signature bytes: %w", err)
 	}
 
 	sha256, err := utils.ComputeSha256(artefact)
 	if err != nil {
-		return fmt.Errorf("failed to compute sha256 hash for artefact tarball: %w", err)
+		return nil, fmt.Errorf("failed to compute sha256 hash for artefact tarball: %w", err)
 	}
 
 	for _, key := range w.knownPublicKeys {
@@ -88,8 +100,8 @@ func (w *WorkedBasedValidator) verifyArtefactSignature(artefact *os.File, signat
 			continue
 		}
 
-		return nil // Return null if a key verified.
+		return sha256, nil // Return null if a key verified.
 	}
 
-	return fmt.Errorf("unknown signatureBytes for artefact: %w", ErrUnknownSignature)
+	return nil, fmt.Errorf("did not find signature in %d known signatures: %w", len(w.knownPublicKeys), ErrUnknownSignature)
 }

@@ -15,8 +15,20 @@ import (
 func FetchArtefact(ctx context.Context, db *sqlm.DB, identifier string, version string) (models.ArtefactModel, error) {
 	var result models.ArtefactModel
 	if err := db.GetContext(ctx, &result, `
-    SELECT * FROM artefact WHERE identifier = $1 AND version = $2
-    `, identifier, version); err != nil {
+	SELECT * FROM artefact WHERE identifier = $1 AND version = $2
+	`, identifier, version); err != nil {
+		return models.ArtefactModel{}, fmt.Errorf("failed to find artefact: %w", err)
+	}
+
+	return result, nil
+}
+
+// FetchArtefactByUUID locates a specific artefact based on its uuid.
+func FetchArtefactByUUID(ctx context.Context, db *sqlm.DB, uuid uuid.UUID) (models.ArtefactModel, error) {
+	var result models.ArtefactModel
+	if err := db.GetContext(ctx, &result, `
+	SELECT * FROM artefact WHERE uuid = $1
+	`, uuid); err != nil {
 		return models.ArtefactModel{}, fmt.Errorf("failed to find artefact: %w", err)
 	}
 
@@ -27,7 +39,7 @@ func FetchArtefact(ctx context.Context, db *sqlm.DB, identifier string, version 
 func FetchArtefactVersions(ctx context.Context, db *sqlm.DB, identifier string) ([]models.ArtefactModel, error) {
 	result := make([]models.ArtefactModel, 0)
 	if err := db.SelectContext(ctx, &result, `
-    SELECT uuid, identifier, version, upload_date FROM artefact WHERE identifier = $1
+    SELECT * FROM artefact WHERE identifier = $1
     `, identifier); err != nil {
 		return result, fmt.Errorf("failed to find artefact: %w", err)
 	}

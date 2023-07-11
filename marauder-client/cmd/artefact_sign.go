@@ -7,6 +7,8 @@ import (
 	"os/user"
 	"path"
 
+	"github.com/gonvenience/bunt"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
@@ -26,7 +28,6 @@ func ArtefactSignCommand() *cobra.Command {
 		&privateKeyFilePath, "privateKey", "p", "{{.User.HomeDir}}/.config/marauder/signingKey",
 		"the private key file used for signing the file.",
 	)
-	_ = command.MarkPersistentFlagRequired("privateKey")
 
 	command.PersistentFlags().StringVarP(
 		&outputFileTemplate, "outputName", "o", "{{.File}}.sig",
@@ -78,6 +79,12 @@ func ArtefactSignCommand() *cobra.Command {
 		if err := os.WriteFile(outputFilePath, ssh.Marshal(sign), 0o600); err != nil {
 			return fmt.Errorf("failed to write signature to %s: %w", outputFilePath, err)
 		}
+
+		cmd.Println(bunt.Sprintf("LimeGreen{successfully signed artefact}"))
+
+		// We are done printing info, this is the result of the command
+		cmd.SetOut(os.Stdout)
+		cmd.Println(outputFilePath)
 
 		return nil
 	}

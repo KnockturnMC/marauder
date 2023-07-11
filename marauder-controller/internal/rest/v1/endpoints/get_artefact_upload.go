@@ -6,6 +6,10 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
+
+	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
+	"gitea.knockturnmc.com/marauder/controller/internal/db/models"
 
 	"gitea.knockturnmc.com/marauder/controller/pkg/artefact"
 
@@ -14,8 +18,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ArtefactUpload creates the upload endpoint to which new artefact can be uploaded.
-func ArtefactUpload(
+// ArtefactPOST creates the upload endpoint to which new artefact can be uploaded.
+func ArtefactPOST(
 	db *sqlm.DB,
 	validator artefact.Validator,
 ) gin.HandlerFunc {
@@ -28,7 +32,7 @@ func ArtefactUpload(
 
 		defer func() { _ = os.Remove(pathToArtefact) }()
 
-		pathToSignature, err := saveUploadInto(context, "signature", os.TempDir()+"/marauder", "signature-*.tar.gz.sig")
+		pathToSignature, err := saveUploadInto(context, "signature", os.TempDir()+"/marauder", "signature-*.sig")
 		if err != nil {
 			_ = context.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to save signature file: %w", err)))
 			return
@@ -38,11 +42,44 @@ func ArtefactUpload(
 
 		validationResult := <-validator.SubmitArtefact(pathToArtefact, pathToSignature)
 		if validationResult.Err != nil {
-			_ = context.Error(response.RestErrorFromErr(http.StatusBadRequest, fmt.Errorf("uploaded artefact did not validate: %w", validationResult.Err)))
+			_ = context.Error(response.RestErrorFromErr(
+				http.StatusBadRequest, fmt.Errorf("uploaded artefact did not validate: %w", validationResult.Err),
+			))
+
 			return
 		}
 
-		context.String(http.StatusOK, "ok!")
+		artefactBytes, err := os.ReadFile(pathToArtefact)
+		if err != nil {
+			_ = context.Error(response.RestErrorFromErr(
+				http.StatusInternalServerError,
+				fmt.Errorf("failed to read entire artefact file into memory: %w", err),
+			))
+
+			return
+		}
+
+		manifest := validationResult.Value.Manifest
+		insertArtefact, err := access.InsertArtefact(context, db, models.ArtefactModelWithBinary{
+			ArtefactModel: models.ArtefactModel{
+				Identifier: manifest.Identifier,
+				Version:    manifest.Version,
+				UploadDate: time.Now(),
+			},
+			TarballBlob: artefactBytes,
+			Hash:        validationResult.Value.ArtefactHash,
+		})
+		if err != nil {
+			_ = context.Error(response.RestErrorFrom(
+				http.StatusInternalServerError,
+				"failed to insert artefact into db",
+				fmt.Errorf("failed to upload artefact to database: %w", err),
+			))
+
+			return
+		}
+
+		context.JSONP(http.StatusOK, insertArtefact)
 	}
 }
 

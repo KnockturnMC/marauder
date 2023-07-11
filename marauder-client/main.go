@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"gitea.knockturnmc.com/marauder/client/cmd"
@@ -11,7 +12,7 @@ func main() {
 	artefactCommand := cmd.ArtefactCommand()
 	artefactCommand.AddCommand(cmd.ArtefactBuildCommand())
 	artefactCommand.AddCommand(cmd.ArtefactSignCommand())
-	artefactCommand.AddCommand(cmd.ArtefactPublishCommand())
+	artefactCommand.AddCommand(cmd.ArtefactPublishCommand(context.Background()))
 	root.AddCommand(artefactCommand)
 
 	if err := root.Execute(); err != nil {

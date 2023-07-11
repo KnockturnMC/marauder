@@ -102,7 +102,11 @@ func ArtefactBuildCommand() *cobra.Command {
 			return fmt.Errorf("failed to create artefact tarball: %w", err)
 		}
 
-		cmd.Println(bunt.Sprintf("LimeGreen{created artefact} *%s* LimeGreen{successfully!}", finalTarballName))
+		cmd.Println(bunt.Sprintf("LimeGreen{successfully build artefact}"))
+
+		// We are done printing info, this is the result of the command
+		cmd.SetOut(os.Stdout)
+		cmd.Println(finalTarballName)
 
 		return nil
 	}

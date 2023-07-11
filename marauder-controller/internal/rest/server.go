@@ -19,6 +19,14 @@ type ServerConfiguration struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 
+	Database struct {
+		Host     string `yaml:"host"`
+		Port     int    `yaml:"port"`
+		Username string `yaml:"username"`
+		Password string `yaml:"password"`
+		Database string `yaml:"database"`
+	} `yaml:"database"`
+
 	ServerCertPath    string `yaml:"serverCertPath"`
 	ServerKeyPath     string `yaml:"serverKeyPath"`
 	AuthorizedKeyPath string `yaml:"authorizedKeyPath"`
@@ -40,7 +48,8 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 	logrus.Debug("registering routs on gin server")
 	group := server.Group("/v1")
 	group.GET("/version", endpoints.VersionEndpoint(dependencies.Version))
-	group.POST("/artefact/upload", endpoints.ArtefactUpload(dependencies.DatabaseHandle, dependencies.ArtefactValidator))
+	group.GET("/artefact/:uuid", endpoints.ArtefactByUUID(dependencies.DatabaseHandle))
+	group.POST("/artefact", endpoints.ArtefactPOST(dependencies.DatabaseHandle, dependencies.ArtefactValidator))
 
 	logrus.Info("staring server on port ", configuration.Port)
 	engine := &http.Server{
