@@ -86,6 +86,8 @@ func ArtefactPublishCommand(
 
 		// post the to controller
 		uploadEndpoint := fmt.Sprintf("%s/v1/artefact", controllerHost)
+
+		cmd.Println(bunt.Sprintf("Gray{uploading artefact to %s}", uploadEndpoint))
 		response, err := doPost(ctx, httpClient, uploadEndpoint, multipartWriter.FormDataContentType(), body)
 		if err != nil {
 			return fmt.Errorf("failed to post to controller: %w", err)

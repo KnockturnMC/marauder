@@ -12,7 +12,7 @@ type ArtefactModel struct {
 	UUID uuid.UUID `db:"uuid" json:"uuid"`
 
 	// A unique, string based Identifier of the artefact as laid out in its manifest. Examples include `spellcore` or `knockturncore`.
-	Identifier string `db:"identifier" json:"db"`
+	Identifier string `db:"identifier" json:"identifier"`
 
 	// The Version of the artefact. This version follows schematic versioning rules and, in combination with the identifier, uniquely identifies
 	// an artefact in the controller.

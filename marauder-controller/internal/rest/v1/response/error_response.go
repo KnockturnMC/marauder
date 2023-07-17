@@ -2,6 +2,7 @@ package response
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/google/uuid"
 )
@@ -31,6 +32,23 @@ func (e RestRequestError) Unwrap() error {
 // ResponseCode returns the response code the error indicates.
 func (e RestRequestError) ResponseCode() int {
 	return e.responseCode
+}
+
+// KnownErr holds the result that should occur if a given error was matched by RestErrorFromKnownErr.
+type KnownErr struct {
+	ResponseCode int
+	Description  string
+}
+
+// RestErrorFromKnownErr creates a new middleware response from an error which might need specific handling based on its type.
+func RestErrorFromKnownErr(errMap map[error]KnownErr, err error) *RestRequestError {
+	for errTyp, knownErr := range errMap {
+		if errors.Is(err, errTyp) {
+			return RestErrorFrom(knownErr.ResponseCode, knownErr.Description, err)
+		}
+	}
+
+	return RestErrorFromErr(http.StatusInternalServerError, err)
 }
 
 // RestErrorFromErr creates a new middleware response from a passed go middleware.

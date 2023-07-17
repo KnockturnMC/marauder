@@ -48,8 +48,11 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 	logrus.Debug("registering routs on gin server")
 	group := server.Group("/v1")
 	group.GET("/version", endpoints.VersionEndpoint(dependencies.Version))
+	group.POST("/artefact", endpoints.ArtefactUpload(dependencies.DatabaseHandle, dependencies.ArtefactValidator))
 	group.GET("/artefact/:uuid", endpoints.ArtefactByUUID(dependencies.DatabaseHandle))
-	group.POST("/artefact", endpoints.ArtefactPOST(dependencies.DatabaseHandle, dependencies.ArtefactValidator))
+	group.GET("/artefact/:uuid/download", endpoints.ArtefactByUUIDDownload(dependencies.DatabaseHandle))
+	group.GET("/artefacts/:identifier", endpoints.ArtefactsByIdentifier(dependencies.DatabaseHandle))
+	group.GET("/artefacts/:identifier/:version", endpoints.ArtefactByIdentifierAndVersion(dependencies.DatabaseHandle))
 
 	logrus.Info("staring server on port ", configuration.Port)
 	engine := &http.Server{

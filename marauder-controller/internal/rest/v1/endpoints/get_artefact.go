@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// ArtefactByUUID creates the upload endpoint to which new artefact can be uploaded.
+// ArtefactByUUID creates the get endpoint that may be used to fetch a specific artefact based on its uuid.
 func ArtefactByUUID(
 	db *sqlm.DB,
 ) gin.HandlerFunc {
@@ -25,7 +26,10 @@ func ArtefactByUUID(
 
 		artefact, err := access.FetchArtefactByUUID(context, db, artefactID)
 		if err != nil {
-			_ = context.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to fetch artefact from db: %w", err)))
+			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
+				sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: fmt.Sprintf("failed to find artefact %s", artefactID.String())},
+			}, fmt.Errorf("failed to fetch artefact: %w", err)))
+
 			return
 		}
 
