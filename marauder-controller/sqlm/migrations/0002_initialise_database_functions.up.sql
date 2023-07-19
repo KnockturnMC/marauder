@@ -51,3 +51,19 @@ BEGIN
 	return inserted_row;
 END
 $$ LANGUAGE plpgsql;
+
+--
+-- Function to query all server states of a server given the state type.
+--
+CREATE FUNCTION func_find_server_artefacts_by_state(server_uuid UUID, state SERVER_STATE_TYPE)
+	RETURNS SETOF artefact
+AS
+$$
+BEGIN
+	RETURN QUERY SELECT artefact.*
+				 FROM server_state
+						  JOIN artefact ON server_state.artefact = artefact.uuid
+					 AND server_state.server = server_uuid
+					 AND server_state.type = state;
+END
+$$ LANGUAGE plpgsql;

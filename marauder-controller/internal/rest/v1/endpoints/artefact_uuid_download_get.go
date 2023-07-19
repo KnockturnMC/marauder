@@ -2,7 +2,6 @@ package endpoints
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -28,17 +27,10 @@ func ArtefactByUUIDDownload(
 
 		tarball, err := access.FetchArtefactTarball(context, db, artefactID)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				_ = context.Error(response.RestErrorFromDescription(
-					http.StatusNotFound,
-					fmt.Sprintf("artefact with uuid %s not found", artefactID.String()),
-				))
-			} else {
-				_ = context.Error(response.RestErrorFromErr(
-					http.StatusInternalServerError,
-					fmt.Errorf("failed to fetch artefact %s: %w", artefactID.String(), err),
-				))
-			}
+			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
+				sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: fmt.Sprintf("could not find artefact %s", artefactID.String())},
+			}, fmt.Errorf("failed to fetch artefact: %w", err)))
+
 			return
 		}
 

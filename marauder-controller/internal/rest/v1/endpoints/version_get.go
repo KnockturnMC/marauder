@@ -3,7 +3,8 @@ package endpoints
 import (
 	"net/http"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/models"
+	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,7 +13,7 @@ func VersionEndpoint(version string) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		context.PureJSON(
 			http.StatusOK,
-			models.VersionResponseModel{Version: version},
+			networkmodel.VersionResponseModel{Version: version},
 		)
 	}
 }

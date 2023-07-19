@@ -5,20 +5,21 @@ import (
 	"database/sql"
 	"strconv"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
+
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/internal/db/models"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var serverModel = models.ServerModel{
+var serverModel = networkmodel.ServerModel{
 	Environment: "production",
 	Name:        "hogwarts",
 	Host:        "falk0.servers.knockturnmc.com",
 	Memory:      1024,
 	Image:       "minecraft:paper",
-	Networks: []models.ServerNetwork{
+	Networks: []networkmodel.ServerNetwork{
 		{
 			NetworkName: "services",
 			IPV4Address: "172.18.0.4",
@@ -36,14 +37,14 @@ var _ = Describe("managing servers", Label("functiontest"), func() {
 			insertedModel, err := access.InsertServer(context.Background(), databaseClient, serverModel)
 			Expect(err).To(Not(HaveOccurred()))
 
-			var result models.ServerModel
+			var result networkmodel.ServerModel
 			err = databaseClient.GetContext(context.Background(), &result, `
             SELECT uuid, environment, name, host, memory, image FROM server WHERE uuid = $1`,
 				insertedModel.UUID,
 			)
 			Expect(err).To(Not(HaveOccurred()))
 
-			var networks []models.ServerNetwork
+			var networks []networkmodel.ServerNetwork
 			err = databaseClient.SelectContext(context.Background(), &networks, `
             SELECT uuid, server, network_name, ipv4_address
             FROM server_network

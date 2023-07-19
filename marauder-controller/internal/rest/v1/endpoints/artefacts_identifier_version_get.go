@@ -24,6 +24,7 @@ func ArtefactByIdentifierAndVersion(
 			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
 				sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: fmt.Sprintf("failed to find artefact %s:%s", identifier, version)},
 			}, fmt.Errorf("failed to fetch artefact: %w", err)))
+
 			return
 		}
 

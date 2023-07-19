@@ -8,9 +8,9 @@ import (
 	"os"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/internal/db/models"
+	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
 
+	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
 	"gitea.knockturnmc.com/marauder/controller/pkg/artefact"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/response"
@@ -60,8 +60,8 @@ func ArtefactUpload(
 		}
 
 		manifest := validationResult.Value.Manifest
-		insertArtefact, err := access.InsertArtefact(context, db, models.ArtefactModelWithBinary{
-			ArtefactModel: models.ArtefactModel{
+		insertArtefact, err := access.InsertArtefact(context, db, networkmodel.ArtefactModelWithBinary{
+			ArtefactModel: networkmodel.ArtefactModel{
 				Identifier: manifest.Identifier,
 				Version:    manifest.Version,
 				UploadDate: time.Now(),

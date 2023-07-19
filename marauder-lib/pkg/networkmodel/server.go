@@ -1,8 +1,6 @@
-package models
+package networkmodel
 
-import (
-	"github.com/google/uuid"
-)
+import "github.com/google/uuid"
 
 // The ServerModel struct represents a servers configuration in the database model.
 type ServerModel struct {
@@ -11,7 +9,7 @@ type ServerModel struct {
 
 	// Environment represents what environment the server lives in. `production` indicating the production environment,
 	// `integration` the integration environment etc.
-	Environment string `db:"environment" yaml:"environment"`
+	Environment string `db:"environment" json:"environment"`
 
 	// Name serves as a display name of the server that can be returned to make interaction with the server easier.
 	Name string `db:"name" json:"name"`

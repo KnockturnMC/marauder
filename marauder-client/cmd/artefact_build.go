@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"gitea.knockturnmc.com/marauder/client/pkg/builder"
-	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
+	"gitea.knockturnmc.com/marauder/lib/pkg/filemodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
@@ -45,14 +45,14 @@ func ArtefactBuildCommand() *cobra.Command {
 			return fmt.Errorf("failed to read %s: %w", manifestFileLocation, err)
 		}
 
-		var manifest artefact.Manifest
+		var manifest filemodel.Manifest
 
 		cmd.Println(bunt.Sprintf("Gray{fetching build information from project}"))
 		buildInformation, err := builder.FetchBuildInformation(workDirectory)
 		if err != nil {
 			cmd.Println(bunt.Sprintf("Red{failed to parse build information, excluding them: %s}", err.Error()))
 			timestamp := time.Now()
-			buildInformation = artefact.BuildInformation{
+			buildInformation = filemodel.BuildInformation{
 				Repository:           "nan",
 				Branch:               "nan",
 				CommitUser:           "nan",
@@ -70,7 +70,7 @@ func ArtefactBuildCommand() *cobra.Command {
 		cmd.Println(bunt.Sprintf("Gray{parsing manifest file %s}", manifestFileLocation))
 
 		templatedManifestContent, err := utils.ExecuteStringTemplateToString(string(file), struct {
-			Build artefact.BuildInformation
+			Build filemodel.BuildInformation
 		}{
 			Build: buildInformation,
 		})

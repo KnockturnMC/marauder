@@ -6,7 +6,7 @@ import (
 
 	"gitea.knockturnmc.com/marauder/client/pkg/builder"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
+	"gitea.knockturnmc.com/marauder/lib/pkg/filemodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils/mocks"
 	. "github.com/onsi/ginkgo/v2"
@@ -39,10 +39,10 @@ var _ = Describe("Building the artefact", Label("unittest"), func() {
 				writer.EXPECT().Add(mock.Anything, "spell-api/build/libs/spellbook-1.14.jar", "files/spellapi.jar").
 					RunAndReturn(okayTarballResponseSingleFile)
 
-				_, err := builder.IncludeArtefactFiles(&rootFS, artefact.Manifest{
+				_, err := builder.IncludeArtefactFiles(&rootFS, filemodel.Manifest{
 					Identifier: "spellcore",
 					Version:    "1.14",
-					Files: []artefact.FileReference{
+					Files: []filemodel.FileReference{
 						{Target: "spellcore.jar", CISourceGlob: "spell-plugin/build/libs/spellcore-*.jar"},
 						{Target: "spellapi.jar", CISourceGlob: "spell-api/build/libs/spellbook-*.jar"},
 					},

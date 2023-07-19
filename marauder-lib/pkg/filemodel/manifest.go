@@ -1,4 +1,4 @@
-package artefact
+package filemodel
 
 import "time"
 

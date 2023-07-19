@@ -6,20 +6,21 @@ import (
 	"fmt"
 	"time"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
+
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/google/uuid"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/internal/db/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("managing server state", Label("functiontest"), func() {
 	var (
-		serverState models.ServerArtefactStateModel
-		server      models.ServerModel
-		artefact    models.ArtefactModel
+		serverState networkmodel.ServerArtefactStateModel
+		server      networkmodel.ServerModel
+		artefact    networkmodel.ArtefactModel
 	)
 
 	BeforeEach(func() {
@@ -30,11 +31,11 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 		Expect(err).To(Not(HaveOccurred()))
 		artefact, err = access.InsertArtefact(context.Background(), databaseClient, fullArtefact)
 		Expect(err).To(Not(HaveOccurred()))
-		serverState = models.ServerArtefactStateModel{
+		serverState = networkmodel.ServerArtefactStateModel{
 			Server:         server.UUID,
 			Artefact:       artefact.UUID,
 			DefinitionDate: time.Now(),
-			Type:           models.TARGET,
+			Type:           networkmodel.TARGET,
 		}
 	})
 
@@ -43,7 +44,7 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 			insertedModel, err := access.InsertServerState(context.Background(), databaseClient, serverState)
 			Expect(err).To(Not(HaveOccurred()))
 
-			var result models.ServerArtefactStateModel
+			var result networkmodel.ServerArtefactStateModel
 			err = databaseClient.GetContext(context.Background(), &result, `
             SELECT uuid, server, artefact, definition_date, type FROM server_state WHERE uuid = $1`,
 				insertedModel.UUID,
@@ -54,7 +55,7 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 		})
 
 		It("should fail if the server has the same is state and is inserting an is state", func() {
-			serverState.Type = models.IS
+			serverState.Type = networkmodel.IS
 
 			_, err := access.InsertServerState(context.Background(), databaseClient, serverState)
 			Expect(err).To(Not(HaveOccurred()))
@@ -64,7 +65,7 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 		})
 
 		It("should fail if the server has the same target state and is inserting an target state", func() {
-			serverState.Type = models.TARGET
+			serverState.Type = networkmodel.TARGET
 
 			_, err := access.InsertServerState(context.Background(), databaseClient, serverState)
 			Expect(err).To(Not(HaveOccurred()))
@@ -75,10 +76,10 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 	})
 
 	Context("when querying a servers current is/target state", func() {
-		type AccessMethod func(ctx context.Context, db *sqlm.DB, serverUUID uuid.UUID) (models.ServerArtefactStateModel, error)
-		for serverStateType, fetchMethod := range map[models.ServerStateType]AccessMethod{
-			models.IS:     access.FetchServerIsState,
-			models.TARGET: access.FetchServerTargetState,
+		type AccessMethod func(ctx context.Context, db *sqlm.DB, serverUUID uuid.UUID) (networkmodel.ServerArtefactStateModel, error)
+		for serverStateType, fetchMethod := range map[networkmodel.ServerStateType]AccessMethod{
+			networkmodel.IS:     access.FetchServerIsState,
+			networkmodel.TARGET: access.FetchServerTargetState,
 		} {
 			Context(fmt.Sprintf("for the %s state", serverStateType), func() {
 				It("should properly fetch the state if it exists", func() {

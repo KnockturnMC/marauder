@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
+
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/internal/db/models"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -23,8 +24,8 @@ func MustHexDecode(val string) []byte {
 	return decodeString
 }
 
-var fullArtefact = models.ArtefactModelWithBinary{
-	ArtefactModel: models.ArtefactModel{
+var fullArtefact = networkmodel.ArtefactModelWithBinary{
+	ArtefactModel: networkmodel.ArtefactModel{
 		Identifier: "spellcore",
 		Version:    "1.0.0+hello",
 		UploadDate: time.Now(),
@@ -45,7 +46,7 @@ var _ = Describe("managing artefacts on the db", Label("functiontest"), func() {
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(artefact.UUID).To(Not(BeEmpty()))
 
-			var testModel models.ArtefactModel
+			var testModel networkmodel.ArtefactModel
 			err = databaseClient.Get(&testModel, `SELECT * FROM artefact WHERE uuid = $1`, artefact.UUID)
 
 			Expect(err).To(Not(HaveOccurred()))

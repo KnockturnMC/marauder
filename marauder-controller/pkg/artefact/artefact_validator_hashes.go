@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg"
-	artefactlib "gitea.knockturnmc.com/marauder/lib/pkg/artefact"
+	artefactlib "gitea.knockturnmc.com/marauder/lib/pkg/filemodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/Goldziher/go-utils/maputils"
 )

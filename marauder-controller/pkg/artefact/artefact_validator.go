@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
+	"gitea.knockturnmc.com/marauder/lib/pkg/filemodel"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
@@ -23,7 +23,7 @@ var (
 
 // The ValidationResult is returned by the Validator via a channel once the validation is completed.
 type ValidationResult struct {
-	Manifest     artefact.Manifest
+	Manifest     filemodel.Manifest
 	ArtefactHash []byte
 }
 
