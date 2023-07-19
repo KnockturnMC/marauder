@@ -14,11 +14,26 @@ const (
 	TARGET ServerStateType = "TARGET"
 
 	// The IS state represents the current state of a server.
+	//nolint:varnamelen
 	IS = "IS"
 
 	// The HISTORY state type represents a state that is no longer maintained by the server.
 	HISTORY = "HISTORY"
 )
+
+// KnownServerStateType computes if the passed state is known by marauder.
+func KnownServerStateType(state ServerStateType) bool {
+	switch state {
+	case IS:
+		fallthrough
+	case TARGET:
+		fallthrough
+	case HISTORY:
+		return true
+	}
+
+	return false
+}
 
 // The ServerArtefactStateModel represents a servers specific relationship with an artefact.
 // The state struct itself does not define if this is a target, is or historic state.

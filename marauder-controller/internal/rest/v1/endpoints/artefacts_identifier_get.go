@@ -10,8 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ArtefactsByIdentifier creates the get endpoint to query all artefacts for a specific identifier.
-func ArtefactsByIdentifier(
+// ArtefactsIdentifierGet creates the get endpoint to query all artefacts for a specific identifier.
+func ArtefactsIdentifierGet(
 	db *sqlm.DB,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {

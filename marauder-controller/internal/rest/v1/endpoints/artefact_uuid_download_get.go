@@ -13,8 +13,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// ArtefactByUUIDDownload creates the get endpoint that may be used to download an artefact from the controller.
-func ArtefactByUUIDDownload(
+// ArtefactUUIDDownloadGet creates the get endpoint that may be used to download an artefact from the controller.
+func ArtefactUUIDDownloadGet(
 	db *sqlm.DB,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {

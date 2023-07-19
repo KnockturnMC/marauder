@@ -11,7 +11,7 @@ import (
 
 // FindServerTargetStateMissMatch fetches a miss-match between the servers current is states and target state.
 func FindServerTargetStateMissMatch(ctx context.Context, db *sqlm.DB, server uuid.UUID) ([]networkmodel.VersionDiff, error) {
-	var result []networkmodel.VersionDiff
+	result := make([]networkmodel.VersionDiff, 0)
 	if err := db.SelectContext(ctx, &result, `
 		SELECT * FROM func_find_server_target_state_missmatches($1)
 		`, server); err != nil {
@@ -28,7 +28,7 @@ func FetchServerArtefactsByState(
 	server uuid.UUID,
 	state networkmodel.ServerStateType,
 ) ([]networkmodel.ArtefactModel, error) {
-	var result []networkmodel.ArtefactModel
+	result := make([]networkmodel.ArtefactModel, 0)
 	if err := db.SelectContext(ctx, &result, `
 		SELECT * FROM func_find_server_artefacts_by_state($1, $2)
 		`, server, state); err != nil {

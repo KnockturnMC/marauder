@@ -18,8 +18,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ArtefactUpload creates the upload endpoint to which new artefact can be uploaded.
-func ArtefactUpload(
+// ArtefactUploadGet creates the upload endpoint to which new artefact can be uploaded.
+func ArtefactUploadGet(
 	db *sqlm.DB,
 	validator artefact.Validator,
 ) gin.HandlerFunc {

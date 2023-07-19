@@ -70,6 +70,7 @@ var _ = BeforeSuite(func() {
 			Env: []string{
 				"POSTGRES_PASSWORD=" + Marauder,
 				"POSTGRES_USER=" + Marauder,
+				"POSTGRES_DB=" + Marauder,
 			},
 		},
 		&container.HostConfig{
@@ -78,7 +79,7 @@ var _ = BeforeSuite(func() {
 		},
 		nil,
 		nil,
-		fmt.Sprintf("marauder-postgres-docker-%d", port),
+		fmt.Sprintf("marauder-postgres-docker-test-%d", port),
 	)
 	Expect(err).To(Not(HaveOccurred()))
 

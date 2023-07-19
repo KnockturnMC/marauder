@@ -39,7 +39,7 @@ func FetchServerByNameAndEnv(ctx context.Context, db *sqlm.DB, name string, envi
 
 // FetchServersByName queries the database for a collection of servers by their name.
 func FetchServersByName(ctx context.Context, db *sqlm.DB, name string) ([]networkmodel.ServerModel, error) {
-	var result []networkmodel.ServerModel
+	result := make([]networkmodel.ServerModel, 0)
 	if err := db.SelectContext(ctx, &result, `
     SELECT uuid, environment, name, host, memory, cpu, image FROM server WHERE name = $1
     `, name); err != nil {
@@ -51,7 +51,7 @@ func FetchServersByName(ctx context.Context, db *sqlm.DB, name string) ([]networ
 
 // FetchServersByEnvironment queries the database for a collection of servers by their environment.
 func FetchServersByEnvironment(ctx context.Context, db *sqlm.DB, environment string) ([]networkmodel.ServerModel, error) {
-	var result []networkmodel.ServerModel
+	result := make([]networkmodel.ServerModel, 0)
 	if err := db.SelectContext(ctx, &result, `
     SELECT uuid, environment, name, host, memory, cpu, image FROM server WHERE environment = $1
     `, environment); err != nil {
@@ -63,7 +63,7 @@ func FetchServersByEnvironment(ctx context.Context, db *sqlm.DB, environment str
 
 // fillServerModelNetwork fetches the network configuration of a given server model from the database.
 func fillServerModelNetwork(ctx context.Context, db *sqlm.DB, model networkmodel.ServerModel) (networkmodel.ServerModel, error) {
-	var networks []networkmodel.ServerNetwork
+	networks := make([]networkmodel.ServerNetwork, 0)
 	if err := db.SelectContext(ctx, &networks, `
         SELECT uuid, server, network_name, ipv4_address FROM server_network WHERE server = $1
         `, model.UUID); err != nil {

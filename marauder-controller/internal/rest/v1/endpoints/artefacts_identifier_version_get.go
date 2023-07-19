@@ -11,8 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ArtefactByIdentifierAndVersion creates the get endpoint to query an artefact based on its identifier and version.
-func ArtefactByIdentifierAndVersion(
+// ArtefactIdentifierVersionGet creates the get endpoint to query an artefact based on its identifier and version.
+func ArtefactIdentifierVersionGet(
 	db *sqlm.DB,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {
