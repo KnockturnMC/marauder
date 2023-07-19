@@ -42,7 +42,6 @@ DECLARE
 BEGIN
 	UPDATE server_state SET type = 'HISTORY' WHERE server = server_uuid AND type = 'TARGET'; -- archive current target state to history
 
-
 	INSERT
 	INTO server_state (server, artefact, definition_date, type)
 	VALUES (server_uuid, artefact_uuid, NOW(), 'TARGET')

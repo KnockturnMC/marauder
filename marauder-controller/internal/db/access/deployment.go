@@ -37,3 +37,12 @@ func FetchServerArtefactsByState(
 
 	return result, nil
 }
+
+func UpdateIsStateOfServer(
+	ctx context.Context,
+	db *sqlm.DB,
+	server uuid.UUID,
+	newIsArtefact uuid.UUID,
+) error {
+
+}
