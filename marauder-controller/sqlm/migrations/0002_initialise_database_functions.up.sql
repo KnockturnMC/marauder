@@ -22,11 +22,11 @@ BEGIN
 						  JOIN server_state target_state ON is_state.server = target_state.server
 					 AND is_state.type = 'IS'
 					 AND target_state.type = 'TARGET'
-					 AND is_state.artefact != target_state.artefact
-						  JOIN artefact is_artefact on is_artefact.uuid = is_state.artefact
-						  JOIN artefact target_artefact on target_artefact.uuid = target_state.artefact
+					 AND is_state.artefact_uuid != target_state.artefact_uuid
+					 AND is_state.artefact_identifier = target_state.artefact_identifier
+						  JOIN artefact is_artefact on is_artefact.uuid = is_state.artefact_uuid
+						  JOIN artefact target_artefact on target_artefact.uuid = target_state.artefact_uuid
 				 WHERE is_state.type = 'IS'
-				   AND is_state.artefact != target_state.artefact
 				   AND is_state.server = server_uuid;
 END
 $$ LANGUAGE plpgsql;
@@ -34,17 +34,35 @@ $$ LANGUAGE plpgsql;
 --
 -- Function to update the current target state of a server in the controller with a new artefact
 --
-CREATE FUNCTION func_update_server_target_state(server_uuid UUID, artefact_uuid UUID)
+CREATE FUNCTION func_create_server_state(
+	param_server_uuid UUID,
+	param_artefact_identifier VARCHAR,
+	param_artefact_uuid UUID,
+	param_state_type SERVER_STATE_TYPE
+)
 	RETURNS server_state AS
 $$
 DECLARE
 	inserted_row server_state;
 BEGIN
-	UPDATE server_state SET type = 'HISTORY' WHERE server = server_uuid AND type = 'TARGET'; -- archive current target state to history
+	IF param_state_type = 'TARGET' then
+		UPDATE server_state
+		SET type = 'HISTORY'
+		WHERE server = param_server_uuid
+		  AND artefact_identifier = param_artefact_identifier
+		  AND type = param_state_type; -- archive current target state to history
+	end if;
+	IF param_state_type = 'IS' then
+		DELETE
+		FROM server_state
+		WHERE server = param_server_uuid
+		  AND type = param_state_type
+		  AND artefact_identifier = param_artefact_identifier; -- delete current is state, not archived like target one
+	end if;
 
 	INSERT
-	INTO server_state (server, artefact, definition_date, type)
-	VALUES (server_uuid, artefact_uuid, NOW(), 'TARGET')
+	INTO server_state (server, artefact_identifier, artefact_uuid, definition_date, type)
+	VALUES (param_server_uuid, param_artefact_identifier, param_artefact_uuid, NOW(), param_state_type)
 	RETURNING *
 		INTO inserted_row;
 	return inserted_row;
@@ -61,7 +79,7 @@ $$
 BEGIN
 	RETURN QUERY SELECT artefact.*
 				 FROM server_state
-						  JOIN artefact ON server_state.artefact = artefact.uuid
+						  JOIN artefact ON server_state.artefact_uuid = artefact.uuid
 					 AND server_state.server = server_uuid
 					 AND server_state.type = state;
 END

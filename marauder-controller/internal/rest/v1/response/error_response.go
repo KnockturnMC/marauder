@@ -13,7 +13,7 @@ var ErrDescriptiveRequestError = errors.New("server rest error")
 // The RestRequestError contains a middleware that occurred while processing a request.
 type RestRequestError struct {
 	Description   string `json:"description,omitempty"`
-	Identifier    string `json:"identifier"`
+	Identifier    string `json:"errorIdentifier"`
 	internalError error
 
 	responseCode int

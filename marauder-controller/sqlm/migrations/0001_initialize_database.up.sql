@@ -55,20 +55,22 @@ CREATE TABLE server_network
 
 CREATE TABLE server_state
 (
-	uuid            UUID              NOT NULL DEFAULT gen_random_uuid(),
-	server          UUID              NOT NULL,
-	artefact        UUID              NOT NULL,
-	definition_date CREATION_DATE     NOT NULL,
-	type            SERVER_STATE_TYPE NOT NULL,
+	uuid                UUID              NOT NULL DEFAULT gen_random_uuid(),
+	server              UUID              NOT NULL,
+	artefact_identifier VARCHAR           NOT NULL,
+	artefact_uuid       UUID              NOT NULL,
+	definition_date     CREATION_DATE     NOT NULL,
+	type                SERVER_STATE_TYPE NOT NULL,
 
 	CONSTRAINT pk_server_state PRIMARY KEY (uuid),
 	CONSTRAINT fk_server FOREIGN KEY (server) REFERENCES server (uuid)
 		ON DELETE CASCADE,
-	CONSTRAINT fk_artefact FOREIGN KEY (artefact) REFERENCES artefact (uuid)
+	CONSTRAINT fk_artefact_uuid FOREIGN KEY (artefact_uuid) REFERENCES artefact (uuid)
 		ON DELETE CASCADE
 );
 
 CREATE INDEX idx_server_state_non_history_state_server ON server_state (server) WHERE type != 'HISTORY';
-CREATE INDEX idx_server_state_non_history_state_artefact ON server_state (artefact) WHERE type != 'HISTORY';
-CREATE UNIQUE INDEX idx_server_state_is_uniq ON server_state (server) WHERE type = 'IS';
-CREATE UNIQUE INDEX idx_server_state_target_uniq ON server_state (server) WHERE type = 'TARGET';
+CREATE INDEX idx_server_state_non_history_state_artefact_uuid ON server_state (artefact_uuid) WHERE type != 'HISTORY';
+CREATE INDEX idx_server_state_non_history_state_artefact_identifier ON server_state (artefact_identifier) WHERE type != 'HISTORY';
+CREATE UNIQUE INDEX idx_server_state_is_uniq ON server_state (server, artefact_identifier) WHERE type = 'IS';
+CREATE UNIQUE INDEX idx_server_state_target_uniq ON server_state (server, artefact_identifier) WHERE type = 'TARGET';

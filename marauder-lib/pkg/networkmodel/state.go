@@ -39,18 +39,21 @@ func KnownServerStateType(state ServerStateType) bool {
 // The state struct itself does not define if this is a target, is or historic state.
 type ServerArtefactStateModel struct {
 	// The UUID of the state, serving as a unique key for the entry.
-	UUID uuid.UUID `db:"uuid"`
+	UUID uuid.UUID `db:"uuid" json:"uuid"`
 
 	// The Server reference based on the servers uuid.
-	Server uuid.UUID `db:"server"`
+	Server uuid.UUID `db:"server" json:"server"`
 
-	// Artefact provides the uuid reference to the artefact this state belongs to.
-	Artefact uuid.UUID `db:"artefact"`
+	// The ArtefactIdentifier defines the shared identifier of the artefact type.
+	ArtefactIdentifier string `db:"artefact_identifier" json:"artefactIdentifier"`
+
+	// ArtefactUUID provides the uuid reference to the artefact this state belongs to.
+	ArtefactUUID uuid.UUID `db:"artefact_uuid" json:"artefactUuid"`
 
 	// The DefinitionDate represents the time this state was published to the controller instance.
-	DefinitionDate time.Time `db:"definition_date"`
+	DefinitionDate time.Time `db:"definition_date" json:"definitionDate"`
 
 	// The Type enum represents the type of the state.
 	// For more information, see ServerStateType and its respective values.
-	Type ServerStateType `db:"type"`
+	Type ServerStateType `db:"type" json:"type"`
 }

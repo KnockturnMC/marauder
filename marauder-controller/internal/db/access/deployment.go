@@ -9,6 +9,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// ErrUnknownServerState is returned when trying to create a server state with an unknown state type.
+var ErrUnknownServerState = fmt.Errorf("cannot create server state for unknown server state")
+
 // FindServerTargetStateMissMatch fetches a miss-match between the servers current is states and target state.
 func FindServerTargetStateMissMatch(ctx context.Context, db *sqlm.DB, server uuid.UUID) ([]networkmodel.VersionDiff, error) {
 	result := make([]networkmodel.VersionDiff, 0)
@@ -38,11 +41,22 @@ func FetchServerArtefactsByState(
 	return result, nil
 }
 
-func UpdateIsStateOfServer(
+// UpdateDeployment creates a state in the state table for the given server to the new artefact
+// and ensures that the existing indices are kept in place.
+func UpdateDeployment(
 	ctx context.Context,
 	db *sqlm.DB,
-	server uuid.UUID,
-	newIsArtefact uuid.UUID,
-) error {
+	model networkmodel.ServerArtefactStateModel,
+) (networkmodel.ServerArtefactStateModel, error) {
+	if !networkmodel.KnownServerStateType(model.Type) {
+		return networkmodel.ServerArtefactStateModel{}, fmt.Errorf("unknown server state (%s): %w", model.Type, ErrUnknownServerState)
+	}
 
+	if err := db.NamedGetContext(ctx, &model, `
+		SELECT * FROM func_create_server_state(:server, :artefact_identifier, :artefact_uuid, :type) 
+		`, model); err != nil {
+		return networkmodel.ServerArtefactStateModel{}, fmt.Errorf("failed to create new server state: %w", err)
+	}
+
+	return model, nil
 }

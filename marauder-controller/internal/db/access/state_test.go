@@ -33,7 +33,7 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 		Expect(err).To(Not(HaveOccurred()))
 		serverState = networkmodel.ServerArtefactStateModel{
 			Server:         server.UUID,
-			Artefact:       artefact.UUID,
+			ArtefactUUID:   artefact.UUID,
 			DefinitionDate: time.Now(),
 			Type:           networkmodel.TARGET,
 		}
@@ -46,7 +46,7 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 
 			var result networkmodel.ServerArtefactStateModel
 			err = databaseClient.GetContext(context.Background(), &result, `
-            SELECT uuid, server, artefact, definition_date, type FROM server_state WHERE uuid = $1`,
+            SELECT * FROM server_state WHERE uuid = $1`,
 				insertedModel.UUID,
 			)
 

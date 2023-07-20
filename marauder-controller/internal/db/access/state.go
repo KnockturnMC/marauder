@@ -14,7 +14,7 @@ import (
 func FetchServerState(ctx context.Context, db *sqlm.DB, uuid uuid.UUID) (networkmodel.ServerArtefactStateModel, error) {
 	var result networkmodel.ServerArtefactStateModel
 	if err := db.GetContext(ctx, &result, `
-            SELECT uuid, server, artefact, definition_date, type FROM server_state WHERE uuid = $1
+            SELECT * FROM server_state WHERE uuid = $1
             `, uuid); err != nil {
 		return networkmodel.ServerArtefactStateModel{}, fmt.Errorf("failed to fetch server state from db: %w", err)
 	}
@@ -53,8 +53,8 @@ func fetchServerStateSingleRow(
 // InsertServerState inserts a new server state into the database.
 func InsertServerState(ctx context.Context, db *sqlm.DB, state networkmodel.ServerArtefactStateModel) (networkmodel.ServerArtefactStateModel, error) {
 	if err := db.NamedGetContext(ctx, &state, `
-            INSERT INTO server_state (server, artefact, definition_date, type) 
-            VALUES (:server, :artefact, :definition_date, :type)
+            INSERT INTO server_state (server, artefact_identifier, artefact_uuid, definition_date, type) 
+            VALUES (:server, :artefact_identifier, :artefact_uuid, :definition_date, :type)
             RETURNING *; 
             `, state); err != nil {
 		return networkmodel.ServerArtefactStateModel{}, fmt.Errorf("failed to insert server state: %w", err)
