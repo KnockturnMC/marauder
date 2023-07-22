@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 
 	"github.com/google/uuid"
 

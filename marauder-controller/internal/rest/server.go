@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	middleware2 "gitea.knockturnmc.com/marauder/lib/pkg/rest/middleware"
+
 	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/endpoints"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -40,22 +41,26 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 	}
 
 	logrus.Debug("registering middleware on gin server")
-	server.Use(gin.LoggerWithFormatter(middleware.RequestLoggerFormatter()))
+	server.Use(gin.LoggerWithFormatter(middleware2.RequestLoggerFormatter()))
 	server.Use(gin.Recovery())
 	server.Use(cors.Default())
-	server.Use(middleware.ErrorHandler())
+	server.Use(middleware2.ErrorHandler())
 
 	logrus.Debug("registering routs on gin server")
 	group := server.Group("/v1")
 	group.GET("/version", endpoints.VersionGet(dependencies.Version))
+
 	group.POST("/artefact", endpoints.ArtefactUploadGet(dependencies.DatabaseHandle, dependencies.ArtefactValidator))
 	group.GET("/artefact/:uuid", endpoints.ArtefactUUIDGet(dependencies.DatabaseHandle))
 	group.GET("/artefact/:uuid/download", endpoints.ArtefactUUIDDownloadGet(dependencies.DatabaseHandle))
+	group.GET("/artefact/:uuid/download/manifest", endpoints.ArtefactUUIDDownloadManifestGet(dependencies.DatabaseHandle))
 	group.GET("/artefacts/:identifier", endpoints.ArtefactsIdentifierGet(dependencies.DatabaseHandle))
 	group.GET("/artefacts/:identifier/:version", endpoints.ArtefactIdentifierVersionGet(dependencies.DatabaseHandle))
+
 	group.GET("/server/:uuid", endpoints.ServerUUIDGet(dependencies.DatabaseHandle))
 	group.GET("/servers/:environment", endpoints.ServersEnvironmentGet(dependencies.DatabaseHandle))
 	group.GET("/servers/:environment/:name", endpoints.ServersEnvironmentNameGet(dependencies.DatabaseHandle))
+
 	group.GET("/deployment/:server", endpoints.DeploymentServerGet(dependencies.DatabaseHandle))
 	group.GET("/deployment/:server/state/:state", endpoints.DeploymentServerGet(dependencies.DatabaseHandle))
 	group.PATCH("/deployment/:server/state/:state", endpoints.DeploymentServerPatch(dependencies.DatabaseHandle))

@@ -3,9 +3,10 @@ package access_test
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strconv"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
 	"github.com/google/uuid"
@@ -16,9 +17,15 @@ import (
 var serverModel = networkmodel.ServerModel{
 	Environment: "production",
 	Name:        "hogwarts",
-	Host:        "falk0.servers.knockturnmc.com",
-	Memory:      1024,
-	Image:       "minecraft:paper",
+	OperatorRef: networkmodel.ServerOperator{
+		Identifier: "falk0.servers.knockturnmc.com",
+		Host:       "localhost",
+		Port:       4200,
+	},
+	OperatorIdentifier: "falk0.servers.knockturnmc.com",
+	Memory:             1024,
+	CPU:                3,
+	Image:              "minecraft:paper",
 	Networks: []networkmodel.ServerNetwork{
 		{
 			NetworkName: "services",
@@ -29,7 +36,13 @@ var serverModel = networkmodel.ServerModel{
 
 var _ = Describe("managing servers", Label("functiontest"), func() {
 	BeforeEach(func() {
-		databaseClient.MustExec("DELETE FROM server; DELETE FROM server_network;")
+		databaseClient.MustExec("DELETE FROM server_operator; DELETE FROM server; DELETE FROM server_network;")
+		databaseClient.MustExec(fmt.Sprintf(
+			"INSERT INTO server_operator VALUES ('%s', '%s', '%d')",
+			serverModel.OperatorIdentifier,
+			serverModel.OperatorRef.Host,
+			serverModel.OperatorRef.Port,
+		))
 	})
 
 	Context("when inserting a new server", func() {
@@ -39,20 +52,27 @@ var _ = Describe("managing servers", Label("functiontest"), func() {
 
 			var result networkmodel.ServerModel
 			err = databaseClient.GetContext(context.Background(), &result, `
-            SELECT uuid, environment, name, host, memory, image FROM server WHERE uuid = $1`,
+            SELECT * FROM server WHERE uuid = $1`,
 				insertedModel.UUID,
 			)
 			Expect(err).To(Not(HaveOccurred()))
 
 			var networks []networkmodel.ServerNetwork
 			err = databaseClient.SelectContext(context.Background(), &networks, `
-            SELECT uuid, server, network_name, ipv4_address
+            SELECT *
             FROM server_network
             WHERE server = $1`, insertedModel.UUID)
 			Expect(err).To(Not(HaveOccurred()))
 
 			result.Networks = networks
 
+			var operator networkmodel.ServerOperator
+			err = databaseClient.GetContext(context.Background(), &operator, `
+			SELECT * FROM server_operator WHERE identifier = $1
+			`, serverModel.OperatorIdentifier)
+			Expect(err).To(Not(HaveOccurred()))
+
+			result.OperatorRef = operator
 			Expect(result).To(BeEquivalentTo(insertedModel))
 		})
 

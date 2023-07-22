@@ -16,7 +16,10 @@ type ServerModel struct {
 
 	// Host represents the host the server can be found on. This may be an internal url, however does not need to be.
 	// The controller simply has to be able to locate an operator based on the host defined for the server.
-	Host string `db:"host" json:"host"`
+	OperatorRef ServerOperator `db:"-" json:"operator"`
+
+	// OperatorIdentifier defines the identifier of the operator
+	OperatorIdentifier string `db:"operator" json:"-"`
 
 	// The Memory the server should allocate, defined in megabytes.
 	Memory int64 `db:"memory" json:"memory"`
@@ -29,6 +32,18 @@ type ServerModel struct {
 
 	// The Networks struct holds all networks the server model is part of.
 	Networks []ServerNetwork `json:"networks"`
+}
+
+// ServerOperator represents an operator of a single node that the server is hosted on.
+type ServerOperator struct {
+	// Identifier is a string based unique identifier of an operator.
+	Identifier string
+
+	// The Host represents the host url on which the operator can be found
+	Host string
+
+	// Port represents the port the operator can be reached under on the Host.
+	Port int
 }
 
 // The ServerNetwork configuration defines what docker networks a server instance should be connected to.

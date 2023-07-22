@@ -1,4 +1,7 @@
-INSERT INTO server(environment, name, host, memory, cpu, image)
+INSERT INTO server_operator
+VALUES ('localhost', 'localhost', 1981);
+
+INSERT INTO server(environment, name, operator, memory, cpu, image)
 VALUES ('production', 'proxy', 'localhost', 7000, 2, 'waterfall:1.19.4'),
 	   ('production', 'hogwarts', 'localhost', 7000, 2, 'ktp:1.19.4'),
 	   ('production', 'towny', 'localhost', 1000, 2, 'ktp:1.19.4'),

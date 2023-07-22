@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/google/uuid"
@@ -24,7 +24,13 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 	)
 
 	BeforeEach(func() {
-		databaseClient.MustExec("DELETE FROM server; DELETE FROM server_network; DELETE FROM artefact;")
+		databaseClient.MustExec("DELETE FROM server_operator; DELETE FROM server; DELETE FROM server_network; DELETE FROM artefact;")
+		databaseClient.MustExec(fmt.Sprintf(
+			"INSERT INTO server_operator VALUES ('%s', '%s', '%d')",
+			serverModel.OperatorIdentifier,
+			serverModel.OperatorRef.Host,
+			serverModel.OperatorRef.Port,
+		))
 
 		var err error
 		server, err = access.InsertServer(context.Background(), databaseClient, serverModel)

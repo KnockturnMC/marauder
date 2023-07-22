@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/filemodel"
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
 	"github.com/go-git/go-git/v5"
 )
 

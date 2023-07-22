@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"gitea.knockturnmc.com/marauder/client/pkg/builder"
-	"gitea.knockturnmc.com/marauder/lib/pkg/filemodel"
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"

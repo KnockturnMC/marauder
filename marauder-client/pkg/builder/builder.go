@@ -14,7 +14,7 @@ import (
 
 	"github.com/goreleaser/fileglob"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/filemodel"
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 )
 

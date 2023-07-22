@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// VersionGet generates the version endpoint for marauder controller.
+// VersionGet generates the version endpoint for marauder operator.
 func VersionGet(version string) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		context.PureJSON(

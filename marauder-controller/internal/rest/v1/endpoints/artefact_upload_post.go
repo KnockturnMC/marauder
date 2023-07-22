@@ -8,12 +8,13 @@ import (
 	"os"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
+	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
 	"gitea.knockturnmc.com/marauder/controller/pkg/artefact"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/response"
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/gin-gonic/gin"
 )

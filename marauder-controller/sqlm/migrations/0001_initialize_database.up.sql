@@ -25,19 +25,30 @@ CREATE TABLE artefact_file
 		ON DELETE CASCADE
 );
 
+CREATE TABLE server_operator
+(
+	identifier VARCHAR NOT NULL,
+	host       VARCHAR NOT NULL,
+	port       INT     NOT NULL,
+
+	CONSTRAINT pk_server_operator PRIMARY KEY (identifier),
+	CONSTRAINT un_server_operator UNIQUE (host, port)
+);
+
 CREATE TABLE server
 (
 	uuid        UUID             NOT NULL DEFAULT gen_random_uuid(),
 	environment VARCHAR          NOT NULL,
 	name        VARCHAR          NOT NULL,
-	host        VARCHAR          NOT NULL,
+	operator    VARCHAR          NOT NULL,
 	memory      INTEGER          NOT NULL,
 	cpu         DOUBLE PRECISION NOT NULL,
 	image       VARCHAR          NOT NULL,
 
 	CONSTRAINT pk_servers_uuid PRIMARY KEY (uuid),
 	CONSTRAINT un_servers_environment_name UNIQUE (environment, name),
-	CONSTRAINT un_server_uuid_host UNIQUE (uuid, host)
+	CONSTRAINT fk_server_operator FOREIGN KEY (operator) REFERENCES server_operator (identifier) ON DELETE CASCADE
+		ON UPDATE CASCADE
 );
 
 CREATE TABLE server_network

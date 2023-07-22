@@ -3,7 +3,7 @@ package middleware
 import (
 	"errors"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/response"
+	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
 	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"

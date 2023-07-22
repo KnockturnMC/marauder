@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg/networkmodel"
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/google/uuid"
 )
 

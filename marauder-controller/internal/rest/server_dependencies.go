@@ -1,15 +1,11 @@
 package rest
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/keyauth"
 	"github.com/jmoiron/sqlx"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"golang.org/x/crypto/ssh"
+	"github.com/sirupsen/logrus"
 
 	"gitea.knockturnmc.com/marauder/controller/pkg/artefact"
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
@@ -36,11 +32,13 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		return ServerDependencies{}, fmt.Errorf("failed to create dispatcher for artefact validator: %w", err)
 	}
 
-	keys, err := parseKnownPublicKeys(configuration)
+	logrus.Debug("loading known public keys of artefact signers")
+	keys, err := keyauth.ParseKnownPublicKeys(configuration.AuthorizedKeyPath)
 	if err != nil {
 		return ServerDependencies{}, fmt.Errorf("failed to parse authorizsed keys: %w", err)
 	}
 
+	logrus.Debug("connecting to database")
 	databaseConnectionString := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable binary_parameters=yes",
 		configuration.Database.Host, configuration.Database.Port, configuration.Database.Username,
@@ -56,38 +54,4 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		DatabaseHandle:    &sqlm.DB{DB: databaseHandle},
 		ArtefactValidator: artefact.NewWorkedBasedValidator(artefactValidatorDispatcher, keys),
 	}, nil
-}
-
-func parseKnownPublicKeys(configuration ServerConfiguration) ([]ssh.PublicKey, error) {
-	authorizedKeyPath, err := utils.EvaluateFilePathTemplate(configuration.AuthorizedKeyPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse authorized key path: %w", err)
-	}
-
-	// Parse authorized keys from disk
-	authorizedKeys := make([]ssh.PublicKey, 0)
-	authorizedKeysFile, err := os.Open(authorizedKeyPath)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return nil, fmt.Errorf("failed to open authorized key file: %w", err)
-		}
-
-		return authorizedKeys, nil
-	}
-
-	defer func() { _ = authorizedKeysFile.Close() }()
-
-	scanner := bufio.NewScanner(authorizedKeysFile)
-	scanner.Split(bufio.ScanLines)
-
-	for scanner.Scan() {
-		out, _, _, _, err := ssh.ParseAuthorizedKey(scanner.Bytes())
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse authorizsed key %s: %w", scanner.Text(), err)
-		}
-
-		authorizedKeys = append(authorizedKeys, out)
-	}
-
-	return authorizedKeys, nil
 }
