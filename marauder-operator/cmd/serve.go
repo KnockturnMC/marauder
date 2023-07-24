@@ -21,9 +21,8 @@ func defaultConfiguration() rest.ServerConfiguration {
 		ServerKeyPath:      "",
 		ControllerEndpoint: "localhost:8080",
 		Disk: rest.Disk{
-			DownloadPath:       "/var/local/marauder/operator/cache/downloads",
-			ServerDataPath:     "/var/local/marauder/operator/servers",
-			ServerNameTemplate: "{{.Environment}}/{{.ServerName}}",
+			DownloadPath:           "/var/local/marauder/operator/cache/downloads",
+			ServerDataPathTemplate: "/var/local/marauder/operator/servers/{{.Environment}}/{{.ServerName}}",
 		},
 	}
 }

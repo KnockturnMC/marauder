@@ -71,8 +71,8 @@ func InsertServer(ctx context.Context, db *sqlm.DB, server networkmodel.ServerMo
 	defer func() { _ = transaction.Rollback() }() // Rollback in case, this explodes. If Commit is called prior, this is a noop.
 
 	if err := transaction.NamedGetContext(ctx, &server, `
-            INSERT INTO server (environment, name, operator, memory, cpu, image)
-            VALUES (:environment, :name, :operator, :memory, :cpu, :image)
+            INSERT INTO server (environment, name, operator, memory, cpu, port, image)
+            VALUES (:environment, :name, :operator, :memory, :cpu, :port, :image)
             RETURNING *; 
             `, server); err != nil {
 		return networkmodel.ServerModel{}, fmt.Errorf("failed to insert server: %w", err)

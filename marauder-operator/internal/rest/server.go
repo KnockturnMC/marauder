@@ -16,6 +16,8 @@ import (
 
 // The ServerConfiguration struct holds relevant configuration values for the rest server.
 type ServerConfiguration struct {
+	Identifier string `yaml:"identifier"`
+
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 
@@ -29,9 +31,8 @@ type ServerConfiguration struct {
 
 // Disk contains configuration values for the disk setup of controller.
 type Disk struct {
-	DownloadPath       string `yaml:"downloadPath"`
-	ServerDataPath     string `yaml:"serverDataPath"`
-	ServerNameTemplate string `yaml:"serverNameTemplate"`
+	DownloadPath           string `yaml:"downloadPath"`
+	ServerDataPathTemplate string `yaml:"serverDataPathTemplate"`
 }
 
 // StartMarauderOperatorServer starts the marauder operator server instance.
@@ -51,6 +52,12 @@ func StartMarauderOperatorServer(configuration ServerConfiguration, dependencies
 	group := server.Group("/v1")
 	group.GET("/version", endpoints.VersionGet(dependencies.Version))
 
+	group.POST("/server/:uuid/:action", endpoints.ServerLifecycleActionPost(
+		configuration.Identifier,
+		dependencies.ControllerClient,
+		dependencies.ServerManager,
+	))
+
 	logrus.Info("staring server on port ", configuration.Port)
 	engine := &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", configuration.Host, configuration.Port),
@@ -60,6 +67,7 @@ func StartMarauderOperatorServer(configuration ServerConfiguration, dependencies
 			MinVersion: tls.VersionTLS13,
 		},
 	}
+
 	serverListenAndServeErr := engine.ListenAndServe()
 	if serverListenAndServeErr != nil {
 		return fmt.Errorf("failed to listen and serve: %w", serverListenAndServeErr)

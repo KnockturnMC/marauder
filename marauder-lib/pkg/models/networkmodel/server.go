@@ -1,6 +1,8 @@
 package networkmodel
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 // The ServerModel struct represents a servers configuration in the database model.
 type ServerModel struct {
@@ -27,6 +29,9 @@ type ServerModel struct {
 	// CPU represents the amount of cpu load the server may use.
 	CPU float64 `db:"cpu" json:"cpu"`
 
+	// Port defines the port of the server that it is running on and that should be exposed to the networks.
+	Port int `db:"port" json:"port"`
+
 	// Image defines the docker image the server should be spun up with.
 	Image string `db:"image" json:"image"`
 
@@ -49,15 +54,15 @@ type ServerOperator struct {
 // The ServerNetwork configuration defines what docker networks a server instance should be connected to.
 type ServerNetwork struct {
 	// The UUID of the network, uniquely identifying it across all existing network configurations.
-	UUID uuid.UUID `db:"uuid"`
+	UUID uuid.UUID `db:"uuid" json:"uuid"`
 
 	// The ServerUUID holds the uuid of the server this network belongs to.
-	ServerUUID uuid.UUID `db:"server"`
+	ServerUUID uuid.UUID `db:"server" json:"server"`
 
 	// NetworkName holds the name of the external docker network.
-	NetworkName string `db:"network_name"`
+	NetworkName string `db:"network_name" json:"networkName"`
 
 	// The IPV4Address holds the potential ipv4 address of the container in the network.
 	// If no address is specified, the string is empty.
-	IPV4Address string `db:"ipv4_address"`
+	IPV4Address string `db:"ipv4_address" json:"ipv4Address"`
 }

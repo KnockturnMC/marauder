@@ -7,6 +7,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// BodyModel represents a struct that is parsed from a json body.
+type BodyModel interface {
+	// CheckFilled returns an err conveying if the request is filled with non-default values.
+	CheckFilled() error
+}
+
 // ErrMalformedModel is returned if a model is found to be in any way malformed.
 var ErrMalformedModel = errors.New("malformed model")
 

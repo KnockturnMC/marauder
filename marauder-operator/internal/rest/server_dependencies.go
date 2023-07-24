@@ -1,9 +1,15 @@
 package rest
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
+
+	"gitea.knockturnmc.com/marauder/operator/pkg/servermgr"
+	dockerClient "github.com/docker/docker/client"
+
+	"gitea.knockturnmc.com/marauder/operator/pkg/controller"
 
 	_ "github.com/lib/pq" // postgres driver
 	"github.com/sirupsen/logrus"
@@ -15,7 +21,13 @@ type ServerDependencies struct {
 	Version string
 
 	// The http client to communicate with the operator
-	ControllerClient http.Client
+	ControllerClient controller.Client
+
+	// The ServerManager is responsible for managing the docker instances on the server.
+	ServerManager servermgr.Manager
+
+	// TLSConfig provides the tsl configuration for the gin engine.
+	TLSConfig *tls.Config
 }
 
 // CreateServerDependencies creates the server configuration for the server based on the configuration.
@@ -25,13 +37,21 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		return ServerDependencies{}, fmt.Errorf("failed to create download path for marauder operator: %w", err)
 	}
 
-	logrus.Debug("creating server data folder on disk")
-	if err := os.MkdirAll(configuration.Disk.ServerDataPath, 0o700); err != nil {
-		return ServerDependencies{}, fmt.Errorf("failed to create server data path for marauder operator: %w", err)
+	logrus.Debug("creating docker client")
+	dockerClientInstance, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
+	if err != nil {
+		return ServerDependencies{}, fmt.Errorf("failed to create docker client: %w", err)
 	}
 
 	return ServerDependencies{
-		Version:          version,
-		ControllerClient: http.Client{},
+		Version: version,
+		ControllerClient: &controller.HTTPClient{
+			Client:        http.Client{},
+			ControllerURL: configuration.ControllerEndpoint,
+		},
+		ServerManager: &servermgr.DockerBasedManager{
+			DockerClient:           dockerClientInstance,
+			ServerDataPathTemplate: configuration.Disk.ServerDataPathTemplate,
+		},
 	}, nil
 }

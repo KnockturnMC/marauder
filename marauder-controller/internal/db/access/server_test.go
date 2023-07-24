@@ -25,6 +25,7 @@ var serverModel = networkmodel.ServerModel{
 	OperatorIdentifier: "falk0.servers.knockturnmc.com",
 	Memory:             1024,
 	CPU:                3,
+	Port:               25565,
 	Image:              "minecraft:paper",
 	Networks: []networkmodel.ServerNetwork{
 		{

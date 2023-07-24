@@ -43,6 +43,7 @@ CREATE TABLE server
 	operator    VARCHAR          NOT NULL,
 	memory      INTEGER          NOT NULL,
 	cpu         DOUBLE PRECISION NOT NULL,
+	port        INTEGER          NOT NULL,
 	image       VARCHAR          NOT NULL,
 
 	CONSTRAINT pk_servers_uuid PRIMARY KEY (uuid),
