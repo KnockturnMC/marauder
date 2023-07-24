@@ -6,6 +6,6 @@ import (
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 )
 
-func (d DockerBasedManager) Stop(ctx context.Context, server networkmodel.ServerModel) error {
+func (d DockerBasedManager) Stop(_ context.Context, _ networkmodel.ServerModel) error {
 	panic("implement me")
 }

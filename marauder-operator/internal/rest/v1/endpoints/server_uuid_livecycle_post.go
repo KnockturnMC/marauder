@@ -17,7 +17,7 @@ import (
 func ServerLifecycleActionPost(
 	operatorIdentifier string,
 	controllerClient controller.Client,
-	serverManager servermgr.Manager,
+	_ servermgr.Manager,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		serverUUIDAsString := context.Param("uuid")

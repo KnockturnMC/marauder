@@ -79,9 +79,9 @@ func readManifestFromTarball(binary *networkmodel.ArtefactModelWithBinary) (*art
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
-			} else {
-				return nil, fmt.Errorf("failed to read next tarball header: %w", err)
 			}
+
+			return nil, fmt.Errorf("failed to read next tarball header: %w", err)
 		}
 
 		if nextHeader.Name != pkg.ManifestFileName {

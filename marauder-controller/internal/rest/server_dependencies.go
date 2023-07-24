@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"net/http"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/keyauth"
 	"github.com/jmoiron/sqlx"
@@ -20,6 +21,10 @@ type ServerDependencies struct {
 
 	// The DatabaseHandle to marauderctl's database.
 	DatabaseHandle *sqlm.DB
+
+	// The OperatorHTTPClient is a http client with a tls configuration authorized to communicate with
+	// operator instances.
+	OperatorHTTPClient *http.Client
 
 	// The ArtefactValidator used by the server to validate uploaded artefacts.
 	ArtefactValidator artefact.Validator
@@ -50,8 +55,9 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 	}
 
 	return ServerDependencies{
-		Version:           version,
-		DatabaseHandle:    &sqlm.DB{DB: databaseHandle},
-		ArtefactValidator: artefact.NewWorkedBasedValidator(artefactValidatorDispatcher, keys),
+		Version:            version,
+		DatabaseHandle:     &sqlm.DB{DB: databaseHandle},
+		OperatorHTTPClient: &http.Client{},
+		ArtefactValidator:  artefact.NewWorkedBasedValidator(artefactValidatorDispatcher, keys),
 	}, nil
 }

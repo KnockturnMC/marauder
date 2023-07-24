@@ -88,7 +88,7 @@ func (h *HTTPClient) FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]n
 	return diffs, nil
 }
 
-func (h *HTTPClient) UpdateIsState(ctx context.Context, server uuid.UUID, artefactIdentifier string, artefact uuid.UUID) error {
+func (h *HTTPClient) UpdateIsState(_ context.Context, _ uuid.UUID, _ string, _ uuid.UUID) error {
 	// TODO implement me
 	panic("implement me")
 }
