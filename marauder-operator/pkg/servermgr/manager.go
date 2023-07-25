@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gitea.knockturnmc.com/marauder/operator/pkg/controller"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/docker/docker/api/types"
@@ -25,6 +27,7 @@ type Manager interface {
 // The DockerBasedManager implements the manager interface and manages server via a docker client.
 type DockerBasedManager struct {
 	DockerClient           *dockerClient.Client
+	ControllerClient       controller.Client
 	ServerDataPathTemplate string
 }
 

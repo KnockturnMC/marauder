@@ -6,7 +6,6 @@ import (
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 )
 
-func (d DockerBasedManager) UpdateDeployments(_ context.Context, _ networkmodel.ServerModel) error {
-	// TODO implement me
+func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel networkmodel.ServerModel) error {
 	panic("implement me")
 }

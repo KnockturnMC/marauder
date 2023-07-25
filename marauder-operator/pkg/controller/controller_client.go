@@ -4,17 +4,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/google/uuid"
 )
-
-// ErrBadStatusCode is returned if the controller returned a bad status code.
-var ErrBadStatusCode = errors.New("bad status code")
 
 // The Client is responsible for interacting with the controller from the operator side.
 type Client interface {
@@ -23,6 +23,9 @@ type Client interface {
 
 	// FetchUpdatesFor fetches all outstanding updates for a server by its uuid.
 	FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.VersionDiff, error)
+
+	// FetchManifest fetches a manifest based on its uuid.
+	FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error)
 
 	// UpdateIsState attempts to update the controller about a servers new is state for the specific artefact.
 	UpdateIsState(ctx context.Context, server uuid.UUID, artefactIdentifier string, artefact uuid.UUID) error
@@ -55,8 +58,8 @@ func getAndBind[T any](ctx context.Context, client *HTTPClient, path string, bin
 		return bindTarget, fmt.Errorf("failed to read body of get request: %w", err)
 	}
 
-	if !isOkayStatusCode(resp.StatusCode) {
-		return bindTarget, fmt.Errorf("controller returned '%s' (%d): %w", string(body), resp.StatusCode, ErrBadStatusCode)
+	if !worker.IsOkayStatusCode(resp.StatusCode) {
+		return bindTarget, fmt.Errorf("controller returned '%s' (%d): %w", string(body), resp.StatusCode, worker.ErrBadStatusCode)
 	}
 
 	if err := json.Unmarshal(body, &bindTarget); err != nil {
@@ -64,10 +67,6 @@ func getAndBind[T any](ctx context.Context, client *HTTPClient, path string, bin
 	}
 
 	return bindTarget, nil
-}
-
-func isOkayStatusCode(code int) bool {
-	return code >= 200 && code <= 400
 }
 
 func (h *HTTPClient) FetchServer(ctx context.Context, server uuid.UUID) (networkmodel.ServerModel, error) {
@@ -86,6 +85,16 @@ func (h *HTTPClient) FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]n
 	}
 
 	return diffs, nil
+}
+
+// FetchManifest fetches a manifest based on its uuid.
+func (h *HTTPClient) FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error) {
+	manifest, err := getAndBind(ctx, h, "/artefact/"+artefact.String()+"/download/manifest", filemodel.Manifest{})
+	if err != nil {
+		return filemodel.Manifest{}, err
+	}
+
+	return manifest, nil
 }
 
 func (h *HTTPClient) UpdateIsState(_ context.Context, _ uuid.UUID, _ string, _ uuid.UUID) error {

@@ -66,7 +66,7 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 	group.PATCH("/deployment/:server/state/:state", endpoints.DeploymentServerPatch(dependencies.DatabaseHandle))
 	group.GET("/deployment/:server/update", endpoints.DeploymentServerUpdatesGet(dependencies.DatabaseHandle))
 
-	group.Any("/operation/:server/*path", endpoints.OperationServerProxy(dependencies.DatabaseHandle, dependencies.OperatorHTTPClient))
+	group.Any("/operator/:server/*path", endpoints.OperationServerProxy(dependencies.DatabaseHandle, dependencies.OperatorHTTPClient))
 
 	logrus.Info("staring server on port ", configuration.Port)
 	engine := &http.Server{

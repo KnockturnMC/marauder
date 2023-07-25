@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"strconv"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
@@ -42,7 +44,7 @@ func OperationServerProxy(
 		request, err := http.NewRequestWithContext(
 			context,
 			context.Request.Method,
-			fmt.Sprintf("%s:%d/v1/%s", server.OperatorRef.Host, server.OperatorRef.Port, context.Param("path")),
+			fmt.Sprintf("http://%s/v1%s", net.JoinHostPort(server.OperatorRef.Host, strconv.Itoa(server.OperatorRef.Port)), context.Param("path")),
 			context.Request.Body,
 		)
 		if err != nil {
