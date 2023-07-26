@@ -27,25 +27,25 @@ type DownloadService interface {
 	Download(ctx context.Context, url string, filename string) (string, error)
 }
 
-// downloadResult is a smaller helper utility representing the result retrieved from a download dispatcher.
-type downloadResult struct {
+// DownloadResult is a smaller helper utility representing the result retrieved from a download dispatcher.
+type DownloadResult struct {
 	fullFileName string
 }
 
 type MutexDownloadService struct {
 	httpClient           *http.Client
-	dispatcher           *Dispatcher[downloadResult]
-	resultListeners      map[string][]chan Outcome[downloadResult]
+	dispatcher           *Dispatcher[DownloadResult]
+	resultListeners      map[string][]chan Outcome[DownloadResult]
 	resultListenersMutex *sync.Mutex
 	cacheDirectory       string
 }
 
 // NewMutexDownloadService creates a new download service using a mutex.
-func NewMutexDownloadService(httpClient *http.Client, dispatcher *Dispatcher[downloadResult], cacheDirectory string) *MutexDownloadService {
+func NewMutexDownloadService(httpClient *http.Client, dispatcher *Dispatcher[DownloadResult], cacheDirectory string) *MutexDownloadService {
 	return &MutexDownloadService{
 		httpClient:           httpClient,
 		dispatcher:           dispatcher,
-		resultListeners:      make(map[string][]chan Outcome[downloadResult]),
+		resultListeners:      make(map[string][]chan Outcome[DownloadResult]),
 		resultListenersMutex: &sync.Mutex{},
 		cacheDirectory:       cacheDirectory,
 	}
@@ -55,18 +55,18 @@ func (m *MutexDownloadService) Download(ctx context.Context, url string, filenam
 	m.resultListenersMutex.Lock() // Lock here, we are going to read from the map.
 
 	listener, ok := m.resultListeners[url]
-	resultChan := make(chan Outcome[downloadResult])
+	resultChan := make(chan Outcome[DownloadResult])
 	if ok {
 		m.resultListeners[url] = append(listener, resultChan)
 	} else {
-		m.resultListeners[url] = []chan Outcome[downloadResult]{resultChan}
-		dispatchResult := m.dispatcher.Dispatch(func() (downloadResult, error) {
+		m.resultListeners[url] = []chan Outcome[DownloadResult]{resultChan}
+		dispatchResult := m.dispatcher.Dispatch(func() (DownloadResult, error) {
 			file, err := m.downloadURLToFile(ctx, url, filename)
 			if err != nil {
-				return downloadResult{}, fmt.Errorf("failed to download url to file: %w", err)
+				return DownloadResult{}, fmt.Errorf("failed to download url to file: %w", err)
 			}
 
-			return downloadResult{
+			return DownloadResult{
 				fullFileName: file,
 			}, nil
 		})
@@ -95,12 +95,6 @@ func (m *MutexDownloadService) Download(ctx context.Context, url string, filenam
 
 func (m *MutexDownloadService) downloadURLToFile(ctx context.Context, url string, filename string) (string, error) {
 	downloadTargetPath := path.Join(m.cacheDirectory, path.Base(filename))
-	downloadTarget, err := os.Create(downloadTargetPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to open output file: %w", err)
-	}
-
-	defer func() { _ = downloadTarget.Close() }()
 
 	downloadReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, &bytes.Buffer{})
 	if err != nil {
@@ -117,6 +111,13 @@ func (m *MutexDownloadService) downloadURLToFile(ctx context.Context, url string
 	if !IsOkayStatusCode(downloadResponse.StatusCode) {
 		return "", fmt.Errorf("failed to download %s, status code %d: %w", url, downloadResponse.StatusCode, ErrBadStatusCode)
 	}
+
+	downloadTarget, err := os.Create(downloadTargetPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open output file: %w", err)
+	}
+
+	defer func() { _ = downloadTarget.Close() }()
 
 	if _, err := io.Copy(downloadTarget, downloadResponse.Body); err != nil {
 		return "", fmt.Errorf("failed to copy download response to file system: %w", err)
