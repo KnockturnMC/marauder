@@ -45,6 +45,11 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		return ServerDependencies{}, fmt.Errorf("failed to create docker client: %w", err)
 	}
 
+	dockerEncodedBasicAuth, err := configuration.Docker.ToBasicAuth()
+	if err != nil {
+		return ServerDependencies{}, fmt.Errorf("failed to encode docker authentication: %w", err)
+	}
+
 	httpClient := &http.Client{}
 
 	dispatcher, err := worker.NewDispatcher[worker.DownloadResult](configuration.Controller.WorkerCount)
@@ -54,15 +59,19 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 
 	downloadService := worker.NewMutexDownloadService(httpClient, dispatcher, configuration.Disk.DownloadPath)
 
+	controllerClient := &controller.HTTPClient{
+		Client:          httpClient,
+		ControllerURL:   configuration.Controller.Endpoint,
+		DownloadService: downloadService,
+	}
+
 	return ServerDependencies{
-		Version: version,
-		ControllerClient: &controller.HTTPClient{
-			Client:          httpClient,
-			ControllerURL:   configuration.Controller.Endpoint,
-			DownloadService: downloadService,
-		},
+		Version:          version,
+		ControllerClient: controllerClient,
 		ServerManager: &servermgr.DockerBasedManager{
+			ControllerClient:       controllerClient,
 			DockerClient:           dockerClientInstance,
+			DockerEncodedAuth:      dockerEncodedBasicAuth,
 			ServerDataPathTemplate: configuration.Disk.ServerDataPathTemplate,
 		},
 	}, nil

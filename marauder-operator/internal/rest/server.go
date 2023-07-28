@@ -14,33 +14,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// The ServerConfiguration struct holds relevant configuration values for the rest server.
-type ServerConfiguration struct {
-	Identifier string `yaml:"identifier"`
-
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
-
-	Controller Controller `yaml:"controller"`
-
-	Disk Disk `yaml:"disk"`
-
-	ServerCertPath string `yaml:"serverCertPath"`
-	ServerKeyPath  string `yaml:"serverKeyPath"`
-}
-
-// Disk contains configuration values for the disk setup of controller.
-type Disk struct {
-	DownloadPath           string `yaml:"downloadPath"`
-	ServerDataPathTemplate string `yaml:"serverDataPathTemplate"`
-}
-
-// The Controller struct holds the configuration values for the controller client used by the operator.
-type Controller struct {
-	Endpoint    string `yaml:"endpoint"`
-	WorkerCount int    `yaml:"workerCount"`
-}
-
 // StartMarauderOperatorServer starts the marauder operator server instance.
 func StartMarauderOperatorServer(configuration ServerConfiguration, dependencies ServerDependencies) error {
 	server := gin.New()

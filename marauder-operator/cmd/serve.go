@@ -15,17 +15,18 @@ import (
 
 func defaultConfiguration() rest.ServerConfiguration {
 	return rest.ServerConfiguration{
+		Identifier:     "localhost",
 		Host:           "localhost",
 		Port:           1981,
 		ServerCertPath: "",
 		ServerKeyPath:  "",
 		Controller: rest.Controller{
-			Endpoint:    "localhost:8080",
+			Endpoint:    "http://localhost:8080/v1",
 			WorkerCount: 5,
 		},
 		Disk: rest.Disk{
 			DownloadPath:           "/var/local/marauder/operator/cache/downloads",
-			ServerDataPathTemplate: "/var/local/marauder/operator/servers/{{.Environment}}/{{.ServerName}}",
+			ServerDataPathTemplate: "/var/local/marauder/operator/servers/{{.Environment}}/{{.Name}}",
 		},
 	}
 }
@@ -38,7 +39,7 @@ func ServeCommand() *cobra.Command {
 	}
 
 	var configurationPath string
-	cmd.PersistentFlags().StringVarP(&configurationPath, "configuration", "c", "marauderctl.yml", "the path to the configuration file of the server")
+	cmd.PersistentFlags().StringVarP(&configurationPath, "configuration", "c", "marauderop.yml", "the path to the configuration file of the server")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		configuration := defaultConfiguration()
 

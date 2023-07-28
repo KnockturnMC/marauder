@@ -33,6 +33,8 @@ func (h *HTTPClient) UpdateIsState(ctx context.Context, server uuid.UUID, artefa
 		return fmt.Errorf("faild to create patch request: %w", err)
 	}
 
+	httpReq.Header.Set("Content-Type", "application/json") // Set content type as json, we are patching a json body in.
+
 	httpResp, err := h.Client.Do(httpReq)
 	if err != nil {
 		return fmt.Errorf("failed to execute http patch request: %w", err)

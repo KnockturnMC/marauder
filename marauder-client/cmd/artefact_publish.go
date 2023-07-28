@@ -31,7 +31,7 @@ func ArtefactPublishCommand(
 		Args:  cobra.RangeArgs(1, 2),
 	}
 	command.PersistentFlags().StringVar(
-		&tlsPath, "tls", "{{.User.HomeDir}}/.config/marauder/tls",
+		&tlsPath, "tls", "{{.User.HomeDir}}/.config/marauder/client/tls",
 		"the root folder for the tls file expected by marauder, specifically a cert.pem and a key.pem.",
 	)
 	command.PersistentFlags().StringVarP(

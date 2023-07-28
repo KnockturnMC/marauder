@@ -28,7 +28,7 @@ func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel n
 	_, err := d.retrieveContainerInfo(ctx, serverModel)
 	if err == nil {
 		return fmt.Errorf("server %s is running: %w", serverModel.UUID.String(), ErrServerRunning)
-	} else if !client.IsErrNotFound(err) {
+	} else if !utils.CheckDockerError(err, client.IsErrNotFound) {
 		return fmt.Errorf("failed to fetch container info for %s: %w", serverModel.UUID.String(), err)
 	}
 
@@ -164,6 +164,10 @@ func (d DockerBasedManager) unpackArtefactIntoServer(artefactPath string, server
 
 		filePathInServerFolder, _ := strings.CutPrefix(tarballHeader.Name, pkg.FileParentDirectoryInArtefact)
 		filePathOnSystem := path.Join(serverFolderLocation, path.Clean(filePathInServerFolder))
+
+		if err := os.MkdirAll(path.Dir(filePathOnSystem), 0o700); err != nil {
+			return fmt.Errorf("failed to create parent directory for %s: %w", filePathOnSystem, err)
+		}
 
 		targetFileOnSystem, err := os.Create(filePathOnSystem)
 		if err != nil {

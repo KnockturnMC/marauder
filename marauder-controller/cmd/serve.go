@@ -22,7 +22,7 @@ func defaultConfiguration() rest.ServerConfiguration {
 		Port:              8080,
 		ServerCertPath:    "",
 		ServerKeyPath:     "",
-		AuthorizedKeyPath: "{{.User.HomeDir}}/.config/marauderctl/authorized_keys",
+		AuthorizedKeyPath: "{{.User.HomeDir}}/.config/marauder/controller/authorized_keys",
 	}
 }
 

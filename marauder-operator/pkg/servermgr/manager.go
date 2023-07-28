@@ -27,6 +27,7 @@ type Manager interface {
 // The DockerBasedManager implements the manager interface and manages server via a docker client.
 type DockerBasedManager struct {
 	DockerClient           *dockerClient.Client
+	DockerEncodedAuth      string
 	ControllerClient       controller.Client
 	ServerDataPathTemplate string
 }
@@ -38,7 +39,7 @@ func (d DockerBasedManager) computeUniqueDockerContainerNameFor(server networkmo
 func (d DockerBasedManager) computeServerFolderLocation(server networkmodel.ServerModel) (string, error) {
 	toString, err := utils.ExecuteStringTemplateToString(d.ServerDataPathTemplate, server)
 	if err != nil {
-		return "", fmt.Errorf("failed to execute template: %w", err)
+		return "", fmt.Errorf("failed to expand string template: %w", err)
 	}
 
 	return toString, nil

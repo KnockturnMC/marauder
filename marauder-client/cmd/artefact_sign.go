@@ -25,7 +25,7 @@ func ArtefactSignCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 	}
 	command.PersistentFlags().StringVarP(
-		&privateKeyFilePath, "privateKey", "p", "{{.User.HomeDir}}/.config/marauder/signingKey",
+		&privateKeyFilePath, "privateKey", "p", "{{.User.HomeDir}}/.config/marauder/client/signingKey",
 		"the private key file used for signing the file.",
 	)
 
