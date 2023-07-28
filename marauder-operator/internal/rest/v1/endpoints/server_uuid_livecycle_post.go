@@ -17,7 +17,7 @@ import (
 func ServerLifecycleActionPost(
 	operatorIdentifier string,
 	controllerClient controller.Client,
-	_ servermgr.Manager,
+	serverManager servermgr.Manager,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		serverUUIDAsString := context.Param("uuid")
@@ -52,13 +52,60 @@ func ServerLifecycleActionPost(
 			return
 		}
 
-		switch action {
-		case networkmodel.Start:
-		case networkmodel.Stop:
-		case networkmodel.Restart:
-		case networkmodel.UpgradeDeployment:
-		default:
-			_ = context.Error(response.RestErrorFromDescription(http.StatusInternalServerError, fmt.Sprintf("unhandled action %s", action)))
+		if handleLifecycleAction(context, action, serverManager, server) {
+			context.Status(http.StatusOK)
 		}
 	}
+}
+
+// handleLifecycleAction handles the passed lifecycle action on the server.
+func handleLifecycleAction(
+	context *gin.Context,
+	action networkmodel.LifecycleChangeActionType,
+	serverManager servermgr.Manager,
+	server networkmodel.ServerModel,
+) bool {
+	switch action {
+	case networkmodel.Start:
+		return handleLifecycleActionStart(context, serverManager, server)
+	case networkmodel.Stop:
+		return handleLifecycleActionStop(context, serverManager, server)
+	case networkmodel.Restart:
+		return handleLifecycleActionStop(context, serverManager, server) && handleLifecycleActionStart(context, serverManager, server)
+	case networkmodel.UpgradeDeployment:
+		if err := serverManager.UpdateDeployments(context, server); err != nil {
+			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
+				servermgr.ErrServerRunning: {
+					ResponseCode: http.StatusBadRequest, Description: fmt.Sprintf("the server %s is running", server.Name),
+				},
+			}, fmt.Errorf("failed to update deployments: %w", err)))
+
+			return false
+		}
+	default:
+		_ = context.Error(response.RestErrorFromDescription(http.StatusInternalServerError, fmt.Sprintf("unhandled action %s", action)))
+		return false
+	}
+
+	return true
+}
+
+// handleLifecycleActionStart handles the start lifecycle action.
+func handleLifecycleActionStart(context *gin.Context, serverManager servermgr.Manager, server networkmodel.ServerModel) bool {
+	if err := serverManager.Start(context, server); err != nil {
+		_ = context.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to start server: %w", err)))
+		return false
+	}
+
+	return true
+}
+
+// handleLifecycleActionStart handles the stop lifecycle action.
+func handleLifecycleActionStop(context *gin.Context, serverManager servermgr.Manager, server networkmodel.ServerModel) bool {
+	if err := serverManager.Stop(context, server); err != nil {
+		_ = context.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to stop server: %w", err)))
+		return false
+	}
+
+	return true
 }

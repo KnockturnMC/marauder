@@ -15,11 +15,14 @@ import (
 
 func defaultConfiguration() rest.ServerConfiguration {
 	return rest.ServerConfiguration{
-		Host:               "localhost",
-		Port:               1981,
-		ServerCertPath:     "",
-		ServerKeyPath:      "",
-		ControllerEndpoint: "localhost:8080",
+		Host:           "localhost",
+		Port:           1981,
+		ServerCertPath: "",
+		ServerKeyPath:  "",
+		Controller: rest.Controller{
+			Endpoint:    "localhost:8080",
+			WorkerCount: 5,
+		},
 		Disk: rest.Disk{
 			DownloadPath:           "/var/local/marauder/operator/cache/downloads",
 			ServerDataPathTemplate: "/var/local/marauder/operator/servers/{{.Environment}}/{{.ServerName}}",

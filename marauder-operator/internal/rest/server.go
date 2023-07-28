@@ -21,7 +21,7 @@ type ServerConfiguration struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 
-	ControllerEndpoint string `yaml:"controllerEndpoint"`
+	Controller Controller `yaml:"controller"`
 
 	Disk Disk `yaml:"disk"`
 
@@ -33,6 +33,12 @@ type ServerConfiguration struct {
 type Disk struct {
 	DownloadPath           string `yaml:"downloadPath"`
 	ServerDataPathTemplate string `yaml:"serverDataPathTemplate"`
+}
+
+// The Controller struct holds the configuration values for the controller client used by the operator.
+type Controller struct {
+	Endpoint    string `yaml:"endpoint"`
+	WorkerCount int    `yaml:"workerCount"`
 }
 
 // StartMarauderOperatorServer starts the marauder operator server instance.

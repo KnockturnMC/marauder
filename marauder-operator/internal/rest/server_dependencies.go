@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
+
 	"gitea.knockturnmc.com/marauder/operator/pkg/servermgr"
 	dockerClient "github.com/docker/docker/client"
 
@@ -43,11 +45,21 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		return ServerDependencies{}, fmt.Errorf("failed to create docker client: %w", err)
 	}
 
+	httpClient := &http.Client{}
+
+	dispatcher, err := worker.NewDispatcher[worker.DownloadResult](configuration.Controller.WorkerCount)
+	if err != nil {
+		return ServerDependencies{}, fmt.Errorf("failed to create dispatcher for controller client: %w", err)
+	}
+
+	downloadService := worker.NewMutexDownloadService(httpClient, dispatcher, configuration.Disk.DownloadPath)
+
 	return ServerDependencies{
 		Version: version,
 		ControllerClient: &controller.HTTPClient{
-			Client:        http.Client{},
-			ControllerURL: configuration.ControllerEndpoint,
+			Client:          httpClient,
+			ControllerURL:   configuration.Controller.Endpoint,
+			DownloadService: downloadService,
 		},
 		ServerManager: &servermgr.DockerBasedManager{
 			DockerClient:           dockerClientInstance,

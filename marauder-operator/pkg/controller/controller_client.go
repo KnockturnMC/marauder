@@ -29,12 +29,17 @@ type Client interface {
 
 	// UpdateIsState attempts to update the controller about a servers new is state for the specific artefact.
 	UpdateIsState(ctx context.Context, server uuid.UUID, artefactIdentifier string, artefact uuid.UUID) error
+
+	// DownloadArtefact downloads the artefact specified with the given uuid a local cache folder and
+	// returns the full path to the downloaded file.
+	DownloadArtefact(ctx context.Context, artefactUUID uuid.UUID) (string, error)
 }
 
 // HTTPClient implements the Client interface by using the controllers rest API.
 type HTTPClient struct {
-	http.Client
-	ControllerURL string
+	*http.Client
+	ControllerURL   string
+	DownloadService worker.DownloadService
 }
 
 // getAndBind performs a get request using the http client at the given path and binds the result into
@@ -97,7 +102,15 @@ func (h *HTTPClient) FetchManifest(ctx context.Context, artefact uuid.UUID) (fil
 	return manifest, nil
 }
 
-func (h *HTTPClient) UpdateIsState(_ context.Context, _ uuid.UUID, _ string, _ uuid.UUID) error {
-	// TODO implement me
-	panic("implement me")
+func (h *HTTPClient) DownloadArtefact(ctx context.Context, artefactUUID uuid.UUID) (string, error) {
+	downloadedFile, err := h.DownloadService.Download(
+		ctx,
+		fmt.Sprintf("%s/artefact/%s/download", h.ControllerURL, artefactUUID.String()),
+		fmt.Sprintf("%s.tar.gz", artefactUUID.String()),
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to download artefact: %w", err)
+	}
+
+	return downloadedFile, nil
 }

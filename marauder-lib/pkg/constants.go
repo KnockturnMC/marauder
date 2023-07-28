@@ -11,3 +11,6 @@ const TLSKeyFileName = "cert.key"
 
 // TLSRootCertificate defines the file name of the root certificate.
 const TLSRootCertificate = "root.ctr"
+
+// The FileParentDirectoryInArtefact holds the prefix under which all files are stored in the artefact tarball.
+const FileParentDirectoryInArtefact = "files/"

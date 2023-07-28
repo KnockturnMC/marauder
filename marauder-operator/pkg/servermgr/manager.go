@@ -44,6 +44,7 @@ func (d DockerBasedManager) computeServerFolderLocation(server networkmodel.Serv
 	return toString, nil
 }
 
+//nolint:unparam
 func (d DockerBasedManager) retrieveContainerInfo(ctx context.Context, server networkmodel.ServerModel) (types.ContainerJSON, error) {
 	identifier := d.computeUniqueDockerContainerNameFor(server)
 	container, err := d.DockerClient.ContainerInspect(ctx, identifier)

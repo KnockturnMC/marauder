@@ -18,8 +18,6 @@ import (
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 )
 
-const FileParentDirectory = "files/"
-
 // CreateArtefactTarball creates a new tar ball given a manifest at the specified target path.
 // The method takes a rootFs file system in which it resolves the ci globs.
 // The target path is relative to the current working directory.
@@ -86,7 +84,7 @@ func IncludeArtefactFiles(
 			}
 
 			pathInTarball := filepath.Join(file.Target, relativePath)
-			addedFiles, err := tarballWriter.Add(rootFs, match, FileParentDirectory+pathInTarball)
+			addedFiles, err := tarballWriter.Add(rootFs, match, pkg.FileParentDirectoryInArtefact+pathInTarball)
 			if err != nil {
 				return filemodel.Manifest{}, fmt.Errorf("failed to add file %s to tarball: %w", matches, err)
 			}
