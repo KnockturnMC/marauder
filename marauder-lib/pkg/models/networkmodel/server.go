@@ -36,19 +36,19 @@ type ServerModel struct {
 	Image string `db:"image" json:"image"`
 
 	// The Networks struct holds all networks the server model is part of.
-	Networks []ServerNetwork `json:"networks"`
+	Networks []ServerNetwork `db:"-" json:"networks"`
 }
 
 // ServerOperator represents an operator of a single node that the server is hosted on.
 type ServerOperator struct {
 	// Identifier is a string based unique identifier of an operator.
-	Identifier string `json:"identifier"`
+	Identifier string `db:"identifier" json:"identifier"`
 
 	// The Host represents the host url on which the operator can be found
-	Host string `json:"host"`
+	Host string `db:"host" json:"host"`
 
 	// Port represents the port the operator can be reached under on the Host.
-	Port int `json:"port"`
+	Port int `db:"port" json:"port"`
 }
 
 // The ServerNetwork configuration defines what docker networks a server instance should be connected to.

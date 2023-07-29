@@ -152,9 +152,9 @@ func (d DockerBasedManager) unpackArtefactIntoServer(artefactPath string, server
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
-			} else {
-				return fmt.Errorf("failed to read next tarball header: %w", err)
 			}
+
+			return fmt.Errorf("failed to read next tarball header: %w", err)
 		}
 
 		// Something not in the files/ top level dir.
