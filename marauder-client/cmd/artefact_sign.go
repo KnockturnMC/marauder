@@ -80,10 +80,7 @@ func ArtefactSignCommand() *cobra.Command {
 			return fmt.Errorf("failed to write signature to %s: %w", outputFilePath, err)
 		}
 
-		cmd.Println(bunt.Sprintf("LimeGreen{successfully signed artefact}"))
-
-		// We are done printing info, this is the result of the command
-		cmd.SetOut(os.Stdout)
+		cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully signed artefact}"))
 		cmd.Println(outputFilePath)
 
 		return nil

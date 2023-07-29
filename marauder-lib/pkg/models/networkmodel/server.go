@@ -42,13 +42,13 @@ type ServerModel struct {
 // ServerOperator represents an operator of a single node that the server is hosted on.
 type ServerOperator struct {
 	// Identifier is a string based unique identifier of an operator.
-	Identifier string
+	Identifier string `json:"identifier"`
 
 	// The Host represents the host url on which the operator can be found
-	Host string
+	Host string `json:"host"`
 
 	// Port represents the port the operator can be reached under on the Host.
-	Port int
+	Port int `json:"port"`
 }
 
 // The ServerNetwork configuration defines what docker networks a server instance should be connected to.

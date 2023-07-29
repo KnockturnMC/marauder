@@ -4,6 +4,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type CommandContextKeyType int
+
+const (
+	// KeyBuildCmdOutput defines the shared key used by the build command to store the build output target in a context.
+	KeyBuildCmdOutput CommandContextKeyType = iota
+)
+
 var version = "develop"
 
 // RootCommand is the root entry command for the builder tool.

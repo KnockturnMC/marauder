@@ -22,6 +22,11 @@ type Manifest struct {
 	// This field is optional as artefacts might be constructed without build information attached.
 	BuildInformation *BuildInformation `json:"buildInformation,omitempty"`
 
+	// DeploymentTargets define into which server/environment an artefact can generally be deployed into
+	// Not all servers require the deployment of a specific artefact, hence this field actively defines which servers
+	// should be targeted during a release.
+	DeploymentTargets DeploymentTargets `json:"deploymentTargets,omitempty"`
+
 	// Hashes contains a collection of hashes for each fully resolved file in the manifest.
 	// While the Files field may hold the globs and targets of specific files, this
 	// field holds a full list of all included files with their hashes.
@@ -65,3 +70,6 @@ type FileReference struct {
 	// A string representation of a glob that identifies the files during the ci build of the project that produces the artefact.
 	CISourceGlob string `json:"ciSourceGlob"`
 }
+
+// The DeploymentTargets type holds a map of environments to a slice of servers in said environment that the artefact should be deployed to.
+type DeploymentTargets map[string][]string

@@ -32,10 +32,14 @@ type DockerBasedManager struct {
 	ServerDataPathTemplate string
 }
 
+// computeUniqueDockerContainerNameFor computes the unique docker container name for a given server managed by
+// the operator.
 func (d DockerBasedManager) computeUniqueDockerContainerNameFor(server networkmodel.ServerModel) string {
 	return fmt.Sprintf("marauder-server-%s-%s-%s", server.Environment, server.Name, strings.ReplaceAll(server.UUID.String(), "-", ""))
 }
 
+// computeServerFolderLocation computes the on-disk server folder location on the host.
+// The operator can extract artefacts into said directory when instructed to.
 func (d DockerBasedManager) computeServerFolderLocation(server networkmodel.ServerModel) (string, error) {
 	toString, err := utils.ExecuteStringTemplateToString(d.ServerDataPathTemplate, server)
 	if err != nil {
@@ -45,6 +49,8 @@ func (d DockerBasedManager) computeServerFolderLocation(server networkmodel.Serv
 	return toString, nil
 }
 
+// retrieveContainerInfo retrieves the container json about a specific server models potential container.
+//
 //nolint:unparam
 func (d DockerBasedManager) retrieveContainerInfo(ctx context.Context, server networkmodel.ServerModel) (types.ContainerJSON, error) {
 	identifier := d.computeUniqueDockerContainerNameFor(server)

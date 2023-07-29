@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -47,10 +48,10 @@ func ArtefactBuildCommand() *cobra.Command {
 
 		var manifest filemodel.Manifest
 
-		cmd.Println(bunt.Sprintf("Gray{fetching build information from project}"))
+		cmd.PrintErrln(bunt.Sprintf("Gray{fetching build information from project}"))
 		buildInformation, err := builder.FetchBuildInformation(workDirectory)
 		if err != nil {
-			cmd.Println(bunt.Sprintf("Red{failed to parse build information, excluding them: %s}", err.Error()))
+			cmd.PrintErrln(bunt.Sprintf("Red{failed to parse build information, excluding them: %s}", err.Error()))
 			timestamp := time.Now()
 			buildInformation = filemodel.BuildInformation{
 				Repository:           "nan",
@@ -67,7 +68,7 @@ func ArtefactBuildCommand() *cobra.Command {
 		}
 
 		// Parse the manifest file
-		cmd.Println(bunt.Sprintf("Gray{parsing manifest file %s}", manifestFileLocation))
+		cmd.PrintErrln(bunt.Sprintf("Gray{parsing manifest file %s}", manifestFileLocation))
 
 		templatedManifestContent, err := utils.ExecuteStringTemplateToString(string(file), struct {
 			Build filemodel.BuildInformation
@@ -91,7 +92,7 @@ func ArtefactBuildCommand() *cobra.Command {
 			return fmt.Errorf("failed to execute template for tarball output name: %w", err)
 		}
 
-		cmd.Println(bunt.Sprintf("Gray{creating output artefact tarball *%s*}", finalTarballName))
+		cmd.PrintErrln(bunt.Sprintf("Gray{creating output artefact tarball *%s*}", finalTarballName))
 		tarballFileRef, err := os.Create(finalTarballName)
 		if err != nil {
 			return fmt.Errorf("failed to open output tarball: %w", err)
@@ -102,11 +103,11 @@ func ArtefactBuildCommand() *cobra.Command {
 			return fmt.Errorf("failed to create artefact tarball: %w", err)
 		}
 
-		cmd.Println(bunt.Sprintf("LimeGreen{successfully build artefact}"))
+		cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully build artefact}"))
 
 		// We are done printing info, this is the result of the command
-		cmd.SetOut(os.Stdout)
 		cmd.Println(finalTarballName)
+		cmd.SetContext(context.WithValue(command.Context(), KeyBuildCmdOutput, finalTarballName))
 
 		return nil
 	}
