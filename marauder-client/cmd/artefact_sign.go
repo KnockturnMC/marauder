@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"os"
-	"os/user"
 	"path"
 
 	"github.com/gonvenience/bunt"
@@ -14,20 +13,13 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func ArtefactSignCommand() *cobra.Command {
-	var (
-		privateKeyFilePath string
-		outputFileTemplate string
-	)
+func ArtefactSignCommand(configuration *Configuration) *cobra.Command {
+	var outputFileTemplate string
 	command := &cobra.Command{
 		Use:   "sign",
 		Short: "Allows marauder to sign artefacts for controller",
 		Args:  cobra.ExactArgs(1),
 	}
-	command.PersistentFlags().StringVarP(
-		&privateKeyFilePath, "privateKey", "p", "{{.User.HomeDir}}/.config/marauder/client/signingKey",
-		"the private key file used for signing the file.",
-	)
 
 	command.PersistentFlags().StringVarP(
 		&outputFileTemplate, "outputName", "o", "{{.File}}.sig",
@@ -41,23 +33,9 @@ func ArtefactSignCommand() *cobra.Command {
 			return fmt.Errorf("failed to compute output file path: %w", err)
 		}
 
-		userAccount, err := user.Current()
+		key, err := configuration.ParseSigningKey()
 		if err != nil {
-			return fmt.Errorf("failed to fetch current user: %w", err)
-		}
-		privateKeyFilePath, err := utils.ExecuteStringTemplateToString(privateKeyFilePath, struct{ User *user.User }{User: userAccount})
-		if err != nil {
-			return fmt.Errorf("failed to evaluate private key file path: %w", err)
-		}
-
-		privateKeyBytes, err := os.ReadFile(privateKeyFilePath)
-		if err != nil {
-			return fmt.Errorf("failed to read private key file for signing: %w", err)
-		}
-
-		key, err := ssh.ParsePrivateKey(privateKeyBytes)
-		if err != nil {
-			return fmt.Errorf("failed to parse private key bytes: %w", err)
+			return fmt.Errorf("failed to parse signing key: %w", err)
 		}
 
 		fileToSign, err := os.Open(fileToSignPath)

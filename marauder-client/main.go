@@ -9,11 +9,13 @@ import (
 )
 
 func main() {
-	root := cmd.RootCommand()
+	configuration := cmd.DefaultConfiguration()
+
+	root := cmd.RootCommand(&configuration)
 	artefactCommand := cmd.ArtefactCommand()
 	artefactCommand.AddCommand(cmd.ArtefactBuildCommand())
-	artefactCommand.AddCommand(cmd.ArtefactSignCommand())
-	artefactCommand.AddCommand(cmd.ArtefactPublishCommand(context.Background()))
+	artefactCommand.AddCommand(cmd.ArtefactSignCommand(&configuration))
+	artefactCommand.AddCommand(cmd.ArtefactPublishCommand(context.Background(), &configuration))
 	root.AddCommand(artefactCommand)
 	root.SetOut(os.Stdout) // By default, the output should properly be printed to stdout.
 

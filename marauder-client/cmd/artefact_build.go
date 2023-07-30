@@ -32,7 +32,7 @@ func ArtefactBuildCommand() *cobra.Command {
 		Short: "Builds a marauder artefact into a tarball ready for publishing.",
 		Args:  cobra.MaximumNArgs(1),
 	}
-	command.PersistentFlags().StringVarP(&manifestFileLocation, "manifest", "m", "manifest.json", "location of the manifest file")
+	command.PersistentFlags().StringVarP(&manifestFileLocation, "manifest", "m", ".marauder.json", "location of the manifest file")
 	command.PersistentFlags().StringVarP(&tarballName, "output", "o", "{{.Identifier}}-{{.Version}}-artefact.tar.gz", "name of the output tarball")
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {

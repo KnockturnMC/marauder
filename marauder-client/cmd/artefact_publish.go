@@ -9,44 +9,19 @@ import (
 	"net/http"
 	"os"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
 )
 
 // ArtefactPublishCommand constructs the artefact publish subcommand.
-//
-//nolint:funlen
 func ArtefactPublishCommand(
 	ctx context.Context,
+	configuration *Configuration,
 ) *cobra.Command {
-	var (
-		tlsPath        string
-		controllerHost string
-	)
-
 	command := &cobra.Command{
 		Use:   "publish",
 		Short: "Publishes a marauder artefact to a controller",
 		Args:  cobra.RangeArgs(1, 2),
-	}
-	command.PersistentFlags().StringVar(
-		&tlsPath, "tls", "{{.User.HomeDir}}/.config/marauder/client/tls",
-		"the root folder for the tls file expected by marauder, specifically a cert.pem and a key.pem.",
-	)
-	command.PersistentFlags().StringVarP(
-		&controllerHost, "controller", "c", "http://localhost:8080",
-		"the url of the controller",
-	)
-
-	command.PreRunE = func(cmd *cobra.Command, args []string) error {
-		evaluatedTLSPath, err := utils.EvaluateFilePathTemplate(tlsPath)
-		if err != nil {
-			return fmt.Errorf("failed to evaluate tls path flag: %w", err)
-		}
-		tlsPath = evaluatedTLSPath
-
-		return nil
 	}
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
@@ -58,7 +33,7 @@ func ArtefactPublishCommand(
 		}
 
 		// create http client
-		httpClient, err := httpClientWithPotentialTLS(tlsPath)
+		httpClient, err := configuration.CreateTLSReadyHTTPClient()
 		if err != nil {
 			cmd.Println(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
@@ -85,7 +60,7 @@ func ArtefactPublishCommand(
 		}
 
 		// post the to controller
-		uploadEndpoint := fmt.Sprintf("%s/v1/artefact", controllerHost)
+		uploadEndpoint := fmt.Sprintf("%s/artefact", configuration.ControllerHost)
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{uploading artefact to %s}", uploadEndpoint))
 		response, err := doPost(ctx, httpClient, uploadEndpoint, multipartWriter.FormDataContentType(), body)
@@ -148,19 +123,4 @@ func writeFileToMultipart(multipartWriter *multipart.Writer, filePath string, na
 	}
 
 	return nil
-}
-
-// httpClientWithPotentialTLS creates a new http client given the cert.pem and key.pem files.
-// This method will always return a usable http client, potentially with an error if no tls could be configured.
-func httpClientWithPotentialTLS(tlsPath string) (*http.Client, error) {
-	configuration, err := utils.ParseTLSConfiguration(tlsPath)
-	if err != nil {
-		return http.DefaultClient, fmt.Errorf("failed to parse tls config: %w", err)
-	}
-
-	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: configuration,
-		},
-	}, nil
 }
