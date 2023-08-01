@@ -8,8 +8,9 @@ import (
 	"io"
 	"net/http"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
 	"github.com/google/uuid"
 )
 
@@ -47,8 +48,8 @@ func (h *HTTPClient) UpdateIsState(ctx context.Context, server uuid.UUID, artefa
 		return fmt.Errorf("failed to read body of get request: %w", err)
 	}
 
-	if !worker.IsOkayStatusCode(httpResp.StatusCode) {
-		return fmt.Errorf("controller returned '%s' (%d): %w", string(body), httpResp.StatusCode, worker.ErrBadStatusCode)
+	if !utils.IsOkayStatusCode(httpResp.StatusCode) {
+		return fmt.Errorf("controller returned '%s' (%d): %w", string(body), httpResp.StatusCode, utils.ErrBadStatusCode)
 	}
 
 	return nil

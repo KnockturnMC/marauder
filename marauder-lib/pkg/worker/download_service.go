@@ -3,21 +3,15 @@ package worker
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path"
 	"sync"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 )
-
-// ErrBadStatusCode is returned if the controller returned a bad status code.
-var ErrBadStatusCode = errors.New("bad status code")
-
-func IsOkayStatusCode(code int) bool {
-	return code >= 200 && code <= 400
-}
 
 // DownloadService is a threadsafe worker capable of properly handling download requests
 // from multiple threads at the same time.
@@ -108,8 +102,8 @@ func (m *MutexDownloadService) downloadURLToFile(ctx context.Context, url string
 
 	defer func() { _ = downloadResponse.Body.Close() }()
 
-	if !IsOkayStatusCode(downloadResponse.StatusCode) {
-		return "", fmt.Errorf("failed to download %s, status code %d: %w", url, downloadResponse.StatusCode, ErrBadStatusCode)
+	if !utils.IsOkayStatusCode(downloadResponse.StatusCode) {
+		return "", fmt.Errorf("failed to download %s, status code %d: %w", url, downloadResponse.StatusCode, utils.ErrBadStatusCode)
 	}
 
 	downloadTarget, err := os.Create(downloadTargetPath)

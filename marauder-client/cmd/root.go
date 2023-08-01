@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -39,7 +38,6 @@ tarball and uploading said artefact to the marauder controller.`,
 
 		configurationBytes, err := os.ReadFile(resolvedConfigurationPath)
 		if err != nil {
-			cmd.PrintErrln(bunt.Sprint("Gray{failed to read configuration file, using default one}"))
 			return nil //nolint:nilerr
 		}
 

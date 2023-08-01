@@ -35,7 +35,7 @@ func ArtefactPublishCommand(
 		// create http client
 		httpClient, err := configuration.CreateTLSReadyHTTPClient()
 		if err != nil {
-			cmd.Println(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
+			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
 
 		// Create multipart writer
