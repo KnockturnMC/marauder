@@ -13,6 +13,7 @@ linters:
     "gomnd", # Magic values are already properly abstracted into the constants packages. The linter is not doing anything useful here.
     "depguard", # Defining go.mod again in a separate file is not smart.
     "godox", # Lines that indicate todos or other future work are perfectly fine.
+    "dupl", # Duplicates make sense given the logic might change in a but not in b.
 
     # Linters disabled due to generic support missing
     "rowserrcheck",

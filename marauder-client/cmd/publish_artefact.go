@@ -13,13 +13,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ArtefactPublishCommand constructs the artefact publish subcommand.
-func ArtefactPublishCommand(
+// PublishArtefactCommand constructs the artefact publish subcommand.
+func PublishArtefactCommand(
 	ctx context.Context,
 	configuration *Configuration,
 ) *cobra.Command {
 	command := &cobra.Command{
-		Use:   "publish",
+		Use:   "artefact artefactFileName [artefactFileSignatureName]",
 		Short: "Publishes a marauder artefact to a controller",
 		Args:  cobra.RangeArgs(1, 2),
 	}
@@ -63,7 +63,7 @@ func ArtefactPublishCommand(
 		uploadEndpoint := fmt.Sprintf("%s/artefact", configuration.ControllerHost)
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{uploading artefact to %s}", uploadEndpoint))
-		response, err := doPost(ctx, httpClient, uploadEndpoint, multipartWriter.FormDataContentType(), body)
+		response, err := do(ctx, httpClient, http.MethodPost, uploadEndpoint, multipartWriter.FormDataContentType(), &body)
 		if err != nil {
 			return fmt.Errorf("failed to post to controller: %w", err)
 		}
@@ -87,9 +87,16 @@ func ArtefactPublishCommand(
 	return command
 }
 
-// doPost creates a post request and publishes it to the passed http client.
-func doPost(ctx context.Context, httpClient *http.Client, controllerHost string, contentType string, body bytes.Buffer) (*http.Response, error) {
-	postRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, controllerHost, &body)
+// do creates a request and publishes it to the passed http client.
+func do(
+	ctx context.Context,
+	httpClient *http.Client,
+	method string,
+	controllerHost string,
+	contentType string,
+	body *bytes.Buffer,
+) (*http.Response, error) {
+	postRequest, err := http.NewRequestWithContext(ctx, method, controllerHost, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create post request: %w", err)
 	}

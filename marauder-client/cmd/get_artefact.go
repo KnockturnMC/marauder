@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
@@ -12,13 +11,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ArtefactFetchCommand constructs the artefact fetch subcommand.
-func ArtefactFetchCommand(
+// GetArtefactCommand constructs the artefact fetch subcommand.
+func GetArtefactCommand(
 	ctx context.Context,
 	configuration *Configuration,
 ) *cobra.Command {
 	command := &cobra.Command{
-		Use:   "fetch",
+		Use:   "artefact <uuid|identifier> [version]",
 		Short: "Fetch information about artefacts from the controller",
 		Args:  cobra.RangeArgs(1, 2),
 	}
@@ -31,7 +30,7 @@ func ArtefactFetchCommand(
 
 		resultSlice := make([]networkmodel.ArtefactModel, 0)
 
-		defer func() { printArtefactFetchResult(cmd, resultSlice) }()
+		defer func() { printFetchResult(cmd, resultSlice) }()
 
 		// Attempt to parse uuid.
 		artefactUUID, err := uuid.Parse(args[0])
@@ -77,15 +76,4 @@ func ArtefactFetchCommand(
 	}
 
 	return command
-}
-
-// printArtefactFetchResult prints the passed result set to the command output stream.
-func printArtefactFetchResult(cmd *cobra.Command, result []networkmodel.ArtefactModel) {
-	output, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		cmd.PrintErrln(bunt.Sprintf("Red{failed to marshal result %s}", err))
-		return
-	}
-
-	cmd.Println(string(output))
 }

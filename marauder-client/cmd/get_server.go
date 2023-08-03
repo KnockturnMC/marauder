@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
@@ -12,13 +11,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ServersFetchCommand constructs the servers fetch subcommand.
-func ServersFetchCommand(
+// GetServerCommand constructs the servers fetch subcommand.
+func GetServerCommand(
 	ctx context.Context,
 	configuration *Configuration,
 ) *cobra.Command {
 	command := &cobra.Command{
-		Use:   "fetch",
+		Use:   "server uuid|(environment [name])",
 		Short: "Fetch information about servers from the controller",
 		Args:  cobra.RangeArgs(1, 2),
 	}
@@ -31,7 +30,7 @@ func ServersFetchCommand(
 
 		resultSlice := make([]networkmodel.ServerModel, 0)
 
-		defer func() { printServerFetchResult(cmd, resultSlice) }()
+		defer func() { printFetchResult(cmd, resultSlice) }()
 
 		// Attempt to parse uuid.
 		serverUUID, err := uuid.Parse(args[0])
@@ -49,7 +48,7 @@ func ServersFetchCommand(
 			return nil
 		}
 
-		// Fetching via identifier and version.
+		// Fetching via environment and identifier.
 		if len(args) == 2 {
 			cmd.PrintErrln(bunt.Sprintf("Gray{requesting server by environment and identifier}"))
 
@@ -77,15 +76,4 @@ func ServersFetchCommand(
 	}
 
 	return command
-}
-
-// printArtefactFetchResult prints the passed result set to the command output stream.
-func printServerFetchResult(cmd *cobra.Command, result []networkmodel.ServerModel) {
-	output, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		cmd.PrintErrln(bunt.Sprintf("Red{failed to marshal result %s}", err))
-		return
-	}
-
-	cmd.Println(string(output))
 }

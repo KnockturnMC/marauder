@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strings"
@@ -17,12 +18,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// DeploymentServerPatch creates the patch that may be used to update the is state of servers.
-func DeploymentServerPatch(
+// ServerDeploymentPatch creates the patch that may be used to update the is state of servers.
+func ServerDeploymentPatch(
 	db *sqlm.DB,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {
-		serverUUID := context.Param("server")
+		serverUUID := context.Param("uuid")
 		serverID, err := uuid.Parse(serverUUID)
 		if err != nil {
 			_ = context.Error(response.RestErrorFromDescription(http.StatusBadRequest, "could not parse uuid in url params"))
@@ -46,6 +47,23 @@ func DeploymentServerPatch(
 
 		if err := updateRequest.CheckFilled(); err != nil {
 			_ = context.Error(response.RestErrorFromDescription(http.StatusBadRequest, err.Error()))
+			return
+		}
+
+		artefactByUUID, err := access.FetchArtefactByUUID(context, db, updateRequest.ArtefactUUID)
+		if err != nil {
+			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
+				sql.ErrNoRows: {ResponseCode: http.StatusBadRequest, Description: "failed to find artefact"},
+			}, fmt.Errorf("failed to fetch artefact %s: %w", updateRequest.ArtefactUUID, err)))
+
+			return
+		}
+
+		if artefactByUUID.Identifier != updateRequest.ArtefactIdentifier {
+			_ = context.Error(response.RestErrorFromDescription(http.StatusBadRequest, fmt.Sprintf(
+				"artefact %s has identifier %s, expected %s", updateRequest.ArtefactUUID, artefactByUUID.Identifier, updateRequest.ArtefactIdentifier,
+			)))
+
 			return
 		}
 

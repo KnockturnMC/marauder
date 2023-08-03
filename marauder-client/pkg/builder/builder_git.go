@@ -39,7 +39,7 @@ func FetchBuildInformation(path string) (filemodel.BuildInformation, error) {
 		CommitUser:           commit.Author.Name,
 		CommitEmail:          commit.Author.Email,
 		CommitHash:           commit.Hash.String(),
-		CommitMessage:        commit.Message,
+		CommitMessage:        strings.TrimRight(commit.Message, "\n"),
 		Timestamp:            time.Now(),
 		BuildSpecificVersion: "g" + commit.Hash.String()[:7],
 	}

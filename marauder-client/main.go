@@ -11,20 +11,33 @@ import (
 func main() {
 	configuration := cmd.DefaultConfiguration()
 
-	context := context.Background()
+	ctx := context.Background()
 
 	root := cmd.RootCommand(&configuration)
 
-	artefactCommand := cmd.ArtefactCommand()
-	artefactCommand.AddCommand(cmd.ArtefactBuildCommand())
-	artefactCommand.AddCommand(cmd.ArtefactSignCommand(&configuration))
-	artefactCommand.AddCommand(cmd.ArtefactPublishCommand(context, &configuration))
-	artefactCommand.AddCommand(cmd.ArtefactFetchCommand(context, &configuration))
-	root.AddCommand(artefactCommand)
+	getCommand := cmd.GetCommand()
 
-	serverCommand := cmd.ServerCommand()
-	serverCommand.AddCommand(cmd.ServersFetchCommand(context, &configuration))
-	root.AddCommand(serverCommand)
+	getArtefactCommand := cmd.GetArtefactCommand(ctx, &configuration)
+	getArtefactCommand.AddCommand(cmd.GetArtefactManifestCommand(ctx, &configuration))
+	getCommand.AddCommand(getArtefactCommand)
+
+	getServerCommand := cmd.GetServerCommand(ctx, &configuration)
+	getServerCommand.AddCommand(cmd.GetServerStateCommand(ctx, &configuration))
+	getCommand.AddCommand(getServerCommand)
+
+	root.AddCommand(getCommand)
+
+	buildCommand := cmd.BuildCommand()
+	buildCommand.AddCommand(cmd.BuildArtefactCommand(&configuration))
+	root.AddCommand(buildCommand)
+
+	publish := cmd.PublishCommand()
+	publish.AddCommand(cmd.PublishArtefactCommand(ctx, &configuration))
+	root.AddCommand(publish)
+
+	deployCommand := cmd.DeployCommand()
+	deployCommand.AddCommand(cmd.DeployArtefactCommand(ctx, &configuration))
+	root.AddCommand(deployCommand)
 
 	root.SetOut(os.Stdout) // By default, the output should properly be printed to stdout.
 

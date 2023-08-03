@@ -12,8 +12,9 @@ import (
 type CommandContextKeyType int
 
 const (
-	// KeyBuildCmdOutput defines the shared key used by the build command to store the build output target in a context.
-	KeyBuildCmdOutput CommandContextKeyType = iota
+	// KeyBuildCommandTarballLocation defines the shared key used by the build command to store the build output target in a context.
+	KeyBuildCommandTarballLocation CommandContextKeyType = iota
+	KeyBuildCommandSignatureLocation
 )
 
 // DefaultConfiguration defines the default configuration.

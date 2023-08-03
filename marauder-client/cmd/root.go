@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/gonvenience/bunt"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/spf13/cobra"
@@ -49,4 +52,15 @@ tarball and uploading said artefact to the marauder controller.`,
 	}
 
 	return command
+}
+
+// printArtefactFetchResult prints the passed result set to the command output stream.
+func printFetchResult[R any](cmd *cobra.Command, result R) {
+	output, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		cmd.PrintErrln(bunt.Sprintf("Red{failed to marshal result %s}", err))
+		return
+	}
+
+	cmd.Println(string(output))
 }

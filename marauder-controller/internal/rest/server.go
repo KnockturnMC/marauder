@@ -61,10 +61,10 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 	group.GET("/servers/:environment", endpoints.ServersEnvironmentGet(dependencies.DatabaseHandle))
 	group.GET("/servers/:environment/:name", endpoints.ServersEnvironmentNameGet(dependencies.DatabaseHandle))
 
-	group.GET("/deployment/:server", endpoints.DeploymentServerGet(dependencies.DatabaseHandle))
-	group.GET("/deployment/:server/state/:state", endpoints.DeploymentServerGet(dependencies.DatabaseHandle))
-	group.PATCH("/deployment/:server/state/:state", endpoints.DeploymentServerPatch(dependencies.DatabaseHandle))
-	group.GET("/deployment/:server/update", endpoints.DeploymentServerUpdatesGet(dependencies.DatabaseHandle))
+	group.GET("/server/:uuid/state/", endpoints.ServerStateGet(dependencies.DatabaseHandle))
+	group.GET("/server/:uuid/state/:state", endpoints.ServerStateGet(dependencies.DatabaseHandle))
+	group.PATCH("/server/:uuid/state/:state", endpoints.ServerDeploymentPatch(dependencies.DatabaseHandle))
+	group.GET("/server/:uuid/apply/update", endpoints.ServerUpdate(dependencies.DatabaseHandle))
 
 	group.Any("/operator/:server/*path", endpoints.OperationServerProxy(dependencies.DatabaseHandle, dependencies.OperatorHTTPClient))
 

@@ -39,7 +39,7 @@ func HTTPGetAndBind[T any](ctx context.Context, client *http.Client, path string
 	}
 
 	if err := json.Unmarshal(body, &bindTarget); err != nil {
-		return bindTarget, fmt.Errorf("failed to bind response to bind target: %w", err)
+		return bindTarget, fmt.Errorf("failed to bind response %s to bind target: %w", string(body), err)
 	}
 
 	return bindTarget, nil
