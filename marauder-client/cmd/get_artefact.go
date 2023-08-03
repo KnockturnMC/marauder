@@ -7,14 +7,13 @@ import (
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 )
 
 // GetArtefactCommand constructs the artefact fetch subcommand.
 func GetArtefactCommand(
 	ctx context.Context,
-	configuration *Configuration,
+	config *Configuration,
 ) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "artefact <uuid|identifier> [version]",
@@ -23,7 +22,7 @@ func GetArtefactCommand(
 	}
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		client, err := configuration.CreateTLSReadyHTTPClient()
+		client, err := config.CreateTLSReadyHTTPClient()
 		if err != nil {
 			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
@@ -33,11 +32,11 @@ func GetArtefactCommand(
 		defer func() { printFetchResult(cmd, resultSlice) }()
 
 		// Attempt to parse uuid.
-		artefactUUID, err := uuid.Parse(args[0])
+		artefactUUID, err := parseOrFetchArtefactUUID(ctx, client, config, args[0])
 		if err == nil {
 			cmd.PrintErrln(bunt.Sprintf("Gray{requesting artefact by uuid %s}", artefactUUID))
 
-			url := fmt.Sprintf("%s/artefact/%s", configuration.ControllerHost, artefactUUID)
+			url := fmt.Sprintf("%s/artefact/%s", config.ControllerHost, artefactUUID)
 			resultStruct, err := utils.HTTPGetAndBind(ctx, client, url, networkmodel.ArtefactModel{})
 			if err != nil {
 				return fmt.Errorf("failed to fetch specific artefact %s: %w", artefactUUID, err)
@@ -52,7 +51,7 @@ func GetArtefactCommand(
 		if len(args) == 2 {
 			cmd.PrintErrln(bunt.Sprintf("Gray{requesting artefact by identifier and version}"))
 
-			url := fmt.Sprintf("%s/artefacts/%s/%s", configuration.ControllerHost, args[0], args[1])
+			url := fmt.Sprintf("%s/artefacts/%s/%s", config.ControllerHost, args[0], args[1])
 			artefact, err := utils.HTTPGetAndBind(ctx, client, url, networkmodel.ArtefactModel{})
 			if err != nil {
 				return fmt.Errorf("failed to fetch artefact %s:%s: %w", args[0], args[1], err)
@@ -65,7 +64,7 @@ func GetArtefactCommand(
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{requesting artefacts by identifier}"))
 
-		artefacts, err := utils.HTTPGetAndBind(ctx, client, configuration.ControllerHost+"/artefacts/"+args[0], resultSlice)
+		artefacts, err := utils.HTTPGetAndBind(ctx, client, config.ControllerHost+"/artefacts/"+args[0], resultSlice)
 		if err != nil {
 			return fmt.Errorf("failed to fetch artefacts %s: %w", args[0], err)
 		}

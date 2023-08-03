@@ -3,11 +3,15 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
@@ -71,14 +75,19 @@ func PublishArtefactCommand(
 		defer func() { _ = response.Body.Close() }()
 
 		bodyBytes, _ := io.ReadAll(response.Body)
-		if response.StatusCode >= http.StatusBadRequest || response.StatusCode < http.StatusOK {
+		if !utils.IsOkayStatusCode(response.StatusCode) {
 			cmd.Println(bunt.Sprintf("Red{failed to upload artefact, controller error: %s}", string(bodyBytes)))
 
 			return nil
 		}
 
-		cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully uploaded artefact to controller}"))
+		var artefactResult networkmodel.ArtefactModel
+		if err := json.Unmarshal(bodyBytes, &artefactResult); err != nil {
+			return fmt.Errorf("failed to unmarshal controller result %s: %w", string(bodyBytes), err)
+		}
 
+		cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully uploaded artefact to controller}"))
+		cmd.SetContext(context.WithValue(cmd.Context(), KeyPublishResultArtefactModel, artefactResult)) //nolint:contextcheck
 		cmd.Println(string(bodyBytes))
 
 		return nil

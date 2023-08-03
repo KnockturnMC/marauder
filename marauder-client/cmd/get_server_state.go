@@ -8,14 +8,13 @@ import (
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 )
 
 // GetServerStateCommand constructs the servers fetch subcommand.
 func GetServerStateCommand(
 	ctx context.Context,
-	configuration *Configuration,
+	config *Configuration,
 ) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "state serverUUID [state]",
@@ -24,7 +23,7 @@ func GetServerStateCommand(
 	}
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		client, err := configuration.CreateTLSReadyHTTPClient()
+		client, err := config.CreateTLSReadyHTTPClient()
 		if err != nil {
 			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
@@ -34,9 +33,9 @@ func GetServerStateCommand(
 		defer func() { printFetchResult(cmd, resultSlice) }()
 
 		// Attempt to parse uuid.
-		serverUUID, err := uuid.Parse(args[0])
+		serverUUID, err := parseOrFetchServerUUID(ctx, client, config, args[0])
 		if err != nil {
-			return fmt.Errorf("failed to parse server uuid: %w", err)
+			return fmt.Errorf("failed to fetch server uuid: %w", err)
 		}
 
 		var stateType networkmodel.ServerStateType = networkmodel.IS
@@ -50,7 +49,10 @@ func GetServerStateCommand(
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{requesting state %s for %s}", stateType, serverUUID))
 
-		servers, err := utils.HTTPGetAndBind(ctx, client, configuration.ControllerHost+"/server/"+args[0]+"/state/"+string(stateType), resultSlice)
+		servers, err := utils.HTTPGetAndBind(ctx, client, fmt.Sprintf(
+			"%s/server/%s/state/%s",
+			config.ControllerHost, serverUUID, string(stateType),
+		), resultSlice)
 		if err != nil {
 			return fmt.Errorf("failed to fetch server state for %s: %w", args[0], err)
 		}

@@ -15,6 +15,7 @@ const (
 	// KeyBuildCommandTarballLocation defines the shared key used by the build command to store the build output target in a context.
 	KeyBuildCommandTarballLocation CommandContextKeyType = iota
 	KeyBuildCommandSignatureLocation
+	KeyPublishResultArtefactModel
 )
 
 // DefaultConfiguration defines the default configuration.

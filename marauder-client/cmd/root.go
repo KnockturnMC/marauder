@@ -1,9 +1,16 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
+	"github.com/google/uuid"
 
 	"github.com/gonvenience/bunt"
 
@@ -13,6 +20,9 @@ import (
 )
 
 var version = "develop"
+
+// ErrIncorrectArgumentFormat is returned if the argument is in a wrong format.
+var ErrIncorrectArgumentFormat = errors.New("incorrect format")
 
 // RootCommand is the root entry command for the builder tool.
 func RootCommand(configuration *Configuration) *cobra.Command {
@@ -63,4 +73,50 @@ func printFetchResult[R any](cmd *cobra.Command, result R) {
 	}
 
 	cmd.Println(string(output))
+}
+
+// parseOrFetchArtefactUUID parses or fetches an artefact uuid based on either a uuid or a / separated compound.
+func parseOrFetchArtefactUUID(ctx context.Context, httpClient *http.Client, configuration *Configuration, input string) (uuid.UUID, error) {
+	parsedUUID, err := uuid.Parse(input)
+	if err == nil {
+		return parsedUUID, nil
+	}
+
+	inputAsSlice := strings.Split(input, "/")
+	if len(inputAsSlice) != 2 {
+		return [16]byte{}, fmt.Errorf("input did not match %%s/%%s format: %w", ErrIncorrectArgumentFormat)
+	}
+
+	var artefact networkmodel.ArtefactModel
+	foundArtefact, err := utils.HTTPGetAndBind(ctx, httpClient, fmt.Sprintf(
+		"%s/artefacts/%s/%s", configuration.ControllerHost, inputAsSlice[0], inputAsSlice[1],
+	), artefact)
+	if err != nil {
+		return [16]byte{}, fmt.Errorf("failed to find provided artefact %s: %w", input, err)
+	}
+
+	return foundArtefact.UUID, nil
+}
+
+// parseOrFetchServerUUID parses or fetches a server uuid based on either a uuid or a / separated compound.
+func parseOrFetchServerUUID(ctx context.Context, httpClient *http.Client, configuration *Configuration, input string) (uuid.UUID, error) {
+	parsedUUID, err := uuid.Parse(input)
+	if err == nil {
+		return parsedUUID, nil
+	}
+
+	inputAsSlice := strings.Split(input, "/")
+	if len(inputAsSlice) != 2 {
+		return [16]byte{}, fmt.Errorf("input did not match %%s/%%s format: %w", ErrIncorrectArgumentFormat)
+	}
+
+	var server networkmodel.ServerModel
+	foundServer, err := utils.HTTPGetAndBind(ctx, httpClient, fmt.Sprintf(
+		"%s/servers/%s/%s", configuration.ControllerHost, inputAsSlice[0], inputAsSlice[1],
+	), server)
+	if err != nil {
+		return [16]byte{}, fmt.Errorf("failed to find provided server %s: %w", input, err)
+	}
+
+	return foundServer.UUID, nil
 }

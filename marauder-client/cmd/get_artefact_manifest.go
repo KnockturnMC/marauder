@@ -8,14 +8,13 @@ import (
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 )
 
 // GetArtefactManifestCommand constructs the artefact manifest fetch subcommand.
 func GetArtefactManifestCommand(
 	ctx context.Context,
-	configuration *Configuration,
+	config *Configuration,
 ) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "manifest uuid",
@@ -24,15 +23,15 @@ func GetArtefactManifestCommand(
 	}
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		client, err := configuration.CreateTLSReadyHTTPClient()
+		client, err := config.CreateTLSReadyHTTPClient()
 		if err != nil {
 			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
 
 		// Attempt to parse uuid.
-		artefactUUID, err := uuid.Parse(args[0])
+		artefactUUID, err := parseOrFetchArtefactUUID(ctx, client, config, args[0])
 		if err != nil {
-			return fmt.Errorf("failed to parse artefact uuid: %w", err)
+			return fmt.Errorf("failed to fetch artefact uuid: %w", err)
 		}
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{requesting manifest by identifier}"))
@@ -41,7 +40,7 @@ func GetArtefactManifestCommand(
 		manifest, err := utils.HTTPGetAndBind(
 			ctx,
 			client,
-			configuration.ControllerHost+"/artefact/"+artefactUUID.String()+"/download/manifest",
+			config.ControllerHost+"/artefact/"+artefactUUID.String()+"/download/manifest",
 			result,
 		)
 		if err != nil {

@@ -79,7 +79,7 @@ func BuildArtefactCommand(
 
 		cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully build artefact}"))
 		cmd.Println(finalTarballName)
-		cmd.SetContext(context.WithValue(command.Context(), KeyBuildCommandTarballLocation, finalTarballName))
+		cmd.SetContext(context.WithValue(cmd.Context(), KeyBuildCommandTarballLocation, finalTarballName))
 
 		if sign {
 			if err := signCreatedArtefact(cmd, configuration, tarballFileRef, finalTarballName); err != nil {

@@ -11,7 +11,6 @@ import (
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 )
 
@@ -26,15 +25,15 @@ func DeployArtefactCommand(
 	}
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		artefactIdentifier := args[0]
-		artefactUUID, err := uuid.Parse(args[1])
-		if err != nil {
-			return fmt.Errorf("failed to parse artefact uuid: %w", err)
-		}
-
 		client, err := config.CreateTLSReadyHTTPClient()
 		if err != nil {
 			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
+		}
+
+		artefactIdentifier := args[0]
+		artefactUUID, err := parseOrFetchArtefactUUID(ctx, client, config, args[1])
+		if err != nil {
+			return fmt.Errorf("failed to find artefact uuid: %w", err)
 		}
 
 		updateRequest := networkmodel.UpdateServerStateRequest{
@@ -49,9 +48,9 @@ func DeployArtefactCommand(
 
 		// Iterate over servers
 		for i := 2; i < len(args); i++ {
-			serverUUID, err := uuid.Parse(args[i])
+			serverUUID, err := parseOrFetchServerUUID(ctx, client, config, args[i])
 			if err != nil {
-				return fmt.Errorf("failed to parse server uuid at %d: %w", i, err)
+				return fmt.Errorf("failed to fetch server uuid at %d: %w", i, err)
 			}
 
 			response, err := do(ctx, client, http.MethodPatch, fmt.Sprintf(
