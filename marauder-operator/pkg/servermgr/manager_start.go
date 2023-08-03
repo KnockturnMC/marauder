@@ -3,6 +3,7 @@ package servermgr
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 
@@ -27,10 +28,15 @@ func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.Serve
 		return fmt.Errorf("failed to retrieve the container information: %w", err)
 	}
 
-	if _, err := d.DockerClient.ImagePull(ctx, server.Image, types.ImagePullOptions{
+	reader, err := d.DockerClient.ImagePull(ctx, server.Image, types.ImagePullOptions{
 		RegistryAuth: d.DockerEncodedAuth,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("failed to pull image for server start: %w", err)
+	}
+
+	if _, err := io.ReadAll(reader); err != nil {
+		return fmt.Errorf("failed to consume image pull reader: %w", err)
 	}
 
 	location, err := d.computeServerFolderLocation(server)

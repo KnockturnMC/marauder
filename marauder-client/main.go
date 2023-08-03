@@ -39,6 +39,10 @@ func main() {
 	deployCommand.AddCommand(cmd.DeployArtefactCommand(ctx, &configuration))
 	root.AddCommand(deployCommand)
 
+	operateCommand := cmd.OperateCommand()
+	operateCommand.AddCommand(cmd.OperateServerCommand(ctx, &configuration))
+	root.AddCommand(operateCommand)
+
 	root.SetOut(os.Stdout) // By default, the output should properly be printed to stdout.
 
 	if err := root.Execute(); err != nil {

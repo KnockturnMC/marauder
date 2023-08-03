@@ -7,6 +7,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/Goldziher/go-utils/maputils"
+	"golang.org/x/exp/slices"
 	"io"
 	"os"
 	"path"
@@ -119,11 +121,45 @@ func (d DockerBasedManager) validateOldDeploymentHashOnDisk(oldArtefact filemode
 
 // deleteOldArtefact deletes an old artefact in the server folder.
 func (d DockerBasedManager) deleteOldArtefact(oldArtefact filemodel.Manifest, serverFolderLocation string) error {
+	potentiallyEmptyParentDirsAsMap := make(map[string]bool)
+
+	// Delete all files
 	for filePathWithPrefix := range oldArtefact.Hashes {
 		filePathWithoutPrefix, _ := strings.CutPrefix(filePathWithPrefix, pkg.FileParentDirectoryInArtefact)
+		cleanedFilePathWithoutPrefix := path.Clean(filePathWithoutPrefix)
 
-		if err := os.Remove(path.Join(serverFolderLocation, path.Clean(filePathWithoutPrefix))); err != nil {
+		fullFilePath := path.Join(serverFolderLocation, cleanedFilePathWithoutPrefix)
+		if err := os.Remove(fullFilePath); err != nil {
 			return fmt.Errorf("failed to delete file %s: %w", filePathWithPrefix, err)
+		}
+
+		for {
+			cleanedFilePathWithoutPrefix = path.Dir(cleanedFilePathWithoutPrefix)
+			if cleanedFilePathWithoutPrefix == "." {
+				break
+			}
+
+			potentiallyEmptyParentDirsAsMap[path.Join(serverFolderLocation, cleanedFilePathWithoutPrefix)] = true
+		}
+	}
+
+	// Sort to depth
+	potentiallyEmptyDirs := maputils.Keys(potentiallyEmptyParentDirsAsMap)
+	slices.SortFunc(potentiallyEmptyDirs, func(a, b string) int {
+		return strings.Count(b, "/") - strings.Count(a, "/")
+	})
+
+	// Iterate and remove is possible.
+	for _, dir := range potentiallyEmptyDirs {
+		dirOutput, err := os.ReadDir(dir)
+		if err != nil {
+			return fmt.Errorf("failed to read potentially empty parent dir %s: %w", dir, err)
+		}
+
+		if len(dirOutput) == 0 {
+			if err := os.Remove(dir); err != nil {
+				return fmt.Errorf("failed to remove empty parent dir %s: %w", dir, err)
+			}
 		}
 	}
 

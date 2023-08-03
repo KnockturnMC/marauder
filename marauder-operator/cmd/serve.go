@@ -20,6 +20,10 @@ func defaultConfiguration() rest.ServerConfiguration {
 		Port:           1981,
 		ServerCertPath: "",
 		ServerKeyPath:  "",
+		Docker: rest.Docker{
+			Username: "",
+			Password: "",
+		},
 		Controller: rest.Controller{
 			Endpoint:    "http://localhost:8080/v1",
 			WorkerCount: 5,

@@ -51,7 +51,7 @@ func (h *HTTPClient) FetchServer(ctx context.Context, server uuid.UUID) (network
 }
 
 func (h *HTTPClient) FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.VersionDiff, error) {
-	diffs, err := utils.HTTPGetAndBind(ctx, h.Client, h.ControllerURL+"/deployment/"+server.String()+"/update", make([]networkmodel.VersionDiff, 0))
+	diffs, err := utils.HTTPGetAndBind(ctx, h.Client, h.ControllerURL+"/server/"+server.String()+"/state/update", make([]networkmodel.VersionDiff, 0))
 	if err != nil {
 		return nil, fmt.Errorf("failed http get: %w", err)
 	}
@@ -61,7 +61,11 @@ func (h *HTTPClient) FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]n
 
 // FetchManifest fetches a manifest based on its uuid.
 func (h *HTTPClient) FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error) {
-	manifest, err := utils.HTTPGetAndBind(ctx, h.Client, h.ControllerURL+"/artefact/"+artefact.String()+"/download/manifest", filemodel.Manifest{})
+	manifest, err := utils.HTTPGetAndBind(ctx, h.Client, h.ControllerURL+"/artefact/"+artefact.String()+"/download/manifest", filemodel.Manifest{
+		Files:            make([]filemodel.FileReference, 0),
+		BuildInformation: &filemodel.BuildInformation{},
+		Hashes:           make(filemodel.Hashes),
+	})
 	if err != nil {
 		return filemodel.Manifest{}, fmt.Errorf("failed http get: %w", err)
 	}

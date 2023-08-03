@@ -62,9 +62,9 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 	group.GET("/servers/:environment/:name", endpoints.ServersEnvironmentNameGet(dependencies.DatabaseHandle))
 
 	group.GET("/server/:uuid/state/", endpoints.ServerStateGet(dependencies.DatabaseHandle))
+	group.GET("/server/:uuid/state/update", endpoints.ServerUpdate(dependencies.DatabaseHandle))
 	group.GET("/server/:uuid/state/:state", endpoints.ServerStateGet(dependencies.DatabaseHandle))
 	group.PATCH("/server/:uuid/state/:state", endpoints.ServerDeploymentPatch(dependencies.DatabaseHandle))
-	group.GET("/server/:uuid/apply/update", endpoints.ServerUpdate(dependencies.DatabaseHandle))
 
 	group.Any("/operator/:server/*path", endpoints.OperationServerProxy(dependencies.DatabaseHandle, dependencies.OperatorHTTPClient))
 

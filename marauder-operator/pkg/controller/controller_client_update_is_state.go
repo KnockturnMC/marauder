@@ -27,7 +27,7 @@ func (h *HTTPClient) UpdateIsState(ctx context.Context, server uuid.UUID, artefa
 	httpReq, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPatch,
-		fmt.Sprintf("%s/deployment/%s/state/is", h.ControllerURL, server.String()),
+		fmt.Sprintf("%s/server/%s/state/is", h.ControllerURL, server.String()),
 		bytes.NewBuffer(updateRequestMarshalled),
 	)
 	if err != nil {

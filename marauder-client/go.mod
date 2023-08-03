@@ -5,12 +5,14 @@ go 1.20
 require (
 	github.com/go-git/go-git/v5 v5.7.0
 	github.com/gonvenience/bunt v1.3.5
+	github.com/google/uuid v1.3.0
 	github.com/goreleaser/fileglob v1.3.0
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.8
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.10.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -54,5 +56,4 @@ require (
 	golang.org/x/tools v0.9.3 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
