@@ -18,7 +18,9 @@ import (
 func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.ServerModel) error {
 	serverName := d.computeUniqueDockerContainerNameFor(serverModel)
 
-	timeoutInSeconds := int((time.Minute * 5).Seconds())
+	timeout := time.Minute * 5
+	timeoutInSeconds := int(timeout.Seconds())
+	deadline := time.Now().Add(timeout)
 	if err := d.DockerClient.ContainerStop(ctx, serverName, container.StopOptions{
 		Timeout: &timeoutInSeconds,
 	}); err != nil {
@@ -27,6 +29,21 @@ func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.S
 		}
 
 		return fmt.Errorf("failed to stop container %s: %w", serverName, err)
+	}
+
+	// Await removal via AutoRemove: true flag in container creation.
+	for {
+		if time.Now().After(deadline) {
+			break
+		}
+
+		if _, err := d.retrieveContainerInfo(ctx, serverModel); err != nil {
+			if utils.CheckDockerError(err, client.IsErrNotFound) {
+				return nil
+			}
+
+			return fmt.Errorf("failed to retrieve container info: %w", err)
+		}
 	}
 
 	if err := d.DockerClient.ContainerRemove(ctx, serverName, types.ContainerRemoveOptions{}); err != nil {

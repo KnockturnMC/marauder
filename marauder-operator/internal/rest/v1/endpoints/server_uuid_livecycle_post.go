@@ -91,9 +91,9 @@ func handleLifecycleAction(
 }
 
 // handleLifecycleActionStart handles the start lifecycle action.
-func handleLifecycleActionStart(context *gin.Context, serverManager servermgr.Manager, server networkmodel.ServerModel) bool {
-	if err := serverManager.Start(context, server); err != nil {
-		_ = context.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to start server: %w", err)))
+func handleLifecycleActionStart(ctx *gin.Context, serverManager servermgr.Manager, server networkmodel.ServerModel) bool {
+	if err := serverManager.Start(ctx, server); err != nil {
+		_ = ctx.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to start server: %w", err)))
 		return false
 	}
 
@@ -101,9 +101,9 @@ func handleLifecycleActionStart(context *gin.Context, serverManager servermgr.Ma
 }
 
 // handleLifecycleActionStart handles the stop lifecycle action.
-func handleLifecycleActionStop(context *gin.Context, serverManager servermgr.Manager, server networkmodel.ServerModel) bool {
-	if err := serverManager.Stop(context, server); err != nil {
-		_ = context.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to stop server: %w", err)))
+func handleLifecycleActionStop(ctx *gin.Context, serverManager servermgr.Manager, server networkmodel.ServerModel) bool {
+	if err := serverManager.Stop(ctx, server); err != nil {
+		_ = ctx.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to stop server: %w", err)))
 		return false
 	}
 
