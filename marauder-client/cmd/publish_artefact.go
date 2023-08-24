@@ -36,7 +36,13 @@ func PublishArtefactCommand(
 			artefactFileSignaturePath = args[1]
 		}
 
-		return publishArtefactInternalExecute(ctx, cmd, configuration, artefactFilePath, artefactFileSignaturePath)
+		// create http client
+		httpClient, err := configuration.CreateTLSReadyHTTPClient()
+		if err != nil {
+			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
+		}
+
+		return publishArtefactInternalExecute(ctx, cmd, httpClient, configuration, artefactFilePath, artefactFileSignaturePath)
 	}
 
 	return command
@@ -46,21 +52,16 @@ func PublishArtefactCommand(
 func publishArtefactInternalExecute(
 	ctx context.Context,
 	cmd *cobra.Command,
+	httpClient *http.Client,
 	configuration *Configuration,
 	artefactFilePath, artefactFileSignaturePath string,
 ) error {
-	// create http client
-	httpClient, err := configuration.CreateTLSReadyHTTPClient()
-	if err != nil {
-		cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
-	}
-
 	// Create multipart writer
 	var body bytes.Buffer
 	multipartWriter := multipart.NewWriter(&body)
 
 	// Write artefact
-	err = writeFileToMultipart(multipartWriter, artefactFilePath, "artefact")
+	err := writeFileToMultipart(multipartWriter, artefactFilePath, "artefact")
 	if err != nil {
 		return fmt.Errorf("failed to write artefact to request body: %w", err)
 	}

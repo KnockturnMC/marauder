@@ -75,6 +75,24 @@ func printFetchResult[R any](cmd *cobra.Command, result R) {
 	cmd.Println(string(output))
 }
 
+// fetchArtefact fetches a specific artefact from the remote controller host.
+func fetchArtefact(
+	ctx context.Context,
+	httpClient *http.Client,
+	configuration *Configuration,
+	artefactUUID uuid.UUID,
+) (networkmodel.ArtefactModel, error) {
+	var artefact networkmodel.ArtefactModel
+	foundArtefact, err := utils.HTTPGetAndBind(ctx, httpClient, fmt.Sprintf(
+		"%s/artefact/%s", configuration.ControllerHost, artefactUUID.String(),
+	), artefact)
+	if err != nil {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("failed to fetch artefact: %w", err)
+	}
+
+	return foundArtefact, nil
+}
+
 // parseOrFetchArtefactUUID parses or fetches an artefact uuid based on either a uuid or a / separated compound.
 func parseOrFetchArtefactUUID(ctx context.Context, httpClient *http.Client, configuration *Configuration, input string) (uuid.UUID, error) {
 	parsedUUID, err := uuid.Parse(input)

@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
+	"github.com/Goldziher/go-utils/sliceutils"
+	"github.com/gonvenience/bunt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -13,17 +17,28 @@ func WorkflowBuildAndDeployCommand(
 	ctx context.Context,
 	configuration *Configuration,
 ) *cobra.Command {
-	var manifestFileLocation string
+	var (
+		manifestFileLocation  string
+		deploymentEnvironment string
+	)
 
 	command := &cobra.Command{
-		Use:   "build-and-deploy",
+		Use:   "build-and-deploy [workdir]",
 		Short: "Builds, signs and pushes and deploys the local artefact found in the working directory",
 		Args:  cobra.MaximumNArgs(1),
 	}
 
 	command.PersistentFlags().StringVarP(&manifestFileLocation, "manifest", "m", ".marauder.json", "location of the manifest file")
+	command.PersistentFlags().StringVarP(&deploymentEnvironment, "env", "e", "", "environment to deploy into")
+
+	_ = command.MarkPersistentFlagRequired("env")
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
+		client, err := configuration.CreateTLSReadyHTTPClient()
+		if err != nil {
+			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
+		}
+
 		workingDirectory := "."
 		if len(args) > 0 {
 			workingDirectory = args[0]
@@ -36,21 +51,56 @@ func WorkflowBuildAndDeployCommand(
 			return fmt.Errorf("failed to build and sign artefact: %w", err)
 		}
 
-		tarballLocation, ok := cmd.Context().Value(KeyBuildCommandTarballOutput).(TarballBuildResult)
-		if !ok {
+		tarballLocation, valueFound := cmd.Context().Value(KeyBuildCommandTarballOutput).(TarballBuildResult)
+		if !valueFound {
 			return fmt.Errorf("failed to retrieve tarball location from build logic %v: %w", tarballLocation, ErrContextMissingValue)
 		}
 
+		// Delete tarball afterwards
 		defer func() { _ = os.Remove(tarballLocation.TarballSignatureLocation) }()
 
+		// publish it
 		if err := publishArtefactInternalExecute(
 			ctx,
 			cmd,
+			client,
 			configuration,
 			tarballLocation.TarballFileLocation,
 			tarballLocation.TarballSignatureLocation,
 		); err != nil {
 			return fmt.Errorf("failed to publish artefact to controller: %w", err)
+		}
+
+		publishedArtefactModel, valueFound := cmd.Context().Value(KeyPublishResultArtefactModel).(networkmodel.ArtefactModel)
+		if !valueFound {
+			return fmt.Errorf("failed to retrieve published artefact from build logic %v: %w", publishedArtefactModel, ErrContextMissingValue)
+		}
+
+		serverTargets, valueFound := tarballLocation.Manifest.DeploymentTargets[deploymentEnvironment]
+		if !valueFound {
+			serverTargets = make([]string, 0)
+			cmd.PrintErrln(bunt.Sprintf("Gray{no servers found for environment %s}", deploymentEnvironment))
+		}
+
+		// Map them to strings for the deployment function
+		serverTargets = sliceutils.Map(serverTargets, func(value string, _ int, _ []string) string {
+			return deploymentEnvironment + "/" + value
+		})
+
+		cmd.PrintErrln(bunt.Sprintf("Gray{deploying to servers: %v}", serverTargets))
+
+		if err := deployArtefactInternalExecute(
+			ctx,
+			cmd,
+			client,
+			configuration,
+			networkmodel.UpdateServerStateRequest{
+				ArtefactIdentifier: publishedArtefactModel.Identifier,
+				ArtefactUUID:       publishedArtefactModel.UUID,
+			},
+			serverTargets,
+		); err != nil {
+			return fmt.Errorf("failed to deploy artefact to targeted servers: %w", err)
 		}
 
 		return nil
