@@ -1,6 +1,9 @@
 linters:
   enable-all: true
   disable: [
+    # faulty linters
+    "nlreturn",
+
     # Archived
     "maligned", "scopelint", "golint", "interfacer", "structcheck", "varcheck", "nosnakecase", "deadcode", "ifshort",
     
@@ -17,7 +20,7 @@ linters:
 
     # Linters disabled due to generic support missing
     "rowserrcheck",
-    "wastedassign"
+    "wastedassign",
   ]
 linters-settings:
   lll:

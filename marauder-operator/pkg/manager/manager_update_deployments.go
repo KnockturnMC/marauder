@@ -7,12 +7,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/Goldziher/go-utils/maputils"
-	"golang.org/x/exp/slices"
 	"io"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/Goldziher/go-utils/maputils"
+	"golang.org/x/exp/slices"
 
 	"gitea.knockturnmc.com/marauder/controller/pkg/artefact"
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"

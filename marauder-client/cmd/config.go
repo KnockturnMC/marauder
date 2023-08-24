@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,11 +13,13 @@ import (
 type CommandContextKeyType int
 
 const (
-	// KeyBuildCommandTarballLocation defines the shared key used by the build command to store the build output target in a context.
-	KeyBuildCommandTarballLocation CommandContextKeyType = iota
-	KeyBuildCommandSignatureLocation
+	// KeyBuildCommandTarballOutput defines the shared key used by the build command to store the build output target in a context.
+	KeyBuildCommandTarballOutput CommandContextKeyType = iota
 	KeyPublishResultArtefactModel
 )
+
+// ErrContextMissingValue is returned if a command expects a context to contain a specific value, but it isn't there.
+var ErrContextMissingValue = errors.New("context missing value")
 
 // DefaultConfiguration defines the default configuration.
 func DefaultConfiguration() Configuration {

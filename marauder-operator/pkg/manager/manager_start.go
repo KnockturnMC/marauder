@@ -3,11 +3,12 @@ package manager
 import (
 	"context"
 	"fmt"
-	"github.com/docker/docker/api/types/filters"
-	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 	"os"
 	"strconv"
+
+	"github.com/docker/docker/api/types/filters"
+	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/docker/docker/client"

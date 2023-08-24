@@ -36,64 +36,74 @@ func PublishArtefactCommand(
 			artefactFileSignaturePath = args[1]
 		}
 
-		// create http client
-		httpClient, err := configuration.CreateTLSReadyHTTPClient()
-		if err != nil {
-			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
-		}
+		return publishArtefactInternalExecute(ctx, cmd, configuration, artefactFilePath, artefactFileSignaturePath)
+	}
 
-		// Create multipart writer
-		var body bytes.Buffer
-		multipartWriter := multipart.NewWriter(&body)
+	return command
+}
 
-		// Write artefact
-		err = writeFileToMultipart(multipartWriter, artefactFilePath, "artefact")
-		if err != nil {
-			return fmt.Errorf("failed to write artefact to request body: %w", err)
-		}
+// publishArtefactInternalExecute is the internal command execution logic for the publish artefact sub command.
+func publishArtefactInternalExecute(
+	ctx context.Context,
+	cmd *cobra.Command,
+	configuration *Configuration,
+	artefactFilePath, artefactFileSignaturePath string,
+) error {
+	// create http client
+	httpClient, err := configuration.CreateTLSReadyHTTPClient()
+	if err != nil {
+		cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
+	}
 
-		// Write signature
-		err = writeFileToMultipart(multipartWriter, artefactFileSignaturePath, "signature")
-		if err != nil {
-			return fmt.Errorf("failed to write signature to request body: %w", err)
-		}
+	// Create multipart writer
+	var body bytes.Buffer
+	multipartWriter := multipart.NewWriter(&body)
 
-		// Close the writer to finalise writing and flush to the bytes.Buffer
-		if err := multipartWriter.Close(); err != nil {
-			return fmt.Errorf("failed to close multipart writer: %w", err)
-		}
+	// Write artefact
+	err = writeFileToMultipart(multipartWriter, artefactFilePath, "artefact")
+	if err != nil {
+		return fmt.Errorf("failed to write artefact to request body: %w", err)
+	}
 
-		// post the to controller
-		uploadEndpoint := fmt.Sprintf("%s/artefact", configuration.ControllerHost)
+	// Write signature
+	err = writeFileToMultipart(multipartWriter, artefactFileSignaturePath, "signature")
+	if err != nil {
+		return fmt.Errorf("failed to write signature to request body: %w", err)
+	}
 
-		cmd.PrintErrln(bunt.Sprintf("Gray{uploading artefact to %s}", uploadEndpoint))
-		response, err := do(ctx, httpClient, http.MethodPost, uploadEndpoint, multipartWriter.FormDataContentType(), &body)
-		if err != nil {
-			return fmt.Errorf("failed to post to controller: %w", err)
-		}
+	// Close the writer to finalise writing and flush to the bytes.Buffer
+	if err := multipartWriter.Close(); err != nil {
+		return fmt.Errorf("failed to close multipart writer: %w", err)
+	}
 
-		defer func() { _ = response.Body.Close() }()
+	// post the to controller
+	uploadEndpoint := fmt.Sprintf("%s/artefact", configuration.ControllerHost)
 
-		bodyBytes, _ := io.ReadAll(response.Body)
-		if !utils.IsOkayStatusCode(response.StatusCode) {
-			cmd.Println(bunt.Sprintf("Red{failed to upload artefact, controller error: %s}", string(bodyBytes)))
+	cmd.PrintErrln(bunt.Sprintf("Gray{uploading artefact to %s}", uploadEndpoint))
+	response, err := do(ctx, httpClient, http.MethodPost, uploadEndpoint, multipartWriter.FormDataContentType(), &body)
+	if err != nil {
+		return fmt.Errorf("failed to post to controller: %w", err)
+	}
 
-			return nil
-		}
+	defer func() { _ = response.Body.Close() }()
 
-		var artefactResult networkmodel.ArtefactModel
-		if err := json.Unmarshal(bodyBytes, &artefactResult); err != nil {
-			return fmt.Errorf("failed to unmarshal controller result %s: %w", string(bodyBytes), err)
-		}
-
-		cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully uploaded artefact to controller}"))
-		cmd.SetContext(context.WithValue(cmd.Context(), KeyPublishResultArtefactModel, artefactResult)) //nolint:contextcheck
-		cmd.Println(string(bodyBytes))
+	bodyBytes, _ := io.ReadAll(response.Body)
+	if !utils.IsOkayStatusCode(response.StatusCode) {
+		cmd.Println(bunt.Sprintf("Red{failed to upload artefact, controller error: %s}", string(bodyBytes)))
 
 		return nil
 	}
 
-	return command
+	var artefactResult networkmodel.ArtefactModel
+	if err := json.Unmarshal(bodyBytes, &artefactResult); err != nil {
+		return fmt.Errorf("failed to unmarshal controller result %s: %w", string(bodyBytes), err)
+	}
+
+	cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully uploaded artefact to controller}"))
+	cmd.SetContext(context.WithValue(cmd.Context(), KeyPublishResultArtefactModel, artefactResult)) //nolint:contextcheck
+	cmd.Println(string(bodyBytes))
+
+	return nil
 }
 
 // do creates a request and publishes it to the passed http client.

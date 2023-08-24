@@ -43,6 +43,10 @@ func main() {
 	operateCommand.AddCommand(cmd.OperateServerCommand(ctx, &configuration))
 	root.AddCommand(operateCommand)
 
+	workflowCommand := cmd.WorkflowCommand()
+	workflowCommand.AddCommand(cmd.WorkflowBuildAndDeployCommand(ctx, &configuration))
+	root.AddCommand(workflowCommand)
+
 	root.SetOut(os.Stdout) // By default, the output should properly be printed to stdout.
 
 	if err := root.Execute(); err != nil {

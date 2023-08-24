@@ -49,48 +49,62 @@ func BuildArtefactCommand(
 			workDirectory = args[0]
 		}
 
-		// Parse the manifest.
-		manifest, err := parseManifestFromDisk(cmd, manifestFileLocation, workDirectory)
-		if err != nil {
-			return err
-		}
-
-		// Parse the tarball name from the commandline flag
-		finalTarballName, err := utils.ExecuteStringTemplateToString(tarballName, OutputNameData{
-			Identifier: manifest.Identifier,
-			Version:    manifest.Version,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to execute template for tarball output name: %w", err)
-		}
-
-		// Create the output file
-		cmd.PrintErrln(bunt.Sprintf("Gray{creating output artefact tarball *%s*}", finalTarballName))
-		tarballFileRef, err := os.Create(finalTarballName)
-		if err != nil {
-			return fmt.Errorf("failed to open output tarball: %w", err)
-		}
-		defer utils.SwallowClose(tarballFileRef)
-
-		// Build and write the tarball to file.
-		if err := builder.CreateArtefactTarball(os.DirFS(workDirectory), manifest, tarballFileRef); err != nil {
-			return fmt.Errorf("failed to create artefact tarball: %w", err)
-		}
-
-		cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully build artefact}"))
-		cmd.Println(finalTarballName)
-		cmd.SetContext(context.WithValue(cmd.Context(), KeyBuildCommandTarballLocation, finalTarballName))
-
-		if sign {
-			if err := signCreatedArtefact(cmd, configuration, tarballFileRef, finalTarballName); err != nil {
-				return err
-			}
-		}
-
-		return nil
+		return buildArtefactInternalExecute(cmd, configuration, manifestFileLocation, tarballName, workDirectory, sign)
 	}
 
 	return command
+}
+
+// buildArtefactInternalExecute is the internal execution logic of the build artefact command.
+func buildArtefactInternalExecute(
+	cmd *cobra.Command,
+	configuration *Configuration,
+	manifestFileLocation, tarballName, workDirectory string,
+	sign bool,
+) error {
+	// Parse the manifest.
+	manifest, err := parseManifestFromDisk(cmd, manifestFileLocation, workDirectory)
+	if err != nil {
+		return err
+	}
+
+	// Parse the tarball name from the commandline flag
+	finalTarballName, err := utils.ExecuteStringTemplateToString(tarballName, OutputNameData{
+		Identifier: manifest.Identifier,
+		Version:    manifest.Version,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to execute template for tarball output name: %w", err)
+	}
+
+	// Create the output file
+	cmd.PrintErrln(bunt.Sprintf("Gray{creating output artefact tarball *%s*}", finalTarballName))
+	tarballFileRef, err := os.Create(finalTarballName)
+	if err != nil {
+		return fmt.Errorf("failed to open output tarball: %w", err)
+	}
+	defer utils.SwallowClose(tarballFileRef)
+
+	// Build and write the tarball to file.
+	if err := builder.CreateArtefactTarball(os.DirFS(workDirectory), manifest, tarballFileRef); err != nil {
+		return fmt.Errorf("failed to create artefact tarball: %w", err)
+	}
+
+	cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully build artefact}"))
+	cmd.Println(finalTarballName)
+	cmd.SetContext(context.WithValue(cmd.Context(), KeyBuildCommandTarballOutput, TarballBuildResult{
+		TarballFileLocation:      finalTarballName,
+		TarballSignatureLocation: "",
+		Manifest:                 manifest,
+	}))
+
+	if sign {
+		if err := signCreatedArtefact(cmd, configuration, tarballFileRef, finalTarballName); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // parseManifestFromDisk parses the manifest from the disk with the given name in the given work directory.
@@ -168,7 +182,21 @@ func signCreatedArtefact(cmd *cobra.Command, configuration *Configuration, tarba
 
 	cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully signed artefact}"))
 	cmd.Println(signatureFileName)
-	cmd.SetContext(context.WithValue(cmd.Context(), KeyBuildCommandSignatureLocation, signatureFileName))
+
+	result, ok := cmd.Context().Value(KeyBuildCommandTarballOutput).(TarballBuildResult)
+	if !ok {
+		return fmt.Errorf("failed to retrieve existing context: %w", ErrContextMissingValue)
+	}
+
+	result.TarballSignatureLocation = signatureFileName
+	cmd.SetContext(context.WithValue(cmd.Context(), KeyBuildCommandTarballOutput, result))
 
 	return nil
+}
+
+// TarballBuildResult is a simple helper struct stored in the context of the build command to indicate the location of the output.
+type TarballBuildResult struct {
+	Manifest                 filemodel.Manifest
+	TarballFileLocation      string
+	TarballSignatureLocation string
 }
