@@ -1,8 +1,10 @@
-package servermgr
+package manager
 
 import (
 	"context"
 	"fmt"
+	"github.com/docker/docker/api/types/filters"
+	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 	"os"
 	"strconv"
@@ -28,15 +30,8 @@ func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.Serve
 		return fmt.Errorf("failed to retrieve the container information: %w", err)
 	}
 
-	reader, err := d.DockerClient.ImagePull(ctx, server.Image, types.ImagePullOptions{
-		RegistryAuth: d.DockerEncodedAuth,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to pull image for server start: %w", err)
-	}
-
-	if _, err := io.ReadAll(reader); err != nil {
-		return fmt.Errorf("failed to consume image pull reader: %w", err)
+	if err := d.ensureLocalImageExists(ctx, server.Image); err != nil {
+		return fmt.Errorf("failed to ensure local server image exists: %w", err)
 	}
 
 	location, err := d.computeServerFolderLocation(server)
@@ -72,7 +67,10 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 			AutoRemove: true,
 		},
 		nil,
-		nil,
+		&v1.Platform{
+			Architecture: "amd64",
+			OS:           "linux",
+		},
 		d.computeUniqueDockerContainerNameFor(server),
 	)
 	if err != nil {
@@ -92,6 +90,35 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 		_ = d.DockerClient.ContainerRemove(ctx, computeServerFolderLocation.ID, types.ContainerRemoveOptions{})
 		return fmt.Errorf("failed to start container: %w", err)
 	}
+
+	return nil
+}
+
+// ensureLocalImageExists ensures that the passed image exists locally, ready for a container to be created from.
+func (d DockerBasedManager) ensureLocalImageExists(ctx context.Context, image string) error {
+	list, err := d.DockerClient.ImageList(ctx, types.ImageListOptions{
+		Filters: filters.NewArgs(filters.Arg("reference", image)),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to list existing images on host: %w", err)
+	}
+
+	if len(list) > 0 {
+		return nil // There is an image with the given reference.
+	}
+
+	reader, err := d.DockerClient.ImagePull(ctx, image, types.ImagePullOptions{
+		RegistryAuth: d.DockerEncodedAuth,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to pull image for server start: %w", err)
+	}
+
+	if _, err := io.ReadAll(reader); err != nil {
+		return fmt.Errorf("failed to consume image pull reader: %w", err)
+	}
+
+	defer func() { _ = reader.Close() }()
 
 	return nil
 }

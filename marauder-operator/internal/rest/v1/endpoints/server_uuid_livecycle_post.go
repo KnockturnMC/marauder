@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"gitea.knockturnmc.com/marauder/operator/pkg/servermgr"
+	"gitea.knockturnmc.com/marauder/operator/pkg/manager"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
@@ -17,7 +17,7 @@ import (
 func ServerLifecycleActionPost(
 	operatorIdentifier string,
 	controllerClient controller.Client,
-	serverManager servermgr.Manager,
+	serverManager manager.Manager,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		serverUUIDAsString := context.Param("uuid")
@@ -62,7 +62,7 @@ func ServerLifecycleActionPost(
 func handleLifecycleAction(
 	context *gin.Context,
 	action networkmodel.LifecycleChangeActionType,
-	serverManager servermgr.Manager,
+	serverManager manager.Manager,
 	server networkmodel.ServerModel,
 ) bool {
 	switch action {
@@ -75,7 +75,7 @@ func handleLifecycleAction(
 	case networkmodel.UpgradeDeployment:
 		if err := serverManager.UpdateDeployments(context, server); err != nil {
 			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
-				servermgr.ErrServerRunning: {
+				manager.ErrServerRunning: {
 					ResponseCode: http.StatusBadRequest, Description: fmt.Sprintf("the server %s is running", server.Name),
 				},
 			}, fmt.Errorf("failed to update deployments: %w", err)))
@@ -91,7 +91,7 @@ func handleLifecycleAction(
 }
 
 // handleLifecycleActionStart handles the start lifecycle action.
-func handleLifecycleActionStart(ctx *gin.Context, serverManager servermgr.Manager, server networkmodel.ServerModel) bool {
+func handleLifecycleActionStart(ctx *gin.Context, serverManager manager.Manager, server networkmodel.ServerModel) bool {
 	if err := serverManager.Start(ctx, server); err != nil {
 		_ = ctx.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to start server: %w", err)))
 		return false
@@ -101,7 +101,7 @@ func handleLifecycleActionStart(ctx *gin.Context, serverManager servermgr.Manage
 }
 
 // handleLifecycleActionStart handles the stop lifecycle action.
-func handleLifecycleActionStop(ctx *gin.Context, serverManager servermgr.Manager, server networkmodel.ServerModel) bool {
+func handleLifecycleActionStop(ctx *gin.Context, serverManager manager.Manager, server networkmodel.ServerModel) bool {
 	if err := serverManager.Stop(ctx, server); err != nil {
 		_ = ctx.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to stop server: %w", err)))
 		return false

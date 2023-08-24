@@ -8,7 +8,7 @@ import (
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
 
-	"gitea.knockturnmc.com/marauder/operator/pkg/servermgr"
+	"gitea.knockturnmc.com/marauder/operator/pkg/manager"
 	dockerClient "github.com/docker/docker/client"
 
 	"gitea.knockturnmc.com/marauder/operator/pkg/controller"
@@ -26,7 +26,7 @@ type ServerDependencies struct {
 	ControllerClient controller.Client
 
 	// The ServerManager is responsible for managing the docker instances on the server.
-	ServerManager servermgr.Manager
+	ServerManager manager.Manager
 
 	// TLSConfig provides the tsl configuration for the gin engine.
 	TLSConfig *tls.Config
@@ -68,7 +68,7 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 	return ServerDependencies{
 		Version:          version,
 		ControllerClient: controllerClient,
-		ServerManager: &servermgr.DockerBasedManager{
+		ServerManager: &manager.DockerBasedManager{
 			ControllerClient:       controllerClient,
 			DockerClient:           dockerClientInstance,
 			DockerEncodedAuth:      dockerEncodedBasicAuth,

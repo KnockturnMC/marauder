@@ -1,4 +1,4 @@
-package servermgr
+package manager
 
 import (
 	"archive/tar"
