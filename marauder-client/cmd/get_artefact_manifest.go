@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
 )
@@ -29,20 +26,14 @@ func GetArtefactManifestCommand(
 		}
 
 		// Attempt to parse uuid.
-		artefactUUID, err := parseOrFetchArtefactUUID(ctx, client, config, args[0])
+		artefactUUID, err := client.ResolveArtefactReference(ctx, args[0])
 		if err != nil {
 			return fmt.Errorf("failed to fetch artefact uuid: %w", err)
 		}
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{requesting manifest by identifier}"))
 
-		result := filemodel.Manifest{}
-		manifest, err := utils.HTTPGetAndBind(
-			ctx,
-			client,
-			config.ControllerHost+"/artefact/"+artefactUUID.String()+"/download/manifest",
-			result,
-		)
+		manifest, err := client.FetchManifest(ctx, artefactUUID)
 		if err != nil {
 			return fmt.Errorf("failed to fetch artefacts %s: %w", args[0], err)
 		}

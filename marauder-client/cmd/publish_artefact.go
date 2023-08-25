@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 
@@ -61,13 +63,13 @@ func publishArtefactInternalExecute(
 	multipartWriter := multipart.NewWriter(&body)
 
 	// Write artefact
-	err := writeFileToMultipart(multipartWriter, artefactFilePath, "artefact")
+	err := utils.WriteFileToMultipart(multipartWriter, artefactFilePath, "artefact")
 	if err != nil {
 		return fmt.Errorf("failed to write artefact to request body: %w", err)
 	}
 
 	// Write signature
-	err = writeFileToMultipart(multipartWriter, artefactFileSignaturePath, "signature")
+	err = utils.WriteFileToMultipart(multipartWriter, artefactFileSignaturePath, "signature")
 	if err != nil {
 		return fmt.Errorf("failed to write signature to request body: %w", err)
 	}
@@ -81,7 +83,7 @@ func publishArtefactInternalExecute(
 	uploadEndpoint := fmt.Sprintf("%s/artefact", configuration.ControllerHost)
 
 	cmd.PrintErrln(bunt.Sprintf("Gray{uploading artefact to %s}", uploadEndpoint))
-	response, err := do(ctx, httpClient, http.MethodPost, uploadEndpoint, multipartWriter.FormDataContentType(), &body)
+	response, err := utils.PerformHTTPRequest(ctx, httpClient, http.MethodPost, uploadEndpoint, multipartWriter.FormDataContentType(), &body)
 	if err != nil {
 		return fmt.Errorf("failed to post to controller: %w", err)
 	}
@@ -90,9 +92,12 @@ func publishArtefactInternalExecute(
 
 	bodyBytes, _ := io.ReadAll(response.Body)
 	if !utils.IsOkayStatusCode(response.StatusCode) {
-		cmd.Println(bunt.Sprintf("Red{failed to upload artefact, controller error: %s}", string(bodyBytes)))
+		if response.StatusCode != http.StatusConflict {
+			cmd.Println(bunt.Sprintf("Red{failed to upload artefact, controller error: %s}", string(bodyBytes)))
+			return nil
+		}
 
-		return nil
+		return nil // TODO check if to-be-published artefact matches existing artefact.
 	}
 
 	var artefactResult networkmodel.ArtefactModel
@@ -107,47 +112,16 @@ func publishArtefactInternalExecute(
 	return nil
 }
 
-// do creates a request and publishes it to the passed http client.
-func do(
-	ctx context.Context,
-	httpClient *http.Client,
-	method string,
-	controllerHost string,
-	contentType string,
-	body *bytes.Buffer,
-) (*http.Response, error) {
-	postRequest, err := http.NewRequestWithContext(ctx, method, controllerHost, body)
+// publishArtefactCheckExisting is responsible for checking if the artefact at the given path exists on the controller.
+func publishArtefactCheckExisting(ctx *context.Context, command *cobra.Command, httpClient *http.Client, path string) error {
+	fileHandle, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create post request: %w", err)
+		return fmt.Errorf("failed to open publishing artefact: %w", err)
 	}
 
-	postRequest.Header.Set("Content-Type", contentType)
+	defer func() { _ = fileHandle.Close() }()
 
-	response, err := httpClient.Do(postRequest)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute post request: %w", err)
-	}
+	_, _ = artefact.ReadManifestFromTarball(fileHandle)
 
-	return response, nil
-}
-
-// writeFileToMultipart writes the passed file to the multipart writer.
-func writeFileToMultipart(multipartWriter *multipart.Writer, filePath string, name string) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to open file to upload: %w", err)
-	}
-
-	defer func() { _ = file.Close() }()
-
-	artefactSigUpload, err := multipartWriter.CreateFormFile(name, name)
-	if err != nil {
-		return fmt.Errorf("failed to create form file for %s: %w", name, err)
-	}
-
-	if _, err := io.Copy(artefactSigUpload, file); err != nil {
-		return fmt.Errorf("failed to write %s to form header: %w", name, err)
-	}
-
-	return nil
+	return nil // TODO work
 }

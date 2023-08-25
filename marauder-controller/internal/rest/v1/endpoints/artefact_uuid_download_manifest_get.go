@@ -1,19 +1,15 @@
 package endpoints
 
 import (
-	"archive/tar"
 	"bytes"
-	"compress/gzip"
 	"database/sql"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg"
 	artefactlib "gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
@@ -65,43 +61,11 @@ func ArtefactUUIDDownloadManifestGet(
 // readManifestFromTarball reads the manifest from the passed artefact model with binary.
 func readManifestFromTarball(binary *networkmodel.ArtefactModelWithBinary) (*artefactlib.Manifest, error) {
 	byteReader := bytes.NewBuffer(binary.TarballBlob)
-	gzipReader, err := gzip.NewReader(byteReader)
+
+	manifest, err := artefact.ReadManifestFromTarball(byteReader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+		return nil, fmt.Errorf("failed to read manifest: %w", err)
 	}
 
-	defer func() { _ = gzipReader.Close() }()
-
-	tarballReader := tar.NewReader(gzipReader)
-	var manifestPtr *artefactlib.Manifest
-	for {
-		nextHeader, err := tarballReader.Next()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-
-			return nil, fmt.Errorf("failed to read next tarball header: %w", err)
-		}
-
-		if nextHeader.Name != pkg.ManifestFileName {
-			continue
-		}
-
-		manifestAsBytes, err := io.ReadAll(tarballReader)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read manifest bytes from tarball: %w", err)
-		}
-
-		manifest := artefactlib.Manifest{}
-		if err := json.Unmarshal(manifestAsBytes, &manifest); err != nil {
-			return nil, fmt.Errorf("failed to parse manifest from json: %w", err)
-		}
-
-		manifestPtr = &manifest
-
-		break
-	}
-
-	return manifestPtr, nil
+	return manifest, err
 }

@@ -72,7 +72,7 @@ func ArtefactUploadGet(
 		})
 		if err != nil {
 			_ = context.Error(response.RestErrorFrom(
-				http.StatusInternalServerError,
+				access.RestErrFromAccessErr(err),
 				"failed to insert artefact into db",
 				fmt.Errorf("failed to upload artefact to database: %w", err),
 			))

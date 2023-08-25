@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"strings"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
+
 	"gitea.knockturnmc.com/marauder/operator/pkg/manager"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
-	"gitea.knockturnmc.com/marauder/operator/pkg/controller"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

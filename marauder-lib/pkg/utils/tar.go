@@ -163,7 +163,7 @@ func (f *FriendlyTarballWriterImpl) AddFolder(rootFs fs.FS, folderPathInFS strin
 			return fmt.Errorf("failed to walk folder %s: %w", path, err)
 		}
 
-		if d.IsDir() { // We do not need to read folders
+		if d.IsDir() { // We PerformHTTPRequest not need to read folders
 			return nil
 		}
 

@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
 
 	"gitea.knockturnmc.com/marauder/operator/pkg/manager"
 	dockerClient "github.com/docker/docker/client"
-
-	"gitea.knockturnmc.com/marauder/operator/pkg/controller"
 
 	_ "github.com/lib/pq" // postgres driver
 	"github.com/sirupsen/logrus"
@@ -23,7 +23,7 @@ type ServerDependencies struct {
 	Version string
 
 	// The http client to communicate with the operator
-	ControllerClient controller.Client
+	ControllerClient controller.DownloadingClient
 
 	// The ServerManager is responsible for managing the docker instances on the server.
 	ServerManager manager.Manager
@@ -59,9 +59,11 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 
 	downloadService := worker.NewMutexDownloadService(httpClient, dispatcher, configuration.Disk.DownloadPath)
 
-	controllerClient := &controller.HTTPClient{
-		Client:          httpClient,
-		ControllerURL:   configuration.Controller.Endpoint,
+	controllerClient := &controller.DownloadingHTTPClient{
+		HTTPClient: controller.HTTPClient{
+			Client:        httpClient,
+			ControllerURL: configuration.Controller.Endpoint,
+		},
 		DownloadService: downloadService,
 	}
 

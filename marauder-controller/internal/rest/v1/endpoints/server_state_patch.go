@@ -76,7 +76,7 @@ func ServerDeploymentPatch(
 		})
 		if err != nil {
 			_ = context.Error(response.RestErrorFromErr(
-				http.StatusInternalServerError,
+				access.RestErrFromAccessErr(err),
 				fmt.Errorf("failed to update deployment for server %s/%s: %w", serverID, updateRequest.ArtefactIdentifier, err)),
 			)
 

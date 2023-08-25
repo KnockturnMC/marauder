@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (h *HTTPClient) UpdateIsState(ctx context.Context, server uuid.UUID, artefactIdentifier string, artefactUUID uuid.UUID) error {
+func (h *HTTPClient) UpdateState(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType, artefactIdentifier string, artefactUUID uuid.UUID) error {
 	updateRequest := networkmodel.UpdateServerStateRequest{
 		ArtefactIdentifier: artefactIdentifier,
 		ArtefactUUID:       artefactUUID,
@@ -27,7 +27,7 @@ func (h *HTTPClient) UpdateIsState(ctx context.Context, server uuid.UUID, artefa
 	httpReq, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPatch,
-		fmt.Sprintf("%s/server/%s/state/is", h.ControllerURL, server.String()),
+		fmt.Sprintf("%s/server/%s/state/%s", h.ControllerURL, server.String(), state),
 		bytes.NewBuffer(updateRequestMarshalled),
 	)
 	if err != nil {

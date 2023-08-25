@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/google/uuid"
 
@@ -19,10 +21,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var version = "develop"
-
 // ErrIncorrectArgumentFormat is returned if the argument is in a wrong format.
 var ErrIncorrectArgumentFormat = errors.New("incorrect format")
+
+var version = "develop"
 
 // RootCommand is the root entry command for the builder tool.
 func RootCommand(configuration *Configuration) *cobra.Command {
@@ -78,14 +80,10 @@ func printFetchResult[R any](cmd *cobra.Command, result R) {
 // fetchArtefact fetches a specific artefact from the remote controller host.
 func fetchArtefact(
 	ctx context.Context,
-	httpClient *http.Client,
+	client controller.Client,
 	configuration *Configuration,
 	artefactUUID uuid.UUID,
 ) (networkmodel.ArtefactModel, error) {
-	var artefact networkmodel.ArtefactModel
-	foundArtefact, err := utils.HTTPGetAndBind(ctx, httpClient, fmt.Sprintf(
-		"%s/artefact/%s", configuration.ControllerHost, artefactUUID.String(),
-	), artefact)
 	if err != nil {
 		return networkmodel.ArtefactModel{}, fmt.Errorf("failed to fetch artefact: %w", err)
 	}
@@ -105,10 +103,6 @@ func parseOrFetchArtefactUUID(ctx context.Context, httpClient *http.Client, conf
 		return [16]byte{}, fmt.Errorf("input did not match %%s/%%s format: %w", ErrIncorrectArgumentFormat)
 	}
 
-	var artefact networkmodel.ArtefactModel
-	foundArtefact, err := utils.HTTPGetAndBind(ctx, httpClient, fmt.Sprintf(
-		"%s/artefacts/%s/%s", configuration.ControllerHost, inputAsSlice[0], inputAsSlice[1],
-	), artefact)
 	if err != nil {
 		return [16]byte{}, fmt.Errorf("failed to find provided artefact %s: %w", input, err)
 	}
@@ -128,10 +122,6 @@ func parseOrFetchServerUUID(ctx context.Context, httpClient *http.Client, config
 		return [16]byte{}, fmt.Errorf("input did not match %%s/%%s format: %w", ErrIncorrectArgumentFormat)
 	}
 
-	var server networkmodel.ServerModel
-	foundServer, err := utils.HTTPGetAndBind(ctx, httpClient, fmt.Sprintf(
-		"%s/servers/%s/%s", configuration.ControllerHost, inputAsSlice[0], inputAsSlice[1],
-	), server)
 	if err != nil {
 		return [16]byte{}, fmt.Errorf("failed to find provided server %s: %w", input, err)
 	}

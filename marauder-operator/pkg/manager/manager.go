@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gitea.knockturnmc.com/marauder/operator/pkg/controller"
+	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"

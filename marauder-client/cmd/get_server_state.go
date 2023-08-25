@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
 )
@@ -33,7 +32,7 @@ func GetServerStateCommand(
 		defer func() { printFetchResult(cmd, resultSlice) }()
 
 		// Attempt to parse uuid.
-		serverUUID, err := parseOrFetchServerUUID(ctx, client, config, args[0])
+		serverUUID, err := client.ResolveServerReference(ctx, args[0])
 		if err != nil {
 			return fmt.Errorf("failed to fetch server uuid: %w", err)
 		}
@@ -49,15 +48,12 @@ func GetServerStateCommand(
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{requesting state %s for %s}", stateType, serverUUID))
 
-		servers, err := utils.HTTPGetAndBind(ctx, client, fmt.Sprintf(
-			"%s/server/%s/state/%s",
-			config.ControllerHost, serverUUID, string(stateType),
-		), resultSlice)
+		artefacts, err := client.FetchServerStateArtefacts(ctx, serverUUID, stateType)
 		if err != nil {
 			return fmt.Errorf("failed to fetch server state for %s: %w", args[0], err)
 		}
 
-		resultSlice = servers
+		resultSlice = artefacts
 
 		return nil
 	}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
 )
@@ -16,9 +15,9 @@ func GetServerCommand(
 	config *Configuration,
 ) *cobra.Command {
 	command := &cobra.Command{
-		Use:   "server uuid|(environment [name])",
+		Use:   "server [environment|reference]",
 		Short: "Fetch information about servers from the controller",
-		Args:  cobra.RangeArgs(1, 2),
+		Args:  cobra.ExactArgs(1),
 	}
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
@@ -32,12 +31,11 @@ func GetServerCommand(
 		defer func() { printFetchResult(cmd, resultSlice) }()
 
 		// Attempt to parse uuid.
-		serverUUID, err := parseOrFetchServerUUID(ctx, client, config, args[0])
+		serverUUID, err := client.ResolveServerReference(ctx, args[0])
 		if err == nil {
 			cmd.PrintErrln(bunt.Sprintf("Gray{requesting server by uuid %s}", serverUUID))
 
-			url := fmt.Sprintf("%s/server/%s", config.ControllerHost, serverUUID)
-			resultStruct, err := utils.HTTPGetAndBind(ctx, client, url, networkmodel.ServerModel{})
+			resultStruct, err := client.FetchServer(ctx, serverUUID)
 			if err != nil {
 				return fmt.Errorf("failed to fetch specific artefact %s: %w", serverUUID, err)
 			}
@@ -47,24 +45,9 @@ func GetServerCommand(
 			return nil
 		}
 
-		// Fetching via environment and identifier.
-		if len(args) == 2 {
-			cmd.PrintErrln(bunt.Sprintf("Gray{requesting server by environment and identifier}"))
-
-			url := fmt.Sprintf("%s/servers/%s/%s", config.ControllerHost, args[0], args[1])
-			servers, err := utils.HTTPGetAndBind(ctx, client, url, networkmodel.ServerModel{})
-			if err != nil {
-				return fmt.Errorf("failed to fetch servers %s:%s: %w", args[0], args[1], err)
-			}
-
-			resultSlice = append(resultSlice, servers)
-
-			return nil
-		}
-
 		cmd.PrintErrln(bunt.Sprintf("Gray{requesting servers by environment}"))
 
-		servers, err := utils.HTTPGetAndBind(ctx, client, config.ControllerHost+"/servers/"+args[0], resultSlice)
+		servers, err := client.FetchServers(ctx, args[0])
 		if err != nil {
 			return fmt.Errorf("failed to fetch servers %s: %w", args[0], err)
 		}

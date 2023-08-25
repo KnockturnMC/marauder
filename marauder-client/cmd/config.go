@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"golang.org/x/crypto/ssh"
 )
@@ -38,16 +40,22 @@ type Configuration struct {
 }
 
 // CreateTLSReadyHTTPClient creates a tls ready http client for communication with the controller.
-func (c Configuration) CreateTLSReadyHTTPClient() (*http.Client, error) {
+func (c Configuration) CreateTLSReadyHTTPClient() (controller.Client, error) {
 	configuration, err := utils.ParseTLSConfiguration(c.TLSPath)
 	if err != nil {
-		return http.DefaultClient, fmt.Errorf("failed to parse tls config: %w", err)
+		return &controller.HTTPClient{
+			Client:        http.DefaultClient,
+			ControllerURL: c.ControllerHost,
+		}, fmt.Errorf("failed to parse tls config: %w", err)
 	}
 
-	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: configuration,
+	return &controller.HTTPClient{
+		Client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: configuration,
+			},
 		},
+		ControllerURL: c.ControllerHost,
 	}, nil
 }
 

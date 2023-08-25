@@ -1,16 +1,13 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"net/http"
-
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
+	"io"
 )
 
 // OperateServerCommand constructs the operate server subcommand.
@@ -19,7 +16,7 @@ func OperateServerCommand(
 	config *Configuration,
 ) *cobra.Command {
 	command := &cobra.Command{
-		Use:   "server uuid action",
+		Use:   "server serverRef action",
 		Short: "Executes an operation on a given server",
 		Args:  cobra.ExactArgs(2),
 	}
@@ -35,20 +32,15 @@ func OperateServerCommand(
 			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
 
-		serverUUID, err := parseOrFetchServerUUID(ctx, client, config, args[0])
+		serverUUID, err := client.ResolveServerReference(ctx, args[0])
 		if err != nil {
 			return fmt.Errorf("failed to fetch server uuid: %w", err)
 		}
 
-		response, err := do(ctx, client, http.MethodPost, fmt.Sprintf(
-			"%s/operator/%s/server/%s/%s",
-			config.ControllerHost, serverUUID, serverUUID, actionType,
-		), "plain/text", &bytes.Buffer{})
+		err := client.PostToOperator(ctx, serverUUID, actionType)
 		if err != nil {
 			return fmt.Errorf("failed to perform http request to controller: %w", err)
 		}
-
-		defer func() { _ = response.Body.Close() }()
 
 		if !utils.IsOkayStatusCode(response.StatusCode) {
 			faultyResponseBody, err := io.ReadAll(response.Body)
