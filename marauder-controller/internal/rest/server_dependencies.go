@@ -1,8 +1,11 @@
 package rest
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/keyauth"
 	"github.com/jmoiron/sqlx"
@@ -28,6 +31,9 @@ type ServerDependencies struct {
 
 	// The ArtefactValidator used by the server to validate uploaded artefacts.
 	ArtefactValidator artefact.Validator
+
+	// The TLSConfig for the server if tls is enabled.
+	TLSConfig *tls.Config
 }
 
 // CreateServerDependencies creates the server configuration for the server based on the configuration.
@@ -37,8 +43,17 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		return ServerDependencies{}, fmt.Errorf("failed to create dispatcher for artefact validator: %w", err)
 	}
 
+	logrus.Debug("looking for local tls configuration")
+	tlsConfiguration, err := utils.ParseTLSConfiguration(configuration.TLSPath)
+	if err != nil {
+		logrus.Warnf("failed to enable tsl: %s", err)
+	} else {
+		tlsConfiguration.ClientAuth = tls.RequireAndVerifyClientCert
+		tlsConfiguration.ClientCAs = tlsConfiguration.RootCAs
+	}
+
 	logrus.Debug("loading known public keys of artefact signers")
-	keys, err := keyauth.ParseKnownPublicKeys(configuration.AuthorizedKeyPath)
+	keys, err := keyauth.ParseKnownPublicKeys(configuration.KnownClientKeysFile)
 	if err != nil {
 		return ServerDependencies{}, fmt.Errorf("failed to parse authorizsed keys: %w", err)
 	}
@@ -59,5 +74,6 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		DatabaseHandle:     &sqlm.DB{DB: databaseHandle},
 		OperatorHTTPClient: &http.Client{},
 		ArtefactValidator:  artefact.NewWorkedBasedValidator(artefactValidatorDispatcher, keys),
+		TLSConfig:          tlsConfiguration,
 	}, nil
 }

@@ -18,11 +18,10 @@ import (
 
 func defaultConfiguration() rest.ServerConfiguration {
 	return rest.ServerConfiguration{
-		Host:              "localhost",
-		Port:              8080,
-		ServerCertPath:    "",
-		ServerKeyPath:     "",
-		AuthorizedKeyPath: "{{.User.HomeDir}}/.config/marauder/controller/authorized_keys",
+		Host:                "localhost",
+		Port:                8080,
+		TLSPath:             "",
+		KnownClientKeysFile: "{{.User.HomeDir}}/.config/marauder/controller/authorized_keys",
 	}
 }
 

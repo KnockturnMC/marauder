@@ -26,7 +26,7 @@ var ErrContextMissingValue = errors.New("context missing value")
 // DefaultConfiguration defines the default configuration.
 func DefaultConfiguration() Configuration {
 	return Configuration{
-		ControllerHost: "http://localhost:8080/v1",
+		ControllerHost: "https://localhost:8080/v1",
 		TLSPath:        "{{.User.HomeDir}}/.config/marauder/client/tls",
 		SigningKey:     "{{.User.HomeDir}}/.config/marauder/client/signingKey",
 	}
@@ -41,7 +41,12 @@ type Configuration struct {
 
 // CreateTLSReadyHTTPClient creates a tls ready http client for communication with the controller.
 func (c Configuration) CreateTLSReadyHTTPClient() (controller.Client, error) {
-	configuration, err := utils.ParseTLSConfiguration(c.TLSPath)
+	tlsPathResolved, err := utils.EvaluateFilePathTemplate(c.TLSPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse tls path as go template: %w", err)
+	}
+
+	configuration, err := utils.ParseTLSConfiguration(tlsPathResolved)
 	if err != nil {
 		return &controller.HTTPClient{
 			Client:        http.DefaultClient,

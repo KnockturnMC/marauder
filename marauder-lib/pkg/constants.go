@@ -4,13 +4,13 @@ package pkg
 const ManifestFileName = "manifest.json"
 
 // TLSCertificateFileName represents the certificate file name.
-const TLSCertificateFileName = "cert.ctr"
+const TLSCertificateFileName = "tls.crt"
 
 // TLSKeyFileName represents the key file name.
-const TLSKeyFileName = "cert.key"
+const TLSKeyFileName = "tls.key"
 
-// TLSRootCertificate defines the file name of the root certificate.
-const TLSRootCertificate = "root.ctr"
+// TLSPoolDir defines the dir in which all pool certs are found.
+const TLSPoolDir = "pool"
 
 // The FileParentDirectoryInArtefact holds the prefix under which all files are stored in the artefact tarball.
 const FileParentDirectoryInArtefact = "files/"
