@@ -64,7 +64,6 @@ func WorkflowBuildAndDeployCommand(
 			ctx,
 			cmd,
 			client,
-			configuration,
 			tarballLocation.TarballFileLocation,
 			tarballLocation.TarballSignatureLocation,
 		); err != nil {
@@ -93,7 +92,6 @@ func WorkflowBuildAndDeployCommand(
 			ctx,
 			cmd,
 			client,
-			configuration,
 			networkmodel.UpdateServerStateRequest{
 				ArtefactIdentifier: publishedArtefactModel.Identifier,
 				ArtefactUUID:       publishedArtefactModel.UUID,

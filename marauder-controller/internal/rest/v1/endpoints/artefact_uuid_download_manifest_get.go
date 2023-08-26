@@ -67,5 +67,5 @@ func readManifestFromTarball(binary *networkmodel.ArtefactModelWithBinary) (*art
 		return nil, fmt.Errorf("failed to read manifest: %w", err)
 	}
 
-	return manifest, err
+	return manifest, nil
 }

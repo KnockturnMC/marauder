@@ -14,7 +14,13 @@ import (
 	"github.com/google/uuid"
 )
 
-func (h *HTTPClient) UpdateState(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType, artefactIdentifier string, artefactUUID uuid.UUID) error {
+func (h *HTTPClient) UpdateState(
+	ctx context.Context,
+	server uuid.UUID,
+	state networkmodel.ServerStateType,
+	artefactIdentifier string,
+	artefactUUID uuid.UUID,
+) error {
 	updateRequest := networkmodel.UpdateServerStateRequest{
 		ArtefactIdentifier: artefactIdentifier,
 		ArtefactUUID:       artefactUUID,

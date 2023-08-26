@@ -28,7 +28,7 @@ type Manager interface {
 type DockerBasedManager struct {
 	DockerClient           *dockerClient.Client
 	DockerEncodedAuth      string
-	ControllerClient       controller.Client
+	ControllerClient       controller.DownloadingClient
 	ServerDataPathTemplate string
 }
 

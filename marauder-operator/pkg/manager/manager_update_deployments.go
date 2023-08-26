@@ -85,7 +85,7 @@ func (d DockerBasedManager) updateSingleDeployment(
 		return fmt.Errorf("failed to unpack new artefact: %w", err)
 	}
 
-	if err := d.ControllerClient.UpdateIsState(ctx, serverModel.UUID, update.ArtefactIdentifier, update.TargetArtefact); err != nil {
+	if err := d.ControllerClient.UpdateState(ctx, serverModel.UUID, networkmodel.IS, update.ArtefactIdentifier, update.TargetArtefact); err != nil {
 		return fmt.Errorf("failed to update controllers is state for server: %w", err)
 	}
 

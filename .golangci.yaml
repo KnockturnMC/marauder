@@ -17,6 +17,7 @@ linters:
     "depguard", # Defining go.mod again in a separate file is not smart.
     "godox", # Lines that indicate todos or other future work are perfectly fine.
     "dupl", # Duplicates make sense given the logic might change in a but not in b.
+    "interfacebloat", # Interfaces for highly abstracted logic is a pretty nice reason to have a lot of methods.
 
     # Linters disabled due to generic support missing
     "rowserrcheck",

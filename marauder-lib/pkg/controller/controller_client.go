@@ -3,7 +3,10 @@ package controller
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
+
+	"github.com/samber/mo"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
 
@@ -25,6 +28,9 @@ type Client interface {
 	// FetchArtefact fetches an artefact model from the controller given the uuid.
 	FetchArtefact(ctx context.Context, artefact uuid.UUID) (networkmodel.ArtefactModel, error)
 
+	// FetchArtefactByIdentifierAndVersion fetches an artefact model from the controller given the identifier and version.
+	FetchArtefactByIdentifierAndVersion(ctx context.Context, identifier, version string) (networkmodel.ArtefactModel, error)
+
 	// FetchServer fetches a server model from the controller given the uuid.
 	FetchServer(ctx context.Context, server uuid.UUID) (networkmodel.ServerModel, error)
 
@@ -43,8 +49,12 @@ type Client interface {
 	// FetchManifest fetches a manifest based on its uuid.
 	FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error)
 
-	// PostToOperator posts a lifecycle action to the operator of the server for the given server.
-	PostToOperator(ctx context.Context, server uuid.UUID, action networkmodel.LifecycleChangeActionType) error
+	// ExecuteActionOn posts a lifecycle action to the operator of the server for the given server.
+	ExecuteActionOn(ctx context.Context, server uuid.UUID, action networkmodel.LifecycleChangeActionType) error
+
+	// PublishArtefact publishes the artefact read from the given readers to the controller.
+	// The method returns the status code of the response for further usage.
+	PublishArtefact(ctx context.Context, artefact, signature io.Reader) (networkmodel.ArtefactModel, mo.Option[int], error)
 
 	// UpdateState attempts to update the controller about a servers new state for the specific artefact.
 	UpdateState(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType, artefactIdentifier string, artefact uuid.UUID) error

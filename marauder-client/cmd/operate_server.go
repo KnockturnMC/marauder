@@ -3,11 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
-	"io"
 )
 
 // OperateServerCommand constructs the operate server subcommand.
@@ -37,19 +36,9 @@ func OperateServerCommand(
 			return fmt.Errorf("failed to fetch server uuid: %w", err)
 		}
 
-		err := client.PostToOperator(ctx, serverUUID, actionType)
+		err = client.ExecuteActionOn(ctx, serverUUID, actionType)
 		if err != nil {
-			return fmt.Errorf("failed to perform http request to controller: %w", err)
-		}
-
-		if !utils.IsOkayStatusCode(response.StatusCode) {
-			faultyResponseBody, err := io.ReadAll(response.Body)
-			if err != nil {
-				return fmt.Errorf("failed to read not-okay controller response: %w", err)
-			}
-
-			cmd.PrintErrln(bunt.Sprintf("Red{failed to apply action %s on %s: %s}", actionType, serverUUID, faultyResponseBody))
-			return nil
+			return fmt.Errorf("failed to post to operator: %w", err)
 		}
 
 		cmd.PrintErrln(bunt.Sprintf("LimeGreen{performed action %s on %s}", actionType, serverUUID))

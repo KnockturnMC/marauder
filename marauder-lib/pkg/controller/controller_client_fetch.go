@@ -38,6 +38,21 @@ func (h *HTTPClient) FetchArtefact(ctx context.Context, artefact uuid.UUID) (net
 	return bind, nil
 }
 
+// FetchArtefactByIdentifierAndVersion fetches an artefact model from the controller given the identifier and version.
+func (h *HTTPClient) FetchArtefactByIdentifierAndVersion(ctx context.Context, identifier, version string) (networkmodel.ArtefactModel, error) {
+	bind, err := utils.HTTPGetAndBind(ctx, h.Client, fmt.Sprintf(
+		"%s/artefacts/%s/%s",
+		h.ControllerURL,
+		identifier,
+		version,
+	), networkmodel.ArtefactModel{})
+	if err != nil {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("failed http get: %w", err)
+	}
+
+	return bind, nil
+}
+
 // FetchArtefacts fetches artefact models from the controller given the identifier.
 func (h *HTTPClient) FetchArtefacts(ctx context.Context, identifier string) ([]networkmodel.ArtefactModel, error) {
 	bind, err := utils.HTTPGetAndBind(

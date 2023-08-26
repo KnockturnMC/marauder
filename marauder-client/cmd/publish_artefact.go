@@ -1,23 +1,29 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
+	"reflect"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/samber/mo"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
 )
+
+// ErrRemoteManifestMismatch is returned when comparing a remote manifest with a local one and they do not match.
+var ErrRemoteManifestMismatch = errors.New("remote manifest mismatch")
 
 // PublishArtefactCommand constructs the artefact publish subcommand.
 func PublishArtefactCommand(
@@ -44,7 +50,7 @@ func PublishArtefactCommand(
 			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
 
-		return publishArtefactInternalExecute(ctx, cmd, httpClient, configuration, artefactFilePath, artefactFileSignaturePath)
+		return publishArtefactInternalExecute(ctx, cmd, httpClient, artefactFilePath, artefactFileSignaturePath)
 	}
 
 	return command
@@ -54,74 +60,103 @@ func PublishArtefactCommand(
 func publishArtefactInternalExecute(
 	ctx context.Context,
 	cmd *cobra.Command,
-	httpClient *http.Client,
-	configuration *Configuration,
-	artefactFilePath, artefactFileSignaturePath string,
+	client controller.Client,
+	artefactFilePath, signatureFilePath string,
 ) error {
-	// Create multipart writer
-	var body bytes.Buffer
-	multipartWriter := multipart.NewWriter(&body)
-
-	// Write artefact
-	err := utils.WriteFileToMultipart(multipartWriter, artefactFilePath, "artefact")
+	artefactFileHandle, err := os.Open(artefactFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to write artefact to request body: %w", err)
+		return fmt.Errorf("failed to open artefact file: %w", err)
 	}
 
-	// Write signature
-	err = utils.WriteFileToMultipart(multipartWriter, artefactFileSignaturePath, "signature")
+	defer func() { _ = artefactFileHandle.Close() }()
+
+	signatureFileHandle, err := os.Open(signatureFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to write signature to request body: %w", err)
+		return fmt.Errorf("failed to open artefact file: %w", err)
 	}
 
-	// Close the writer to finalise writing and flush to the bytes.Buffer
-	if err := multipartWriter.Close(); err != nil {
-		return fmt.Errorf("failed to close multipart writer: %w", err)
+	defer func() { _ = signatureFileHandle.Close() }()
+
+	publishArtefact, statusCode, err := client.PublishArtefact(
+		ctx,
+		artefactFileHandle,
+		signatureFileHandle,
+	)
+
+	if err != nil && statusCode.IsAbsent() {
+		return fmt.Errorf("failed to publish: %w", err)
 	}
 
-	// post the to controller
-	uploadEndpoint := fmt.Sprintf("%s/artefact", configuration.ControllerHost)
-
-	cmd.PrintErrln(bunt.Sprintf("Gray{uploading artefact to %s}", uploadEndpoint))
-	response, err := utils.PerformHTTPRequest(ctx, httpClient, http.MethodPost, uploadEndpoint, multipartWriter.FormDataContentType(), &body)
+	// publishing did not work out, attempt to find duplicate
 	if err != nil {
-		return fmt.Errorf("failed to post to controller: %w", err)
-	}
-
-	defer func() { _ = response.Body.Close() }()
-
-	bodyBytes, _ := io.ReadAll(response.Body)
-	if !utils.IsOkayStatusCode(response.StatusCode) {
-		if response.StatusCode != http.StatusConflict {
-			cmd.Println(bunt.Sprintf("Red{failed to upload artefact, controller error: %s}", string(bodyBytes)))
-			return nil
+		remoteArtefact, err := publishArtefactTryRecoverConflict(ctx, client, statusCode, artefactFileHandle)
+		if err != nil {
+			return fmt.Errorf("failed to publish artefact: %w", err)
 		}
 
-		return nil // TODO check if to-be-published artefact matches existing artefact.
-	}
-
-	var artefactResult networkmodel.ArtefactModel
-	if err := json.Unmarshal(bodyBytes, &artefactResult); err != nil {
-		return fmt.Errorf("failed to unmarshal controller result %s: %w", string(bodyBytes), err)
+		cmd.PrintErrln(bunt.Sprintf("Gray{found existing matching artefact on controller}"))
+		publishArtefact = remoteArtefact
 	}
 
 	cmd.PrintErrln(bunt.Sprintf("LimeGreen{successfully uploaded artefact to controller}"))
-	cmd.SetContext(context.WithValue(cmd.Context(), KeyPublishResultArtefactModel, artefactResult)) //nolint:contextcheck
-	cmd.Println(string(bodyBytes))
+	cmd.SetContext(context.WithValue(cmd.Context(), KeyPublishResultArtefactModel, publishArtefact)) //nolint:contextcheck
+	publishedArtefactAsJSON, err := json.Marshal(publishArtefact)
+	if err != nil {
+		cmd.Println(fmt.Sprintf("%v", publishArtefact))
+		return fmt.Errorf("failed to marshal published artefact to string: %w", err)
+	}
+
+	cmd.Println(string(publishedArtefactAsJSON))
 
 	return nil
 }
 
-// publishArtefactCheckExisting is responsible for checking if the artefact at the given path exists on the controller.
-func publishArtefactCheckExisting(ctx *context.Context, command *cobra.Command, httpClient *http.Client, path string) error {
-	fileHandle, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("failed to open publishing artefact: %w", err)
+func publishArtefactTryRecoverConflict(
+	ctx context.Context,
+	client controller.Client,
+	statusCode mo.Option[int],
+	artefactFileHandle *os.File,
+) (networkmodel.ArtefactModel, error) {
+	statusCodeAsInt := statusCode.MustGet()
+	if statusCodeAsInt != http.StatusConflict {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("failed to publish: %w", utils.ErrStatusCodeUnrecoverable)
 	}
 
-	defer func() { _ = fileHandle.Close() }()
+	// We have a conflict, the version already exists.
+	if _, err := artefactFileHandle.Seek(0, io.SeekStart); err != nil {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("failed to reset artefact file handle: %w", err)
+	}
 
-	_, _ = artefact.ReadManifestFromTarball(fileHandle)
+	remoteArtefact, err := publishArtefactCheckExisting(ctx, client, artefactFileHandle)
+	if errors.Is(err, ErrRemoteManifestMismatch) {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("conflict on publish, remote artefact exists but does not match: %w", err)
+	} else if err != nil {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("failed to compare conflicting remote artefact with local one: %w", err)
+	}
 
-	return nil // TODO work
+	return remoteArtefact, nil
+}
+
+// publishArtefactCheckExisting is responsible for checking if the artefact at the given path exists on the controller.
+func publishArtefactCheckExisting(ctx context.Context, client controller.Client, artefactFileHandle io.Reader) (networkmodel.ArtefactModel, error) {
+	manifest, err := artefact.ReadManifestFromTarball(artefactFileHandle)
+	if err != nil {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("failed to find manifest: %w", err)
+	}
+
+	remoteArtefact, err := client.FetchArtefactByIdentifierAndVersion(ctx, manifest.Identifier, manifest.Version)
+	if err != nil {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("failed to find remote artefact: %w", err)
+	}
+
+	remoteArtefactManifest, err := client.FetchManifest(ctx, remoteArtefact.UUID)
+	if err != nil {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("failed to fetch remote artefacts manifest: %w", err)
+	}
+
+	if !reflect.DeepEqual(manifest.Files, remoteArtefactManifest.Files) {
+		return networkmodel.ArtefactModel{}, fmt.Errorf("manifests do not match file hashes: %w", ErrRemoteManifestMismatch)
+	}
+
+	return remoteArtefact, nil
 }

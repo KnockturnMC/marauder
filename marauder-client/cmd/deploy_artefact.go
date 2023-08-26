@@ -33,7 +33,7 @@ func DeployArtefactCommand(
 			return fmt.Errorf("failed to find artefact uuid: %w", err)
 		}
 
-		artefact, err := fetchArtefact(ctx, client, config, artefactUUID)
+		artefact, err := client.FetchArtefact(ctx, artefactUUID)
 		if err != nil {
 			return fmt.Errorf("failed to fetch artefact information to deploy: %w", err)
 		}
@@ -56,7 +56,7 @@ func deployArtefactInternalExecute(
 ) error {
 	// Iterate over servers
 	for i := 0; i < len(serverIdentifiers); i++ {
-		serverUUID, err := client.ResolveArtefactReference(ctx, serverIdentifiers[i])
+		serverUUID, err := client.ResolveServerReference(ctx, serverIdentifiers[i])
 		if err != nil {
 			return fmt.Errorf("failed to fetch server uuid at %d: %w", i, err)
 		}
@@ -66,8 +66,6 @@ func deployArtefactInternalExecute(
 		} else {
 			cmd.PrintErrln(bunt.Sprintf("LimeGreen{deployed to %s}", serverUUID))
 		}
-
-		return nil
 	}
 
 	return nil

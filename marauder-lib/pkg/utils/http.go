@@ -9,11 +9,13 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"os"
 )
 
 // ErrBadStatusCode is returned if the controller returned a bad status code.
 var ErrBadStatusCode = errors.New("bad status code")
+
+// ErrStatusCodeUnrecoverable is returned if a logic that may recover a status code failed.
+var ErrStatusCodeUnrecoverable = errors.New("status code unrecoverable")
 
 // HTTPGetAndBind performs a get request using the http client at the given path and binds the result into
 // the passed struct.
@@ -72,14 +74,7 @@ func PerformHTTPRequest(
 }
 
 // WriteFileToMultipart writes the passed file to the multipart writer.
-func WriteFileToMultipart(multipartWriter *multipart.Writer, filePath string, name string) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to open file to upload: %w", err)
-	}
-
-	defer func() { _ = file.Close() }()
-
+func WriteFileToMultipart(multipartWriter *multipart.Writer, file io.Reader, name string) error {
 	artefactSigUpload, err := multipartWriter.CreateFormFile(name, name)
 	if err != nil {
 		return fmt.Errorf("failed to create form file for %s: %w", name, err)
