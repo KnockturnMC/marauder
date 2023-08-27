@@ -20,17 +20,35 @@ builds:
   # The controller
   - goos:
       - "linux"
-      - "darwin"
     goarch:
       - "amd64"
-      - "arm64"
     main: "main.go"
     id: "marauder-controller"
     dir: "marauder-controller"
     binary: "marauderctl"
+    env:
+      - "CGO_ENABLED=0"
     flags:
       - '-trimpath'
     ldflags:
       - '-s -w -extldflags "-static"'
       - "-X gitea.knockturnmc.com/marauder/controller/cmd.version={{.Version}}"
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+  # The operator
+  - goos:
+      - "linux"
+    goarch:
+      - "amd64"
+    main: "main.go"
+    id: "marauder-operator"
+    dir: "marauder-operator"
+    binary: "marauderop"
+    env:
+      - "CGO_ENABLED=0"
+    flags:
+      - '-trimpath'
+    ldflags:
+      - '-s -w -extldflags "-static"'
+      - "-X gitea.knockturnmc.com/marauder/operator/cmd.version={{.Version}}"
     mod_timestamp: '{{ .CommitTimestamp }}'

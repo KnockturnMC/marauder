@@ -3,12 +3,13 @@ module gitea.knockturnmc.com/marauder/client
 go 1.20
 
 require (
+	github.com/Goldziher/go-utils v1.7.3
 	github.com/go-git/go-git/v5 v5.7.0
 	github.com/gonvenience/bunt v1.3.5
-	github.com/google/uuid v1.3.0
 	github.com/goreleaser/fileglob v1.3.0
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.8
+	github.com/samber/mo v1.8.0
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.10.0
@@ -48,7 +49,8 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b // indirect
+	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/term v0.9.0 // indirect

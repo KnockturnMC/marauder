@@ -3,7 +3,7 @@ module gitea.knockturnmc.com/marauder/controller
 go 1.20
 
 require (
-	github.com/Goldziher/go-utils v1.7.2
+	github.com/Goldziher/go-utils v1.7.3
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/docker/docker v24.0.2+incompatible
 	github.com/docker/go-connections v0.4.0

@@ -1,6 +1,5 @@
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25UVaW/CKtUDjefjrs0SPonmDGUVOYP0=
-github.com/Goldziher/go-utils v1.7.2 h1:qgZo8H05IJjwVUvYoscgfXavPyhFyzvfkbr7RH+FBb4=
-github.com/Goldziher/go-utils v1.7.2/go.mod h1:f8MZN25MeSvRSksId/3hwVvoQYwVb9hTxHPBzuNfI0g=
+github.com/Goldziher/go-utils v1.7.3 h1:9wttDDznlzxijDwzH/tC1haz/v32VTl+boBUEAN6QW0=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/avast/retry-go v3.0.0+incompatible h1:4SOWQ7Qs+oroOTQOYnAHqelpCO0biHSxpiH9JdtuBj0=
