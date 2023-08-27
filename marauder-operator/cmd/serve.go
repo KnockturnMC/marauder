@@ -15,11 +15,10 @@ import (
 
 func defaultConfiguration() rest.ServerConfiguration {
 	return rest.ServerConfiguration{
-		Identifier:     "localhost",
-		Host:           "localhost",
-		Port:           1981,
-		ServerCertPath: "",
-		ServerKeyPath:  "",
+		Identifier: "localhost",
+		Host:       "localhost",
+		Port:       1981,
+		TLSPath:    "",
 		Docker: rest.Docker{
 			Username: "",
 			Password: "",

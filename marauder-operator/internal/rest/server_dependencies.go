@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
@@ -34,6 +36,12 @@ type ServerDependencies struct {
 
 // CreateServerDependencies creates the server configuration for the server based on the configuration.
 func CreateServerDependencies(version string, configuration ServerConfiguration) (ServerDependencies, error) {
+	logrus.Debug("looking for local tls configuration")
+	tlsConfiguration, err := utils.ParseTLSConfiguration(configuration.TLSPath)
+	if err != nil {
+		logrus.Warnf("failed to enable tsl: %s", err)
+	}
+
 	logrus.Debug("creating downloads folder on disk")
 	if err := os.MkdirAll(configuration.Disk.DownloadPath, 0o700); err != nil {
 		return ServerDependencies{}, fmt.Errorf("failed to create download path for marauder operator: %w", err)
@@ -50,18 +58,28 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		return ServerDependencies{}, fmt.Errorf("failed to encode docker authentication: %w", err)
 	}
 
-	httpClient := &http.Client{}
+	controllerHTTPClient := &http.Client{}
+
+	// tls is enabled
+	if tlsConfiguration != nil {
+		controllerHTTPClient.Transport = &http.Transport{
+			TLSClientConfig: tlsConfiguration.Clone(),
+		}
+
+		tlsConfiguration.ClientAuth = tls.RequireAndVerifyClientCert
+		tlsConfiguration.ClientCAs = tlsConfiguration.RootCAs
+	}
 
 	dispatcher, err := worker.NewDispatcher[worker.DownloadResult](configuration.Controller.WorkerCount)
 	if err != nil {
 		return ServerDependencies{}, fmt.Errorf("failed to create dispatcher for controller client: %w", err)
 	}
 
-	downloadService := worker.NewMutexDownloadService(httpClient, dispatcher, configuration.Disk.DownloadPath)
+	downloadService := worker.NewMutexDownloadService(controllerHTTPClient, dispatcher, configuration.Disk.DownloadPath)
 
 	controllerClient := &controller.DownloadingHTTPClient{
 		HTTPClient: controller.HTTPClient{
-			Client:        httpClient,
+			Client:        controllerHTTPClient,
 			ControllerURL: configuration.Controller.Endpoint,
 		},
 		DownloadService: downloadService,
@@ -70,6 +88,7 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 	return ServerDependencies{
 		Version:          version,
 		ControllerClient: controllerClient,
+		TLSConfig:        tlsConfiguration,
 		ServerManager: &manager.DockerBasedManager{
 			ControllerClient:       controllerClient,
 			DockerClient:           dockerClientInstance,

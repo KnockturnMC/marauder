@@ -65,7 +65,15 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 	group.GET("/server/:uuid/state/:state", endpoints.ServerStateGet(dependencies.DatabaseHandle))
 	group.PATCH("/server/:uuid/state/:state", endpoints.ServerDeploymentPatch(dependencies.DatabaseHandle))
 
-	group.Any("/operator/:server/*path", endpoints.OperationServerProxy(dependencies.DatabaseHandle, dependencies.OperatorHTTPClient))
+	operatorProtocol := "http"
+	if dependencies.TLSConfig != nil {
+		operatorProtocol = "https"
+	}
+	group.Any("/operator/:server/*path", endpoints.OperationServerProxy(
+		dependencies.DatabaseHandle,
+		dependencies.OperatorHTTPClient,
+		operatorProtocol,
+	))
 
 	logrus.Info("staring server on port ", configuration.Port)
 	engine := &http.Server{

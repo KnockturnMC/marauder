@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"time"
@@ -42,14 +41,17 @@ func StartMarauderOperatorServer(configuration ServerConfiguration, dependencies
 		Addr:              fmt.Sprintf("%s:%d", configuration.Host, configuration.Port),
 		Handler:           server,
 		ReadHeaderTimeout: 30 * time.Second,
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS13,
-		},
+		TLSConfig:         dependencies.TLSConfig,
 	}
 
-	serverListenAndServeErr := engine.ListenAndServe()
-	if serverListenAndServeErr != nil {
-		return fmt.Errorf("failed to listen and serve: %w", serverListenAndServeErr)
+	var serveErr error
+	if engine.TLSConfig != nil {
+		serveErr = engine.ListenAndServeTLS("", "") // Defined in config
+	} else {
+		serveErr = engine.ListenAndServe()
+	}
+	if serveErr != nil {
+		return fmt.Errorf("failed to listen and serve: %w", serveErr)
 	}
 
 	return nil

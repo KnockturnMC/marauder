@@ -47,9 +47,6 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 	tlsConfiguration, err := utils.ParseTLSConfiguration(configuration.TLSPath)
 	if err != nil {
 		logrus.Warnf("failed to enable tsl: %s", err)
-	} else {
-		tlsConfiguration.ClientAuth = tls.RequireAndVerifyClientCert
-		tlsConfiguration.ClientCAs = tlsConfiguration.RootCAs
 	}
 
 	logrus.Debug("loading known public keys of artefact signers")
@@ -69,10 +66,23 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		return ServerDependencies{}, fmt.Errorf("failed to open database connection pool: %w", err)
 	}
 
+	operatorClient := &http.Client{}
+
+	// tls is enabled
+	if tlsConfiguration != nil {
+		operatorClient.Transport = &http.Transport{ // Enable on client for operator
+			TLSClientConfig: tlsConfiguration.Clone(),
+		}
+
+		// Configure client auth requirement for server side tls config.
+		tlsConfiguration.ClientAuth = tls.RequireAndVerifyClientCert
+		tlsConfiguration.ClientCAs = tlsConfiguration.RootCAs
+	}
+
 	return ServerDependencies{
 		Version:            version,
 		DatabaseHandle:     &sqlm.DB{DB: databaseHandle},
-		OperatorHTTPClient: &http.Client{},
+		OperatorHTTPClient: operatorClient,
 		ArtefactValidator:  artefact.NewWorkedBasedValidator(artefactValidatorDispatcher, keys),
 		TLSConfig:          tlsConfiguration,
 	}, nil

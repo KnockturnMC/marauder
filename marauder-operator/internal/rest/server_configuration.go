@@ -19,8 +19,7 @@ type ServerConfiguration struct {
 
 	Disk Disk `yaml:"disk"`
 
-	ServerCertPath string `yaml:"serverCertPath"`
-	ServerKeyPath  string `yaml:"serverKeyPath"`
+	TLSPath string `yaml:"tlsPath"`
 }
 
 // Disk contains configuration values for the disk setup of controller.

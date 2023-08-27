@@ -26,7 +26,7 @@ var ErrContextMissingValue = errors.New("context missing value")
 // DefaultConfiguration defines the default configuration.
 func DefaultConfiguration() Configuration {
 	return Configuration{
-		ControllerHost: "https://localhost:8080/v1",
+		ControllerHost: "http://localhost:8080/v1",
 		TLSPath:        "{{.User.HomeDir}}/.config/marauder/client/tls",
 		SigningKey:     "{{.User.HomeDir}}/.config/marauder/client/signingKey",
 	}

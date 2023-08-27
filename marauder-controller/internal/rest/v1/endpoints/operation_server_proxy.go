@@ -18,6 +18,7 @@ import (
 func OperationServerProxy(
 	db *sqlm.DB,
 	operatorClient *http.Client,
+	protocol string,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		serverUUIDAsString := context.Param("server")
@@ -41,10 +42,16 @@ func OperationServerProxy(
 		}
 
 		// Construct request to operator endpoint
+		controllerEndpoint := fmt.Sprintf(
+			"%s://%s/v1%s",
+			protocol,
+			net.JoinHostPort(server.OperatorRef.Host, strconv.Itoa(server.OperatorRef.Port)),
+			context.Param("path"),
+		)
 		request, err := http.NewRequestWithContext(
 			context,
 			context.Request.Method,
-			fmt.Sprintf("http://%s/v1%s", net.JoinHostPort(server.OperatorRef.Host, strconv.Itoa(server.OperatorRef.Port)), context.Param("path")),
+			controllerEndpoint,
 			context.Request.Body,
 		)
 		if err != nil {
