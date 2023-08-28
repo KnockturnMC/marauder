@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
+
 	middleware2 "gitea.knockturnmc.com/marauder/lib/pkg/rest/middleware"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/endpoints"
@@ -26,6 +28,8 @@ type ServerConfiguration struct {
 		Password string `yaml:"password"`
 		Database string `yaml:"database"`
 	} `yaml:"database"`
+
+	Cronjobs cronjob.CronjobsConfiguration `yaml:"cronjobs"`
 
 	TLSPath string `yaml:"tlsPath"`
 

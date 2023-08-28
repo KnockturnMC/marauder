@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitea.knockturnmc.com/marauder/controller/internal/cronjobworker"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/keyauth"
@@ -31,6 +33,9 @@ type ServerDependencies struct {
 
 	// The ArtefactValidator used by the server to validate uploaded artefacts.
 	ArtefactValidator artefact.Validator
+
+	// JobWorker is the job worker the controller server uses.
+	JobWorker cronjobworker.CronjobWorker
 
 	// The TLSConfig for the server if tls is enabled.
 	TLSConfig *tls.Config

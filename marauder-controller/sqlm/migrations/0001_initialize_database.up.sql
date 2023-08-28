@@ -86,3 +86,11 @@ CREATE INDEX idx_server_state_non_history_state_artefact_uuid ON server_state (a
 CREATE INDEX idx_server_state_non_history_state_artefact_identifier ON server_state (artefact_identifier) WHERE type != 'HISTORY';
 CREATE UNIQUE INDEX idx_server_state_is_uniq ON server_state (server, artefact_identifier) WHERE type = 'IS';
 CREATE UNIQUE INDEX idx_server_state_target_uniq ON server_state (server, artefact_identifier) WHERE type = 'TARGET';
+
+CREATE TABLE cronjob
+(
+	type           VARCHAR   NOT NULL,
+	next_execution TIMESTAMP NOT NULL,
+
+	CONSTRAINT pk_cronjob PRIMARY KEY (type)
+)

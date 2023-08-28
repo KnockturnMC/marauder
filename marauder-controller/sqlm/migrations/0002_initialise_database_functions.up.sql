@@ -1,5 +1,8 @@
 --
 -- Function to query the current missmatches in artefacts between the passed servers is and target state.
+-- Returns the artefact identifier and the current is artefact and target artefact (both their uuid and their versions).
+-- E.g. spellcore on the server might be out of date, running 1.0.0 but should be running 1.0.1.
+-- This function would yield "spellcore", the uuid of the 1.0.0 spellcore artefact, 1.0.0, and the uuid of 1.0.1 spellcore and 1.0.1.
 --
 CREATE FUNCTION func_find_server_target_state_missmatches(server_uuid UUID)
 	RETURNS TABLE
@@ -32,7 +35,8 @@ END
 $$ LANGUAGE plpgsql;
 
 --
--- Function to update the current target state of a server in the controller with a new artefact
+-- Function to update the current target state of a server in the controller with a new artefact.
+-- This method actively takes care of moving the TARGET state to the HISTORY and deleting the existing state if the target state is TARGET or IS.
 --
 CREATE FUNCTION func_create_server_state(
 	param_server_uuid UUID,
@@ -57,7 +61,7 @@ BEGIN
 		FROM server_state
 		WHERE server = param_server_uuid
 		  AND type = param_state_type
-		  AND artefact_identifier = param_artefact_identifier; -- delete current is state, not archived like target one
+		  AND artefact_identifier = param_artefact_identifier; -- delete current is state, not archived like target one.
 	end if;
 
 	INSERT
@@ -70,7 +74,7 @@ END
 $$ LANGUAGE plpgsql;
 
 --
--- Function to query all server states of a server given the state type.
+-- Function to query all artefacts under a servers given server state.
 --
 CREATE FUNCTION func_find_server_artefacts_by_state(server_uuid UUID, state SERVER_STATE_TYPE)
 	RETURNS SETOF artefact
@@ -82,5 +86,21 @@ BEGIN
 						  JOIN artefact ON server_state.artefact_uuid = artefact.uuid
 					 AND server_state.server = server_uuid
 					 AND server_state.type = state;
+END
+$$ LANGUAGE plpgsql;
+
+--
+-- Function to query all artefacts older than the passed timestamp that are not either a TARGET or IS state.
+--
+CREATE FUNCTION func_find_historic_artefacts_older_than(date TIMESTAMP)
+	RETURNS SETOF artefact
+AS
+$$
+BEGIN
+	RETURN QUERY SELECT artefact.*
+				 FROM artefact
+						  LEFT JOIN server_state s ON artefact.uuid = s.artefact_uuid
+				 WHERE artefact.upload_date < date
+				   AND (s.type IS NULL OR s.type = 'HISTORY');
 END
 $$ LANGUAGE plpgsql;
