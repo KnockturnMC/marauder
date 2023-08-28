@@ -1,9 +1,12 @@
 package rest
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/ztrue/shutdown"
 
 	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
 
@@ -43,6 +46,39 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 		return fmt.Errorf("failed to set server trusted proxies: %w", err)
 	}
 
+	configureRouterGroup(server, dependencies)
+
+	logrus.Info("staring server on port ", configuration.Port)
+	engine := &http.Server{
+		Addr:              fmt.Sprintf("%s:%d", configuration.Host, configuration.Port),
+		Handler:           server,
+		ReadHeaderTimeout: 30 * time.Second,
+		TLSConfig:         dependencies.TLSConfig,
+	}
+
+	cronjobWorkerContext, cronjobWorkerCancel := context.WithCancel(context.Background())
+	go func() {
+		if err := dependencies.CronjobWorker.Start(cronjobWorkerContext); err != nil {
+			logrus.Errorf("failed cronjob worker: %s", err)
+			return
+		}
+	}()
+	shutdown.Add(cronjobWorkerCancel) // shutdown worker on shutdown
+
+	var serveErr error
+	if engine.TLSConfig != nil {
+		serveErr = engine.ListenAndServeTLS("", "") // Defined in config
+	} else {
+		serveErr = engine.ListenAndServe()
+	}
+	if serveErr != nil {
+		return fmt.Errorf("failed to listen and serve: %w", serveErr)
+	}
+
+	return nil
+}
+
+func configureRouterGroup(server *gin.Engine, dependencies ServerDependencies) {
 	logrus.Debug("registering middleware on gin server")
 	server.Use(gin.LoggerWithFormatter(middleware2.RequestLoggerFormatter()))
 	server.Use(gin.Recovery())
@@ -78,24 +114,4 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 		dependencies.OperatorHTTPClient,
 		operatorProtocol,
 	))
-
-	logrus.Info("staring server on port ", configuration.Port)
-	engine := &http.Server{
-		Addr:              fmt.Sprintf("%s:%d", configuration.Host, configuration.Port),
-		Handler:           server,
-		ReadHeaderTimeout: 30 * time.Second,
-		TLSConfig:         dependencies.TLSConfig,
-	}
-
-	var serveErr error
-	if engine.TLSConfig != nil {
-		serveErr = engine.ListenAndServeTLS("", "") // Defined in config
-	} else {
-		serveErr = engine.ListenAndServe()
-	}
-	if serveErr != nil {
-		return fmt.Errorf("failed to listen and serve: %w", serveErr)
-	}
-
-	return nil
 }

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"time"
 
+	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/sirupsen/logrus"
@@ -22,6 +24,12 @@ func defaultConfiguration() rest.ServerConfiguration {
 		Port:                8080,
 		TLSPath:             "",
 		KnownClientKeysFile: "{{.User.HomeDir}}/.config/marauder/controller/authorized_keys",
+		Cronjobs: cronjob.CronjobsConfiguration{RemoveUnused: &cronjob.RemoveUnused{
+			BaseCronjobConfiguration: cronjob.BaseCronjobConfiguration{
+				Every: time.Minute,
+			},
+			RemoveAfter: 14 * 24 * time.Hour,
+		}},
 	}
 }
 
@@ -72,8 +80,10 @@ func ServeCommand() *cobra.Command {
 }
 
 func migrateDatabase(dependencies rest.ServerDependencies, configuration rest.ServerConfiguration) error {
-	if _, err := dependencies.DatabaseHandle.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
-		return fmt.Errorf("failed to run temp db wipe: %w", err)
+	if true {
+		if _, err := dependencies.DatabaseHandle.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
+			return fmt.Errorf("failed to run temp db wipe: %w", err)
+		}
 	}
 
 	migrationDatabaseDriver, err := postgres.WithInstance(dependencies.DatabaseHandle.DB.DB, &postgres.Config{})

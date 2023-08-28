@@ -34,8 +34,8 @@ type ServerDependencies struct {
 	// The ArtefactValidator used by the server to validate uploaded artefacts.
 	ArtefactValidator artefact.Validator
 
-	// JobWorker is the job worker the controller server uses.
-	JobWorker cronjobworker.CronjobWorker
+	// CronjobWorker is the cronjob worker the controller server uses.
+	CronjobWorker *cronjobworker.CronjobWorker
 
 	// The TLSConfig for the server if tls is enabled.
 	TLSConfig *tls.Config
@@ -71,6 +71,10 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		return ServerDependencies{}, fmt.Errorf("failed to open database connection pool: %w", err)
 	}
 
+	wrappedDatabaseHandle := &sqlm.DB{DB: databaseHandle}
+
+	cronjobWorker := cronjobworker.NewCronjobWorker(wrappedDatabaseHandle, cronjobworker.ComputeCronjobMap(configuration.Cronjobs))
+
 	operatorClient := &http.Client{}
 
 	// tls is enabled
@@ -86,9 +90,10 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 
 	return ServerDependencies{
 		Version:            version,
-		DatabaseHandle:     &sqlm.DB{DB: databaseHandle},
+		DatabaseHandle:     wrappedDatabaseHandle,
 		OperatorHTTPClient: operatorClient,
 		ArtefactValidator:  artefact.NewWorkedBasedValidator(artefactValidatorDispatcher, keys),
+		CronjobWorker:      cronjobWorker,
 		TLSConfig:          tlsConfiguration,
 	}, nil
 }

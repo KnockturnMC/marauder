@@ -59,10 +59,10 @@ func (j *CronjobWorker) runRunnableJobs(ctx context.Context) (time.Duration, err
 		return 0, fmt.Errorf("failed to update local fetched cronjobs: %w", err)
 	}
 
-	timeNow := time.Now()
+	timeNow := time.Now().UTC()
 	earliestNextJobExecutionTime := timeNow
 	for cronjobType, fetchedCronjob := range j.cronjobs {
-		if fetchedCronjob.Execution.NextExecution.Before(timeNow) {
+		if fetchedCronjob.Execution.NextExecution.UTC().Before(timeNow) {
 			if err := fetchedCronjob.Executor.Execute(j); err != nil {
 				return 0, fmt.Errorf("failed to execute cronjob %s: %w", cronjobType, err)
 			}
@@ -92,12 +92,12 @@ func (j *CronjobWorker) updateFetchedCronjobsFromDB(ctx context.Context) error {
 	}
 
 	for _, execution := range cronjobExecutions {
-		cronjob, ok := j.cronjobs[execution.Type]
+		fetchedCronjob, ok := j.cronjobs[execution.Type]
 		if !ok {
 			continue
 		}
 
-		cronjob.Execution = execution
+		fetchedCronjob.Execution = execution
 	}
 
 	return nil
@@ -109,7 +109,7 @@ func NewCronjobWorker(db *sqlm.DB, executors map[cronjob.Type]CronjobExecutor) *
 	for cronjobType, executor := range executors {
 		preparedCronjobs[cronjobType] = &FetchedCronjob{
 			Execution: cronjob.Execution{
-				NextExecution: time.Now(),
+				NextExecution: time.Now().UTC(),
 				Type:          cronjobType,
 			},
 			Executor: executor,
