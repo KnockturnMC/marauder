@@ -26,9 +26,9 @@ func defaultConfiguration() rest.ServerConfiguration {
 		KnownClientKeysFile: "{{.User.HomeDir}}/.config/marauder/controller/authorized_keys",
 		Cronjobs: cronjob.CronjobsConfiguration{RemoveUnused: &cronjob.RemoveUnused{
 			BaseCronjobConfiguration: cronjob.BaseCronjobConfiguration{
-				Every: time.Minute,
+				Every: 24 * time.Hour, // run daily
 			},
-			RemoveAfter: 14 * 24 * time.Hour,
+			RemoveAfter: 14 * 24 * time.Hour, // delete artefacts older than 14 days that are not used
 		}},
 	}
 }

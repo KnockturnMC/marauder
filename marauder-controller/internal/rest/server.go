@@ -56,14 +56,7 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 		TLSConfig:         dependencies.TLSConfig,
 	}
 
-	cronjobWorkerContext, cronjobWorkerCancel := context.WithCancel(context.Background())
-	go func() {
-		if err := dependencies.CronjobWorker.Start(cronjobWorkerContext); err != nil {
-			logrus.Errorf("failed cronjob worker: %s", err)
-			return
-		}
-	}()
-	shutdown.Add(cronjobWorkerCancel) // shutdown worker on shutdown
+	startCronjobWorker(dependencies)
 
 	var serveErr error
 	if engine.TLSConfig != nil {
@@ -78,6 +71,19 @@ func StartMarauderControllerServer(configuration ServerConfiguration, dependenci
 	return nil
 }
 
+// startCronjobWorker starts the cronjob worker passed in the server dependencies.
+func startCronjobWorker(dependencies ServerDependencies) {
+	cronjobWorkerContext, cronjobWorkerCancel := context.WithCancel(context.Background())
+	go func() {
+		if err := dependencies.CronjobWorker.Start(cronjobWorkerContext); err != nil {
+			logrus.Errorf("failed cronjob worker: %s", err)
+			return
+		}
+	}()
+	shutdown.Add(cronjobWorkerCancel) // shutdown worker on shutdown
+}
+
+// configureRouterGroup configures the router for the engine, specifically all its endpoints.
 func configureRouterGroup(server *gin.Engine, dependencies ServerDependencies) {
 	logrus.Debug("registering middleware on gin server")
 	server.Use(gin.LoggerWithFormatter(middleware2.RequestLoggerFormatter()))

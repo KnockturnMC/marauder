@@ -1,6 +1,7 @@
 package cronjobworker
 
 import (
+	"context"
 	"time"
 
 	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
@@ -9,11 +10,11 @@ import (
 // SimpleCronjobExecutor is an implementation that has a static cooldown and a simple execution function.
 type SimpleCronjobExecutor struct {
 	cooldown          time.Duration
-	executionFunction func(worker *CronjobWorker) error
+	executionFunction func(ctx context.Context, worker *CronjobWorker) error
 }
 
-func (c SimpleCronjobExecutor) Execute(parent *CronjobWorker) error {
-	return c.executionFunction(parent)
+func (c SimpleCronjobExecutor) Execute(ctx context.Context, parent *CronjobWorker) error {
+	return c.executionFunction(ctx, parent)
 }
 
 func (c SimpleCronjobExecutor) Cooldown() time.Duration {

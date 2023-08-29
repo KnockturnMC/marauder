@@ -95,7 +95,7 @@ func FetchArtefactTarball(ctx context.Context, db *sqlm.DB, uuid uuid.UUID) (net
 
 // DeleteArtefact deletes an artefact from the database.
 func DeleteArtefact(ctx context.Context, db *sqlm.DB, uuid uuid.UUID) error {
-	if _, err := db.ExecContext(ctx, "DELETE FROM artefact WHERE uuid = ?", uuid); err != nil {
+	if _, err := db.ExecContext(ctx, "DELETE FROM artefact WHERE uuid = $1;", uuid); err != nil {
 		return fmt.Errorf("failed to delete artefact %s: %w", uuid, err)
 	}
 

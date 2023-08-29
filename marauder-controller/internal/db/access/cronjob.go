@@ -35,6 +35,13 @@ func UpsertCronjobExecution(ctx context.Context, db *sqlm.DB, execution cronjob.
 
 // FindHistoricArtefactsOlderThan yields all artefacts that are older than the passed date and are not
 // currently used as a TARGET or IS state.
-func FindHistoricArtefactsOlderThan(_ context.Context, _ *sqlm.DB, _ time.Time) ([]networkmodel.ArtefactModel, error) {
-	panic("implement me")
+func FindHistoricArtefactsOlderThan(ctx context.Context, db *sqlm.DB, timestamp time.Time) ([]networkmodel.ArtefactModel, error) {
+	result := make([]networkmodel.ArtefactModel, 0)
+	if err := db.SelectContext(ctx, &result, `
+		SELECT * FROM func_find_historic_artefacts_older_than($1)
+		`, timestamp.UTC()); err != nil {
+		return nil, fmt.Errorf("failed to query db: %w", err)
+	}
+
+	return result, nil
 }

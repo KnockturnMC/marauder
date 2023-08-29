@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
 	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
@@ -13,7 +15,7 @@ import (
 // CronjobExecutor defines a specific cronjobs executor that can be executed against a job worker parent.
 type CronjobExecutor interface {
 	// Execute executes the job executor.
-	Execute(parent *CronjobWorker) error
+	Execute(ctx context.Context, parent *CronjobWorker) error
 
 	// Cooldown defines the cooldown of the executor
 	Cooldown() time.Duration
@@ -63,7 +65,7 @@ func (j *CronjobWorker) runRunnableJobs(ctx context.Context) (time.Duration, err
 	earliestNextJobExecutionTime := timeNow
 	for cronjobType, fetchedCronjob := range j.cronjobs {
 		if fetchedCronjob.Execution.NextExecution.UTC().Before(timeNow) {
-			if err := fetchedCronjob.Executor.Execute(j); err != nil {
+			if err := fetchedCronjob.Executor.Execute(ctx, j); err != nil {
 				return 0, fmt.Errorf("failed to execute cronjob %s: %w", cronjobType, err)
 			}
 
@@ -74,10 +76,12 @@ func (j *CronjobWorker) runRunnableJobs(ctx context.Context) (time.Duration, err
 			if err := access.UpsertCronjobExecution(ctx, j.DB, fetchedCronjob.Execution); err != nil {
 				return 0, fmt.Errorf("failed to update chron fetchedCronjob in db: %w", err)
 			}
+
+			logrus.Info("executed cronjob ", cronjobType, " at ", timeNow.UTC())
 		}
 
-		if earliestNextJobExecutionTime == timeNow || fetchedCronjob.Execution.NextExecution.Before(earliestNextJobExecutionTime) {
-			earliestNextJobExecutionTime = fetchedCronjob.Execution.NextExecution
+		if earliestNextJobExecutionTime == timeNow || fetchedCronjob.Execution.NextExecution.UTC().Before(earliestNextJobExecutionTime) {
+			earliestNextJobExecutionTime = fetchedCronjob.Execution.NextExecution.UTC()
 		}
 	}
 
