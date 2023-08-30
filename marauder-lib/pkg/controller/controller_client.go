@@ -44,7 +44,7 @@ type Client interface {
 	FetchServerStateArtefacts(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType) ([]networkmodel.ArtefactModel, error)
 
 	// FetchUpdatesFor fetches all outstanding updates for a server by its uuid.
-	FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.VersionDiff, error)
+	FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.ArtefactVersionMissmatch, error)
 
 	// FetchManifest fetches a manifest based on its uuid.
 	FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error)

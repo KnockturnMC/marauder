@@ -81,6 +81,16 @@ CREATE TABLE server_state
 		ON DELETE CASCADE
 );
 
+CREATE VIEW server_state_target AS
+SELECT *
+FROM server_state
+WHERE type = 'TARGET';
+
+CREATE VIEW server_state_is AS
+SELECT *
+FROM server_state
+WHERE type = 'IS';
+
 CREATE INDEX idx_server_state_non_history_state_server ON server_state (server) WHERE type != 'HISTORY';
 CREATE INDEX idx_server_state_non_history_state_artefact_uuid ON server_state (artefact_uuid) WHERE type != 'HISTORY';
 CREATE INDEX idx_server_state_non_history_state_artefact_identifier ON server_state (artefact_identifier) WHERE type != 'HISTORY';

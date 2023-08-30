@@ -49,16 +49,3 @@ func fetchServerStateSingleRow(
 
 	return result, nil
 }
-
-// InsertServerState inserts a new server state into the database.
-func InsertServerState(ctx context.Context, db *sqlm.DB, state networkmodel.ServerArtefactStateModel) (networkmodel.ServerArtefactStateModel, error) {
-	if err := db.NamedGetContext(ctx, &state, `
-            INSERT INTO server_state (server, artefact_identifier, artefact_uuid, definition_date, type) 
-            VALUES (:server, :artefact_identifier, :artefact_uuid, :definition_date, :type)
-            RETURNING *; 
-            `, state); err != nil {
-		return networkmodel.ServerArtefactStateModel{}, fmt.Errorf("failed to insert server state: %w", err)
-	}
-
-	return state, nil
-}

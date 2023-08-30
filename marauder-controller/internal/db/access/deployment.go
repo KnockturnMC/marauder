@@ -10,8 +10,8 @@ import (
 )
 
 // FindServerTargetStateMissMatch fetches a miss-match between the servers current is states and target state.
-func FindServerTargetStateMissMatch(ctx context.Context, db *sqlm.DB, server uuid.UUID) ([]networkmodel.VersionDiff, error) {
-	result := make([]networkmodel.VersionDiff, 0)
+func FindServerTargetStateMissMatch(ctx context.Context, db *sqlm.DB, server uuid.UUID) ([]networkmodel.ArtefactVersionMissmatch, error) {
+	result := make([]networkmodel.ArtefactVersionMissmatch, 0)
 	if err := db.SelectContext(ctx, &result, `
 		SELECT * FROM func_find_server_target_state_missmatches($1)
 		`, server); err != nil {

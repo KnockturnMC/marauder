@@ -3,7 +3,6 @@ package networkmodel
 import (
 	"errors"
 	"fmt"
-
 	"github.com/google/uuid"
 )
 
@@ -16,23 +15,54 @@ type BodyModel interface {
 // ErrMalformedModel is returned if a model is found to be in any way malformed.
 var ErrMalformedModel = errors.New("malformed model")
 
-// A VersionDiff holds a difference between the version of the same artefact identifier.
+// A ArtefactVersionMissmatch holds a difference between the version of the same artefact identifier.
 // E.g. the artefact spellcore might be on version 1.0 while it targets version 2.0.
-type VersionDiff struct {
+type ArtefactVersionMissmatch struct {
 	// The ArtefactIdentifier holds the shared identifier between the two versions.
-	ArtefactIdentifier string `db:"artefact_identifier" json:"artefactIdentifier"`
+	ArtefactIdentifier string `json:"artefactIdentifier"`
 
-	// The IsArtefact holds the uuid of the current artefact deployed.
-	IsArtefact uuid.UUID `db:"is_artefact" json:"isArtefact"`
+	// The Missmatch defines the missmatch container that holds the potential missmatch.
+	Missmatch ArtefactMissmatch `json:"missmatch"`
+}
 
-	// The IsVersion defines the version of the current artefact.
-	IsVersion string `db:"is_version" json:"isVersion"`
+type ArtefactMissmatch struct {
+	// Update defines that a missmatch exists because the artefact already exists on the server but needs to be updated to a new version.
+	Update *ArtefactVersionMissmatchUpdate `json:"update,omitempty"`
 
-	// The TargetArtefact holds the uuid of the targeted artefact to be deployed.
-	TargetArtefact uuid.UUID `db:"target_artefact" json:"targetArtefact"`
+	// Install defines that the server needs to install an artefact that is not running as of right now.
+	Install *ArtefactVersionMissmatchInstall `json:"install,omitempty"`
 
-	// The TargetVersion defines the version of the artefact to deploy.
-	TargetVersion string `db:"target_version" json:"targetVersion"`
+	// Uninstall defines that the server is running an artefact that is not needed to be running.
+	Uninstall *ArtefactVersionMissmatchUninstall `json:"uninstall,omitempty"`
+}
+
+// ArtefactVersionMissmatchUpdate defines that a version of an artefact is out of date and needs to be updated.
+type ArtefactVersionMissmatchUpdate struct {
+	// Is defines the current version the server is running of the artefact.
+	Is ArtefactVersionMissmatchArtefactInfo `json:"is"`
+
+	// Target defines the target version the server is supposed to be running of the artefact.
+	Target ArtefactVersionMissmatchArtefactInfo `json:"target"`
+}
+
+// ArtefactVersionMissmatchInstall defines that a server is not yet running a specific artefact, but should.
+type ArtefactVersionMissmatchInstall struct {
+	// Target defines the target version the server is supposed to be running of the artefact.
+	Target ArtefactVersionMissmatchArtefactInfo `json:"target"`
+}
+
+// ArtefactVersionMissmatchUninstall defines that a server is running a specific artefact, but shouldn't.
+type ArtefactVersionMissmatchUninstall struct {
+	// Is defines the current version the server is running of the artefact.
+	Is ArtefactVersionMissmatchArtefactInfo `json:"is"`
+}
+
+type ArtefactVersionMissmatchArtefactInfo struct {
+	// The Artefact holds the uuid of the artefact this info describes.
+	Artefact uuid.UUID `db:"artefact" json:"artefact"`
+
+	// The Version defines the version of the artefact this info describes.
+	Version string `db:"version" json:"version"`
 }
 
 // The UpdateServerStateRequest is pushed to the deployment endpoint as a body to trigger an update to a new server state.

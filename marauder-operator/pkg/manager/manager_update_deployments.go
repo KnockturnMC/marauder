@@ -53,7 +53,7 @@ func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel n
 func (d DockerBasedManager) updateSingleDeployment(
 	ctx context.Context,
 	serverModel networkmodel.ServerModel,
-	update networkmodel.VersionDiff,
+	update networkmodel.ArtefactVersionMissmatch,
 ) error {
 	oldArtefact, err := d.ControllerClient.FetchManifest(ctx, update.IsArtefact)
 	if err != nil {

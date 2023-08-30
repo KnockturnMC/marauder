@@ -19,8 +19,13 @@ func (h *HTTPClient) FetchServer(ctx context.Context, server uuid.UUID) (network
 	return model, nil
 }
 
-func (h *HTTPClient) FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.VersionDiff, error) {
-	diffs, err := utils.HTTPGetAndBind(ctx, h.Client, h.ControllerURL+"/server/"+server.String()+"/state/update", make([]networkmodel.VersionDiff, 0))
+func (h *HTTPClient) FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.ArtefactVersionMissmatch, error) {
+	diffs, err := utils.HTTPGetAndBind(
+		ctx,
+		h.Client,
+		h.ControllerURL+"/server/"+server.String()+"/state/update",
+		make([]networkmodel.ArtefactVersionMissmatch, 0),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed http get: %w", err)
 	}

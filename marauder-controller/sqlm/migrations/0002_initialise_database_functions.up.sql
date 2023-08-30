@@ -16,21 +16,18 @@ CREATE FUNCTION func_find_server_target_state_missmatches(server_uuid UUID)
 AS
 $$
 BEGIN
-	RETURN QUERY SELECT is_artefact.identifier,
+	RETURN QUERY SELECT COALESCE(target_artefact.identifier, is_artefact.identifier) as identifier,
 						is_artefact.uuid,
 						is_artefact.version,
 						target_artefact.uuid,
 						target_artefact.version
-				 FROM server_state is_state
-						  JOIN server_state target_state ON is_state.server = target_state.server
-					 AND is_state.type = 'IS'
-					 AND target_state.type = 'TARGET'
-					 AND is_state.artefact_uuid != target_state.artefact_uuid
-					 AND is_state.artefact_identifier = target_state.artefact_identifier
-						  JOIN artefact is_artefact on is_artefact.uuid = is_state.artefact_uuid
-						  JOIN artefact target_artefact on target_artefact.uuid = target_state.artefact_uuid
-				 WHERE is_state.type = 'IS'
-				   AND is_state.server = server_uuid;
+				 FROM server_state_target target_state
+						  FULL OUTER JOIN server_state_is is_state ON
+							 target_state.server = is_state.server
+						 AND target_state.artefact_identifier = is_state.artefact_identifier -- Only join with same artefacts
+						  LEFT JOIN artefact target_artefact on target_artefact.uuid = target_state.artefact_uuid
+						  LEFT JOIN artefact is_artefact on is_artefact.uuid = is_state.artefact_uuid
+				 WHERE target_state.artefact_uuid != is_state.artefact_uuid AND server_uuid = server_uuid;
 END
 $$ LANGUAGE plpgsql;
 
