@@ -23,7 +23,7 @@ func defaultConfiguration() rest.ServerConfiguration {
 		Host:                "localhost",
 		Port:                8080,
 		TLSPath:             "",
-		KnownClientKeysFile: "{{.User.HomeDir}}/.config/marauder/controller/authorized_keys",
+		KnownClientKeysFile: "{{.User.HomeDir}}/.local/marauder/controller/authorized_keys",
 		Cronjobs: cronjob.CronjobsConfiguration{RemoveUnused: &cronjob.RemoveUnused{
 			BaseCronjobConfiguration: cronjob.BaseCronjobConfiguration{
 				Every: 24 * time.Hour, // run daily
