@@ -3,6 +3,7 @@ package networkmodel
 import (
 	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
 )
 
@@ -34,6 +35,28 @@ type ArtefactMissmatch struct {
 
 	// Uninstall defines that the server is running an artefact that is not needed to be running.
 	Uninstall *ArtefactVersionMissmatchUninstall `json:"uninstall,omitempty"`
+}
+
+// ArtefactToInstall computes the artefact to install to resolve the missmatch.
+func (a ArtefactMissmatch) ArtefactToInstall() *ArtefactVersionMissmatchArtefactInfo {
+	if a.Update != nil {
+		return &a.Update.Target
+	} else if a.Install != nil {
+		return &a.Install.Target
+	}
+
+	return nil
+}
+
+// ArtefactToUninstall computes the artefact to install to resolve the missmatch.
+func (a ArtefactMissmatch) ArtefactToUninstall() *ArtefactVersionMissmatchArtefactInfo {
+	if a.Update != nil {
+		return &a.Update.Is
+	} else if a.Uninstall != nil {
+		return &a.Uninstall.Is
+	}
+
+	return nil
 }
 
 // ArtefactVersionMissmatchUpdate defines that a version of an artefact is out of date and needs to be updated.
@@ -71,16 +94,19 @@ type UpdateServerStateRequest struct {
 	ArtefactIdentifier string `json:"artefactIdentifier"`
 
 	// ArtefactUUID provides the uuid reference to the artefact this state belongs to.
-	ArtefactUUID uuid.UUID `json:"artefactUuid"`
+	// If the artefact UUID is nil, the update server state request implies a deletion of the state.
+	ArtefactUUID *uuid.UUID `json:"artefactUuid,omitempty"`
 }
 
 // CheckFilled returns an err conveying if the request is filled with non-default values.
-func (r UpdateServerStateRequest) CheckFilled() error {
+// insertable defines if the update server state request may be inserted, specifically if an artefact uuid is present.
+func (r UpdateServerStateRequest) CheckFilled(insertable bool) error {
 	if r.ArtefactIdentifier == "" {
 		return fmt.Errorf("artefact identifier empty: %w", ErrMalformedModel)
 	}
-	if r.ArtefactUUID.Version() == 0 {
-		return fmt.Errorf("artefact uuid empty: %w", ErrMalformedModel)
+
+	if insertable && r.ArtefactUUID == nil {
+		return fmt.Errorf("artefact uuid empty for inserting request: %w", ErrMalformedModel)
 	}
 
 	return nil

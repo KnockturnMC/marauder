@@ -49,3 +49,33 @@ func fetchServerStateSingleRow(
 
 	return result, nil
 }
+
+// InsertServerState inserts a new server state into the database.
+func InsertServerState(ctx context.Context, db *sqlm.DB, state networkmodel.ServerArtefactStateModel) (networkmodel.ServerArtefactStateModel, error) {
+	if err := db.NamedGetContext(ctx, &state, `
+            INSERT INTO server_state (server, artefact_identifier, artefact_uuid, definition_date, type) 
+            VALUES (:server, :artefact_identifier, :artefact_uuid, :definition_date, :type)
+            RETURNING *; 
+            `, state); err != nil {
+		return networkmodel.ServerArtefactStateModel{}, fmt.Errorf("failed to insert server state: %w", err)
+	}
+
+	return state, nil
+}
+
+// DeleteNonHistoricServerState deletes a non-historic state from the database for a specific server for a specific artefact identifier.
+func DeleteNonHistoricServerState(
+	ctx context.Context,
+	db *sqlm.DB,
+	serverUUID uuid.UUID,
+	state networkmodel.ServerStateType,
+	artefactIdentifier string,
+) error {
+	if _, err := db.ExecContext(ctx, `
+		DELETE FROM server_state WHERE server = $1 AND type = $2 AND artefact_identifier = $3
+		`, serverUUID, state, artefactIdentifier); err != nil {
+		return fmt.Errorf("failed to delete server state %s:%s for %s: %w", state, artefactIdentifier, serverUUID.String(), err)
+	}
+
+	return nil
+}

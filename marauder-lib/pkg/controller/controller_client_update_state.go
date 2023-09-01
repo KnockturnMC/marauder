@@ -18,21 +18,21 @@ func (h *HTTPClient) UpdateState(
 	ctx context.Context,
 	server uuid.UUID,
 	state networkmodel.ServerStateType,
-	artefactIdentifier string,
-	artefactUUID uuid.UUID,
+	updateRequest networkmodel.UpdateServerStateRequest,
 ) error {
-	updateRequest := networkmodel.UpdateServerStateRequest{
-		ArtefactIdentifier: artefactIdentifier,
-		ArtefactUUID:       artefactUUID,
-	}
 	updateRequestMarshalled, err := json.Marshal(updateRequest)
 	if err != nil {
 		return fmt.Errorf("failed to marshal update request: %w", err)
 	}
 
+	method := http.MethodPatch
+	if updateRequest.ArtefactUUID == nil {
+		method = http.MethodDelete
+	}
+
 	httpReq, err := http.NewRequestWithContext(
 		ctx,
-		http.MethodPatch,
+		method,
 		fmt.Sprintf("%s/server/%s/state/%s", h.ControllerURL, server.String(), state),
 		bytes.NewBuffer(updateRequestMarshalled),
 	)

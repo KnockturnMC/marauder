@@ -15,7 +15,7 @@ const (
 
 	// UpgradeDeployment updates a servers deployment.
 	// For this, the server is stopped, the artefacts are updated and the server is started again.
-	UpgradeDeployment = "update"
+	UpgradeDeployment LifecycleChangeActionType = "update"
 )
 
 // KnownLifecycleChangeActionType computes if the passed change action is known by marauder.

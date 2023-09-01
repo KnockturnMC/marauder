@@ -12,6 +12,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/Goldziher/go-utils/maputils"
 	"golang.org/x/exp/slices"
 
@@ -35,12 +37,12 @@ func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel n
 		return fmt.Errorf("failed to fetch container info for %s: %w", serverModel.UUID.String(), err)
 	}
 
-	updates, err := d.ControllerClient.FetchUpdatesFor(ctx, serverModel.UUID)
+	missmatches, err := d.ControllerClient.FetchMissmatchesFor(ctx, serverModel.UUID)
 	if err != nil {
-		return fmt.Errorf("failed to fetch updates for %s: %w", serverModel.UUID, err)
+		return fmt.Errorf("failed to fetch missmatches for %s: %w", serverModel.UUID, err)
 	}
 
-	for _, update := range updates {
+	for _, update := range missmatches {
 		if err := d.updateSingleDeployment(ctx, serverModel, update); err != nil {
 			return fmt.Errorf("failed to update %s on %s: %w", update.ArtefactIdentifier, serverModel.UUID.String(), err)
 		}
@@ -50,42 +52,65 @@ func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel n
 }
 
 // updateSingleDeployment updates a single deployment on the server.
+//
+//nolint:cyclop
 func (d DockerBasedManager) updateSingleDeployment(
 	ctx context.Context,
 	serverModel networkmodel.ServerModel,
 	update networkmodel.ArtefactVersionMissmatch,
 ) error {
-	oldArtefact, err := d.ControllerClient.FetchManifest(ctx, update.IsArtefact)
-	if err != nil {
-		return fmt.Errorf("failed to fetch old manifest: %w", err)
-	}
-
 	serverFolderLocation, err := d.computeServerFolderLocation(serverModel)
 	if err != nil {
 		return fmt.Errorf("failed to compute server folder location: %w", err)
 	}
 
-	if err := d.validateOldDeploymentHashOnDisk(oldArtefact, serverFolderLocation); err != nil {
-		return fmt.Errorf("failed to validate old deployment hashes: %w", err)
+	artefactToInstall := update.Missmatch.ArtefactToInstall()
+	artefactToUninstall := update.Missmatch.ArtefactToUninstall()
+	var (
+		artefactToUninstallManifest filemodel.Manifest
+		artefactToInstallOnDisk     string
+	)
+
+	if artefactToUninstall != nil {
+		artefactToUninstallManifest, err = d.ControllerClient.FetchManifest(ctx, artefactToUninstall.Artefact)
+		if err != nil {
+			return fmt.Errorf("failed to fetch old manifest: %w", err)
+		}
+
+		if err := d.validateOldDeploymentHashOnDisk(artefactToUninstallManifest, serverFolderLocation); err != nil {
+			return fmt.Errorf("failed to validate old deployment hashes: %w", err)
+		}
 	}
 
-	targetArtefact, err := d.ControllerClient.DownloadArtefact(ctx, update.TargetArtefact)
-	if err != nil {
-		return fmt.Errorf("failed to download target artefact: %w", err)
+	if artefactToInstall != nil {
+		artefactToInstallOnDisk, err = d.ControllerClient.DownloadArtefact(ctx, artefactToInstall.Artefact)
+		if err != nil {
+			return fmt.Errorf("failed to download target artefact: %w", err)
+		}
 	}
 
-	// Delete old artefact files after downloading the new one to fail before moving the server into a non-start-able state
-	// This needs further improvements down the line to do a proper rollback, for now this should be fine.
-	if err := d.deleteOldArtefact(oldArtefact, serverFolderLocation); err != nil {
-		return fmt.Errorf("failed to delete old artefact from server folder: %w", err)
+	if artefactToUninstall != nil {
+		// Delete old artefact files after downloading the new one to fail before moving the server into a non-start-able state
+		// This needs further improvements down the line to do a proper rollback, for now this should be fine.
+		if err := d.deleteOldArtefact(artefactToUninstallManifest, serverFolderLocation); err != nil {
+			return fmt.Errorf("failed to delete old artefact from server folder: %w", err)
+		}
 	}
 
-	// Extract the new artefact to the server directory
-	if err := d.unpackArtefactIntoServer(targetArtefact, serverFolderLocation); err != nil {
-		return fmt.Errorf("failed to unpack new artefact: %w", err)
+	var artefactToInstallUUID *uuid.UUID
+	if artefactToInstall != nil {
+		// Extract the new artefact to the server directory
+		if err := d.unpackArtefactIntoServer(artefactToInstallOnDisk, serverFolderLocation); err != nil {
+			return fmt.Errorf("failed to unpack new artefact: %w", err)
+		}
+
+		artefactToInstallUUID = &artefactToInstall.Artefact
 	}
 
-	if err := d.ControllerClient.UpdateState(ctx, serverModel.UUID, networkmodel.IS, update.ArtefactIdentifier, update.TargetArtefact); err != nil {
+	if err := d.ControllerClient.UpdateState(ctx, serverModel.UUID, networkmodel.IS, networkmodel.UpdateServerStateRequest{
+		ArtefactIdentifier: update.ArtefactIdentifier,
+		ArtefactUUID:       artefactToInstallUUID,
+	}); err != nil {
 		return fmt.Errorf("failed to update controllers is state for server: %w", err)
 	}
 

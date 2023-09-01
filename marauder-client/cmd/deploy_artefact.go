@@ -40,7 +40,7 @@ func DeployArtefactCommand(
 
 		return deployArtefactInternalExecute(ctx, cmd, client, networkmodel.UpdateServerStateRequest{
 			ArtefactIdentifier: artefact.Identifier,
-			ArtefactUUID:       artefactUUID,
+			ArtefactUUID:       &artefactUUID,
 		}, args[0:])
 	}
 
@@ -55,18 +55,23 @@ func deployArtefactInternalExecute(
 	serverIdentifiers []string,
 ) error {
 	// Iterate over servers
+	var resultingErr error
 	for i := 0; i < len(serverIdentifiers); i++ {
 		serverUUID, err := client.ResolveServerReference(ctx, serverIdentifiers[i])
 		if err != nil {
 			return fmt.Errorf("failed to fetch server uuid at %d: %w", i, err)
 		}
 
-		if err := client.UpdateState(ctx, serverUUID, networkmodel.TARGET, updateRequest.ArtefactIdentifier, updateRequest.ArtefactUUID); err != nil {
+		if err := client.UpdateState(ctx, serverUUID, networkmodel.TARGET, networkmodel.UpdateServerStateRequest{
+			ArtefactIdentifier: updateRequest.ArtefactIdentifier,
+			ArtefactUUID:       updateRequest.ArtefactUUID,
+		}); err != nil {
 			cmd.PrintErrln(bunt.Sprintf("Red{failed to patch server %s: %s}", serverUUID, err.Error()))
+			resultingErr = err
 		} else {
 			cmd.PrintErrln(bunt.Sprintf("LimeGreen{deployed to %s}", serverUUID))
 		}
 	}
 
-	return nil
+	return resultingErr
 }

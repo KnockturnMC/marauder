@@ -94,7 +94,7 @@ func WorkflowBuildAndDeployCommand(
 			client,
 			networkmodel.UpdateServerStateRequest{
 				ArtefactIdentifier: publishedArtefactModel.Identifier,
-				ArtefactUUID:       publishedArtefactModel.UUID,
+				ArtefactUUID:       &publishedArtefactModel.UUID,
 			},
 			serverTargets,
 		); err != nil {

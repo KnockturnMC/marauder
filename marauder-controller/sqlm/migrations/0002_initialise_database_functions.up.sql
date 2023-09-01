@@ -27,7 +27,8 @@ BEGIN
 						 AND target_state.artefact_identifier = is_state.artefact_identifier -- Only join with same artefacts
 						  LEFT JOIN artefact target_artefact on target_artefact.uuid = target_state.artefact_uuid
 						  LEFT JOIN artefact is_artefact on is_artefact.uuid = is_state.artefact_uuid
-				 WHERE target_state.artefact_uuid != is_state.artefact_uuid AND server_uuid = server_uuid;
+				 WHERE target_state.artefact_uuid IS DISTINCT FROM is_state.artefact_uuid
+				   AND COALESCE(target_state.server, is_state.server) = server_uuid;
 END
 $$ LANGUAGE plpgsql;
 

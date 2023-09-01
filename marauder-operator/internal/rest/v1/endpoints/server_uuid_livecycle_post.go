@@ -74,6 +74,10 @@ func handleLifecycleAction(
 	case networkmodel.Restart:
 		return handleLifecycleActionStop(context, serverManager, server) && handleLifecycleActionStart(context, serverManager, server)
 	case networkmodel.UpgradeDeployment:
+		if !handleLifecycleActionStop(context, serverManager, server) {
+			return false
+		}
+
 		if err := serverManager.UpdateDeployments(context, server); err != nil {
 			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
 				manager.ErrServerRunning: {
@@ -81,6 +85,10 @@ func handleLifecycleAction(
 				},
 			}, fmt.Errorf("failed to update deployments: %w", err)))
 
+			return false
+		}
+
+		if !handleLifecycleActionStart(context, serverManager, server) {
 			return false
 		}
 	default:

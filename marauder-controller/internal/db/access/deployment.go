@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Goldziher/go-utils/sliceutils"
+
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/google/uuid"
@@ -11,14 +13,66 @@ import (
 
 // FindServerTargetStateMissMatch fetches a miss-match between the servers current is states and target state.
 func FindServerTargetStateMissMatch(ctx context.Context, db *sqlm.DB, server uuid.UUID) ([]networkmodel.ArtefactVersionMissmatch, error) {
-	result := make([]networkmodel.ArtefactVersionMissmatch, 0)
+	type DBArtefactVersionMissmatchModel struct {
+		ArtefactIdentifier string     `db:"artefact_identifier"`
+		IsArtefact         *uuid.UUID `db:"is_artefact"`
+		IsVersion          *string    `db:"is_version"`
+		TargetArtefact     *uuid.UUID `db:"target_artefact"`
+		TargetVersion      *string    `db:"target_version"`
+	}
+
+	result := make([]DBArtefactVersionMissmatchModel, 0)
 	if err := db.SelectContext(ctx, &result, `
 		SELECT * FROM func_find_server_target_state_missmatches($1)
 		`, server); err != nil {
 		return nil, fmt.Errorf("failed to execute psql func to fetch missmatch: %w", err)
 	}
 
-	return result, nil
+	return sliceutils.Map(
+		result,
+		func(
+			value DBArtefactVersionMissmatchModel,
+			index int,
+			slice []DBArtefactVersionMissmatchModel,
+		) networkmodel.ArtefactVersionMissmatch {
+			var isArtefact, targetArtefact *networkmodel.ArtefactVersionMissmatchArtefactInfo
+			var missmatch networkmodel.ArtefactMissmatch
+			if value.TargetArtefact != nil {
+				targetArtefact = &networkmodel.ArtefactVersionMissmatchArtefactInfo{
+					Artefact: *value.TargetArtefact,
+					Version:  *value.TargetVersion,
+				}
+			}
+			if value.IsArtefact != nil {
+				isArtefact = &networkmodel.ArtefactVersionMissmatchArtefactInfo{
+					Artefact: *value.IsArtefact,
+					Version:  *value.IsVersion,
+				}
+			}
+
+			switch {
+			case isArtefact != nil && targetArtefact != nil:
+				missmatch = networkmodel.ArtefactMissmatch{
+					Update: &networkmodel.ArtefactVersionMissmatchUpdate{
+						Is: *isArtefact, Target: *targetArtefact,
+					},
+				}
+			case isArtefact != nil:
+				missmatch = networkmodel.ArtefactMissmatch{
+					Uninstall: &networkmodel.ArtefactVersionMissmatchUninstall{Is: *isArtefact},
+				}
+			default:
+				missmatch = networkmodel.ArtefactMissmatch{
+					Install: &networkmodel.ArtefactVersionMissmatchInstall{Target: *targetArtefact},
+				}
+			}
+
+			return networkmodel.ArtefactVersionMissmatch{
+				ArtefactIdentifier: value.ArtefactIdentifier,
+				Missmatch:          missmatch,
+			}
+		},
+	), nil
 }
 
 // FetchServerArtefactsByState fetches all artefacts for a given server and the given state.

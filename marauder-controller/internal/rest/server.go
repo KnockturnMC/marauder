@@ -110,6 +110,7 @@ func configureRouterGroup(server *gin.Engine, dependencies ServerDependencies) {
 	group.GET("/server/:uuid/state/update", endpoints.ServerUpdate(dependencies.DatabaseHandle))
 	group.GET("/server/:uuid/state/:state", endpoints.ServerStateGet(dependencies.DatabaseHandle))
 	group.PATCH("/server/:uuid/state/:state", endpoints.ServerDeploymentPatch(dependencies.DatabaseHandle))
+	group.DELETE("/server/:uuid/state/:state", endpoints.ServerDeploymentPatch(dependencies.DatabaseHandle))
 
 	operatorProtocol := "http"
 	if dependencies.TLSConfig != nil {

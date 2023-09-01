@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/gonvenience/bunt"
 	"github.com/spf13/cobra"
@@ -15,13 +17,13 @@ func OperateServerCommand(
 	config *Configuration,
 ) *cobra.Command {
 	command := &cobra.Command{
-		Use:   "server serverRef action",
-		Short: "Executes an operation on a given server",
-		Args:  cobra.ExactArgs(2),
+		Use:   "server action servers...",
+		Short: "Executes the operation on the passed servers",
+		Args:  cobra.MinimumNArgs(2),
 	}
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		actionType := networkmodel.LifecycleChangeActionType(args[1])
+		actionType := networkmodel.LifecycleChangeActionType(args[0])
 		if !networkmodel.KnownLifecycleChangeActionType(actionType) {
 			return fmt.Errorf("unknow action %s: %w", actionType, ErrIncorrectArgumentFormat)
 		}
@@ -31,19 +33,41 @@ func OperateServerCommand(
 			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
 
-		serverUUID, err := client.ResolveServerReference(ctx, args[0])
-		if err != nil {
-			return fmt.Errorf("failed to fetch server uuid: %w", err)
-		}
-
-		err = client.ExecuteActionOn(ctx, serverUUID, actionType)
-		if err != nil {
-			return fmt.Errorf("failed to post to operator: %w", err)
-		}
-
-		cmd.PrintErrln(bunt.Sprintf("LimeGreen{performed action %s on %s}", actionType, serverUUID))
-		return nil
+		return operateServerInternalExecute(
+			ctx,
+			cmd,
+			client,
+			actionType,
+			args[1:],
+		)
 	}
 
 	return command
+}
+
+// operateServerInternalExecute is the internal logic that runs the lifecycle actions for the passed servers.
+func operateServerInternalExecute(
+	ctx context.Context,
+	cmd *cobra.Command,
+	client controller.Client,
+	lifecycleActionType networkmodel.LifecycleChangeActionType,
+	serverIdentifiers []string,
+) error {
+	// Iterate over servers
+	var resultingErr error
+	for i := 0; i < len(serverIdentifiers); i++ {
+		serverUUID, err := client.ResolveServerReference(ctx, serverIdentifiers[i])
+		if err != nil {
+			return fmt.Errorf("failed to fetch server uuid at %d: %w", i, err)
+		}
+
+		if err := client.ExecuteActionOn(ctx, serverUUID, lifecycleActionType); err != nil {
+			cmd.PrintErrln(bunt.Sprintf("Red{failed to execute lifecycle action on server %s: %s}", serverUUID, err.Error()))
+			resultingErr = err
+		} else {
+			cmd.PrintErrln(bunt.Sprintf("LimeGreen{performed cation %s to %s}", lifecycleActionType, serverUUID))
+		}
+	}
+
+	return resultingErr
 }

@@ -43,8 +43,8 @@ type Client interface {
 	// FetchServerStateArtefacts fetches the artefacts defined for the specific state on the given server.
 	FetchServerStateArtefacts(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType) ([]networkmodel.ArtefactModel, error)
 
-	// FetchUpdatesFor fetches all outstanding updates for a server by its uuid.
-	FetchUpdatesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.ArtefactVersionMissmatch, error)
+	// FetchMissmatchesFor fetches all outstanding missmatches for a server by its uuid.
+	FetchMissmatchesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.ArtefactVersionMissmatch, error)
 
 	// FetchManifest fetches a manifest based on its uuid.
 	FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error)
@@ -57,7 +57,7 @@ type Client interface {
 	PublishArtefact(ctx context.Context, artefact, signature io.Reader) (networkmodel.ArtefactModel, mo.Option[int], error)
 
 	// UpdateState attempts to update the controller about a servers new state for the specific artefact.
-	UpdateState(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType, artefactIdentifier string, artefact uuid.UUID) error
+	UpdateState(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType, request networkmodel.UpdateServerStateRequest) error
 }
 
 // HTTPClient implements the Client interface by using the controllers rest API.
