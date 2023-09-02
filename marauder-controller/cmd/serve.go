@@ -80,12 +80,6 @@ func ServeCommand() *cobra.Command {
 }
 
 func migrateDatabase(dependencies rest.ServerDependencies, configuration rest.ServerConfiguration) error {
-	if true {
-		if _, err := dependencies.DatabaseHandle.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
-			return fmt.Errorf("failed to run temp db wipe: %w", err)
-		}
-	}
-
 	migrationDatabaseDriver, err := postgres.WithInstance(dependencies.DatabaseHandle.DB.DB, &postgres.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to create postgres migration driver for database: %w", err)
