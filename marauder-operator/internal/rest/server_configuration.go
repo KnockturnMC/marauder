@@ -3,6 +3,8 @@ package rest
 import (
 	"fmt"
 
+	"gitea.knockturnmc.com/marauder/operator/pkg/manager"
+
 	"github.com/docker/docker/api/types/registry"
 )
 
@@ -24,8 +26,9 @@ type ServerConfiguration struct {
 
 // Disk contains configuration values for the disk setup of controller.
 type Disk struct {
-	DownloadPath           string `yaml:"downloadPath"`
-	ServerDataPathTemplate string `yaml:"serverDataPathTemplate"`
+	DownloadPath           string               `yaml:"downloadPath"`
+	ServerDataPathTemplate string               `yaml:"serverDataPathTemplate"`
+	FolderOwner            *manager.FolderOwner `yaml:"folderOwner,omitempty"`
 }
 
 // The Controller struct holds the configuration values for the controller client used by the operator.

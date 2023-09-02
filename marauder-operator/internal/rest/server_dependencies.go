@@ -94,6 +94,7 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 			DockerClient:           dockerClientInstance,
 			DockerEncodedAuth:      dockerEncodedBasicAuth,
 			AutoRemoveContainers:   configuration.Docker.AutoRemoveContainers,
+			FolderOwner:            configuration.Disk.FolderOwner,
 			ServerDataPathTemplate: configuration.Disk.ServerDataPathTemplate,
 		},
 	}, nil

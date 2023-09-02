@@ -24,12 +24,19 @@ type Manager interface {
 	UpdateDeployments(ctx context.Context, server networkmodel.ServerModel) error
 }
 
+// FolderOwner defines the folder owner for the docker based mounting.
+type FolderOwner struct {
+	GID int `yaml:"gid"`
+	UID int `yaml:"uid"`
+}
+
 // The DockerBasedManager implements the manager interface and manages server via a docker client.
 type DockerBasedManager struct {
 	DockerClient           *dockerClient.Client
 	DockerEncodedAuth      string
 	ControllerClient       controller.DownloadingClient
 	AutoRemoveContainers   bool
+	FolderOwner            *FolderOwner
 	ServerDataPathTemplate string
 }
 
