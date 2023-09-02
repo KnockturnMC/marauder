@@ -72,6 +72,11 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 		&container.Config{
 			Image:        server.Image,
 			ExposedPorts: map[nat.Port]struct{}{nat.Port(strconv.Itoa(server.Port)): {}},
+			AttachStdin:  true,
+			AttachStdout: true,
+			AttachStderr: true,
+			Tty:          true,
+			OpenStdin:    true,
 		},
 		&container.HostConfig{
 			Mounts: []mount.Mount{{
