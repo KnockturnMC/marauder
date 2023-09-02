@@ -100,7 +100,7 @@ func saveUploadInto(context *gin.Context, formName string, parentPath string, pa
 
 	defer func() { _ = open.Close() }()
 
-	if err := os.Mkdir(parentPath, 0o700); err != nil {
+	if err := os.MkdirAll(parentPath, 0o700); err != nil {
 		if !errors.Is(err, os.ErrExist) {
 			return "", fmt.Errorf("failed to create parent directory for temporary file: %w", err)
 		}
