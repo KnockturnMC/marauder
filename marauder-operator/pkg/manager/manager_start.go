@@ -40,7 +40,7 @@ func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.Serve
 		return fmt.Errorf("failed to compute server folder location: %w", err)
 	}
 
-	if err := os.MkdirAll(location, 0o700); err != nil {
+	if err := os.MkdirAll(location, 0o770); err != nil {
 		return fmt.Errorf("failed to mkdir the server data folder %s: %w", location, err)
 	}
 
