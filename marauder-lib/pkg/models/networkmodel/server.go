@@ -37,6 +37,9 @@ type ServerModel struct {
 
 	// The Networks struct holds all networks the server model is part of.
 	Networks []ServerNetwork `db:"-" json:"networks"`
+
+	// HostPorts defines a list of ports on the host that the container should be exposed on.
+	HostPorts []HostPort `db:"-" json:"hostPorts"`
 }
 
 // ServerOperator represents an operator of a single node that the server is hosted on.
@@ -65,4 +68,22 @@ type ServerNetwork struct {
 	// The IPV4Address holds the potential ipv4 address of the container in the network.
 	// If no address is specified, the string is empty.
 	IPV4Address string `db:"ipv4_address" json:"ipv4Address"`
+}
+
+// HostPort defines a port on the host that the server is exposed on.
+type HostPort struct {
+	// UUID defines the uuid of this specific host port in the database.
+	UUID uuid.UUID `db:"uuid" json:"uuid"`
+
+	// The ServerUUID holds the uuid of the server this port belongs to.
+	ServerUUID uuid.UUID `db:"server" json:"server"`
+
+	// HostIPAddr defines the raw ip address on the host that the port is exposed on.
+	HostIPAddr string `db:"host_ip" json:"hostIp"`
+
+	// HostIPAddr defines the raw port on the host ip that the port is exposed on.
+	HostPort int `db:"host_port" json:"hostPort"`
+
+	// ServerPort defines the port of the server that should be exposed on said port.
+	ServerPort int `db:"server_port" json:"serverPort"`
 }

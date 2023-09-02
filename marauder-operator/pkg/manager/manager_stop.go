@@ -46,10 +46,6 @@ func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.S
 		}
 	}
 
-	if err := d.DockerClient.ContainerRemove(ctx, serverName, types.ContainerRemoveOptions{}); err != nil {
-		return fmt.Errorf("failed to remove container: %w", err)
-	}
-
 	return nil
 }
 

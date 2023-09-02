@@ -65,6 +65,21 @@ CREATE TABLE server_network
 		ON UPDATE CASCADE
 );
 
+CREATE TABLE server_host_port
+(
+	uuid        UUID    NOT NULL DEFAULT gen_random_uuid(),
+	server      UUID    NOT NULL,
+	host_ip     VARCHAR NOT NULL,
+	host_port   INT     NOT NULL,
+	server_port INT     NOT NULL,
+
+	CONSTRAINT pk_server_host_port_uuid PRIMARY KEY (uuid),
+	CONSTRAINT un_server_host_port_host_ip_port UNIQUE (host_ip, host_port),
+	CONSTRAINT fk_server_host_port_server FOREIGN KEY (server) REFERENCES server (uuid) ON DELETE CASCADE
+		ON UPDATE CASCADE,
+	CONSTRAINT un_server_host_port_server_port UNIQUE (server, server_port)
+);
+
 CREATE TABLE server_state
 (
 	uuid                UUID              NOT NULL DEFAULT gen_random_uuid(),

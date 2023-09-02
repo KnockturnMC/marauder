@@ -19,6 +19,10 @@ func fillServerModelRefs(ctx context.Context, db *sqlm.DB, model networkmodel.Se
 		return networkmodel.ServerModel{}, fmt.Errorf("failed to fetch operator: %w", err)
 	}
 
+	if model, err = fillServerModelHostPorts(ctx, db, model); err != nil {
+		return networkmodel.ServerModel{}, fmt.Errorf("failed to fetch host ports: %w", err)
+	}
+
 	return model, nil
 }
 
@@ -45,6 +49,20 @@ func fillServerModelNetwork(ctx context.Context, db *sqlm.DB, model networkmodel
 	}
 
 	model.Networks = networks
+
+	return model, nil
+}
+
+// fillServerModelHostPorts fetches the host ports configuration of a given server model from the database.
+func fillServerModelHostPorts(ctx context.Context, db *sqlm.DB, model networkmodel.ServerModel) (networkmodel.ServerModel, error) {
+	hostPorts := make([]networkmodel.HostPort, 0)
+	if err := db.SelectContext(ctx, &hostPorts, `
+        SELECT * FROM server_host_port WHERE server = $1
+        `, model.UUID); err != nil {
+		return networkmodel.ServerModel{}, fmt.Errorf("faild to fetch server host ports: %w", err)
+	}
+
+	model.HostPorts = hostPorts
 
 	return model, nil
 }

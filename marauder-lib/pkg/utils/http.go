@@ -46,7 +46,7 @@ func HTTPGetAndBind[T any](ctx context.Context, client *http.Client, path string
 
 // IsOkayStatusCode defines if a status code is considered okay.
 func IsOkayStatusCode(code int) bool {
-	return code >= 200 && code <= 400
+	return code >= 200 && code < 400
 }
 
 // PerformHTTPRequest creates a request and publishes it to the passed http client.

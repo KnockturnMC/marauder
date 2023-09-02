@@ -59,6 +59,14 @@ func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.Serve
 }
 
 func (d DockerBasedManager) starDockerContainer(ctx context.Context, server networkmodel.ServerModel, systemPath string) error {
+	hostPortMap := make(nat.PortMap)
+	for _, hostPort := range server.HostPorts {
+		hostPortMap[nat.Port(strconv.Itoa(hostPort.ServerPort))] = []nat.PortBinding{{
+			HostIP:   hostPort.HostIPAddr,
+			HostPort: strconv.Itoa(hostPort.HostPort),
+		}}
+	}
+
 	computeServerFolderLocation, err := d.DockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -71,7 +79,8 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 				Source: systemPath,
 				Target: "/home/server",
 			}},
-			AutoRemove: d.AutoRemoveContainers,
+			PortBindings: hostPortMap,
+			AutoRemove:   d.AutoRemoveContainers,
 		},
 		nil,
 		&v1.Platform{
