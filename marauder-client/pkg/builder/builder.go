@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"strings"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg"
 
@@ -73,32 +74,55 @@ func IncludeArtefactFiles(
 		}
 
 		for _, match := range matches {
-			shortestMatch, err := globCache.FindShortestMatch(file.CISourceGlob, match)
-			if err != nil {
-				return filemodel.Manifest{}, fmt.Errorf("failed to compute shortest path for file %s under glob %s: %w", match, file.CISourceGlob, err)
-			}
-
-			relativePath, err := filepath.Rel(shortestMatch, match)
-			if err != nil {
-				return filemodel.Manifest{}, fmt.Errorf("failed to compute relative path of %s to glob %s: %w", match, shortestMatch, err)
-			}
-
-			pathInTarball := filepath.Join(file.Target, relativePath)
-			addedFiles, err := tarballWriter.Add(rootFs, match, pkg.FileParentDirectoryInArtefact+pathInTarball)
-			if err != nil {
-				return filemodel.Manifest{}, fmt.Errorf("failed to add file %s to tarball: %w", matches, err)
-			}
-
-			// Write hashes
-			for _, addedFile := range addedFiles {
-				hashArray, err := computeHashFor(rootFs, addedFile.PathInRootFS)
-				if err != nil {
-					return filemodel.Manifest{}, fmt.Errorf("faild to compute hash for %s: %w", addedFile.PathInRootFS, err)
-				}
-
-				resolvedManifest.Hashes[addedFile.PathInTarball] = hex.EncodeToString(hashArray)
+			manifest, err2 := includeMatchInTarball(rootFs, resolvedManifest, globCache, tarballWriter, file, match)
+			if err2 != nil {
+				return manifest, err2
 			}
 		}
+	}
+
+	return resolvedManifest, nil
+}
+
+// includeMatchInTarball includes a single matched file in the rootFs in the tarball writer and the manifest.
+func includeMatchInTarball(
+	rootFs fs.FS,
+	resolvedManifest filemodel.Manifest,
+	globCache *utils.ShortestGlobPathCache,
+	tarballWriter utils.FriendlyTarballWriter,
+	file filemodel.FileReference,
+	match string,
+) (filemodel.Manifest, error) {
+	shortestMatch, err := globCache.FindShortestMatch(file.CISourceGlob, match)
+	if err != nil {
+		return filemodel.Manifest{}, fmt.Errorf("failed to compute shortest path for file %s under glob %s: %w", match, file.CISourceGlob, err)
+	}
+
+	relativePath, err := filepath.Rel(shortestMatch, match)
+	if err != nil {
+		return filemodel.Manifest{}, fmt.Errorf("failed to compute relative path of %s to glob %s: %w", match, shortestMatch, err)
+	}
+
+	// We matched the exact file, the exact shortest match.
+	// And the target on disk ends with a slash, indicating it is not a file.
+	if shortestMatch == match && strings.HasSuffix(file.Target, "/") {
+		relativePath = match
+	}
+
+	pathInTarball := filepath.Join(file.Target, relativePath)
+	addedFiles, err := tarballWriter.Add(rootFs, match, pkg.FileParentDirectoryInArtefact+pathInTarball)
+	if err != nil {
+		return filemodel.Manifest{}, fmt.Errorf("failed to add file %s to tarball: %w", match, err)
+	}
+
+	// Write hashes
+	for _, addedFile := range addedFiles {
+		hashArray, err := computeHashFor(rootFs, addedFile.PathInRootFS)
+		if err != nil {
+			return filemodel.Manifest{}, fmt.Errorf("faild to compute hash for %s: %w", addedFile.PathInRootFS, err)
+		}
+
+		resolvedManifest.Hashes[addedFile.PathInTarball] = hex.EncodeToString(hashArray)
 	}
 
 	return resolvedManifest, nil
