@@ -29,6 +29,7 @@ type DockerBasedManager struct {
 	DockerClient           *dockerClient.Client
 	DockerEncodedAuth      string
 	ControllerClient       controller.DownloadingClient
+	AutoRemoveContainers   bool
 	ServerDataPathTemplate string
 }
 

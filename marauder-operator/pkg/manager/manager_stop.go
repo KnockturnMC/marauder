@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,6 +15,9 @@ import (
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 )
+
+// ErrContainerNotRemovedInTime is returned if the stop logic did not find the container to be removed in time.
+var ErrContainerNotRemovedInTime = errors.New("not removed in time")
 
 func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.ServerModel) error {
 	serverName := d.computeUniqueDockerContainerNameFor(serverModel)
@@ -31,6 +35,26 @@ func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.S
 		return fmt.Errorf("failed to stop container %s: %w", serverName, err)
 	}
 
+	if d.AutoRemoveContainers {
+		err := d.awaitAutoRemoval(ctx, serverModel, deadline)
+		if err != nil {
+			return err
+		}
+	} else {
+		if err := d.DockerClient.ContainerRemove(ctx, serverName, types.ContainerRemoveOptions{}); err != nil {
+			return fmt.Errorf("failed to manually remove the container %s: %w", serverName, err)
+		}
+	}
+
+	if err := d.DockerClient.ContainerRemove(ctx, serverName, types.ContainerRemoveOptions{}); err != nil {
+		return fmt.Errorf("failed to remove container: %w", err)
+	}
+
+	return nil
+}
+
+// awaitAutoRemoval awaits a container that was constructed with auto removal to remove itself after stopping.
+func (d DockerBasedManager) awaitAutoRemoval(ctx context.Context, serverModel networkmodel.ServerModel, deadline time.Time) error {
 	// Await removal via AutoRemove: true flag in container creation.
 	for {
 		if time.Now().After(deadline) {
@@ -45,10 +69,5 @@ func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.S
 			return fmt.Errorf("failed to retrieve container info: %w", err)
 		}
 	}
-
-	if err := d.DockerClient.ContainerRemove(ctx, serverName, types.ContainerRemoveOptions{}); err != nil {
-		return fmt.Errorf("failed to remove container: %w", err)
-	}
-
-	return nil
+	return ErrContainerNotRemovedInTime
 }

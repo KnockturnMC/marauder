@@ -20,8 +20,9 @@ func defaultConfiguration() rest.ServerConfiguration {
 		Port:       1981,
 		TLSPath:    "",
 		Docker: rest.Docker{
-			Username: "",
-			Password: "",
+			Username:             "",
+			Password:             "",
+			AutoRemoveContainers: true,
 		},
 		Controller: rest.Controller{
 			Endpoint:    "http://localhost:8080/v1",

@@ -65,7 +65,7 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 				Source: systemPath,
 				Target: "/home/server",
 			}},
-			AutoRemove: true,
+			AutoRemove: d.AutoRemoveContainers,
 		},
 		nil,
 		&v1.Platform{
