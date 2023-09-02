@@ -3,8 +3,6 @@ package manager
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
@@ -43,7 +41,12 @@ type DockerBasedManager struct {
 // computeUniqueDockerContainerNameFor computes the unique docker container name for a given server managed by
 // the operator.
 func (d DockerBasedManager) computeUniqueDockerContainerNameFor(server networkmodel.ServerModel) string {
-	return fmt.Sprintf("marauder-server-%s-%s-%s", server.Environment, server.Name, strings.ReplaceAll(server.UUID.String(), "-", ""))
+	visibility := "local"
+	if len(server.HostPorts) > 0 {
+		visibility = "public"
+	}
+
+	return fmt.Sprintf("%s-minecraft-%s-%s", visibility, server.Environment, server.Name)
 }
 
 // computeServerFolderLocation computes the on-disk server folder location on the host.
