@@ -1,15 +1,38 @@
 builds:
-  # The client
+  # The user facing client
   - goos:
       - "darwin"
       - "linux"
     goarch:
       - "amd64"
       - "arm64"
+    ignore:
+      - goos: "darwin"
+        goarch: "amd64"
+      - goos: "linux"
+        goarch: "arm64"
     main: "main.go"
     id: "marauder-client"
     dir: "marauder-client"
     binary: "marauder"
+    flags:
+      - '-trimpath'
+    ldflags:
+      - '-s -w -extldflags "-static"'
+      - "-X gitea.knockturnmc.com/marauder/client/cmd.version={{.Version}}"
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+  # The client for alpine
+  - goos:
+      - "linux"
+    goarch:
+      - "amd64"
+    main: "main.go"
+    id: "marauder-client-alpine"
+    dir: "marauder-client"
+    binary: "marauder"
+    env:
+      - "CGO_ENABLED=0"
     flags:
       - '-trimpath'
     ldflags:
@@ -52,3 +75,7 @@ builds:
       - '-s -w -extldflags "-static"'
       - "-X gitea.knockturnmc.com/marauder/operator/cmd.version={{.Version}}"
     mod_timestamp: '{{ .CommitTimestamp }}'
+
+archives:
+  - format: binary
+    allow_different_binary_count: true

@@ -2,13 +2,17 @@
 # We are using alpine, as alpine has the dependencies needed to do a CGO_ENABLED=0 build, allowing us to run from scratch.
 FROM golang as builder
 
+# The version of goreleaser to download
+ARG GORELEASER_VERSION="v1.20.0"
+
 # Install bash to run build scripts
 # Install git to fetch version
 # Install ca-certificats for root ssl cert which is needed in scratch image.
-RUN apt install -y curl bash git ca-certificates
-RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list && \
-    apt update && \
-    apt install -y goreleaser
+# Install wget to download goreleaser
+RUN apt install -y curl bash git ca-certificates wget
+RUN wget "https://github.com/goreleaser/goreleaser/releases/download/$GORELEASER_VERSION/goreleaser_Linux_x86_64.tar.gz" -O goreleaser.tar.gz \
+    && tar -xzvf goreleaser.tar.gz goreleaser \
+    && cp goreleaser /usr/bin/goreleaser
 
 # Create the runner user in the build image, we copy the created files later.
 # The user does not need a password or a shell, it is simply there to restrict permissions.
@@ -27,7 +31,7 @@ WORKDIR /usr/src/marauder
 COPY . .
 
 # Build binaries
-RUN go work sync && goreleaser build --clean --snapshot --id "marauder-controller" --id "marauder-operator"
+RUN go work sync && goreleaser build --clean --snapshot --id "marauder-controller" --id "marauder-operator" --id "marauder-client-alpine"
 
 # The running image, from scratch
 FROM scratch as base_runner
@@ -57,3 +61,8 @@ COPY --from=builder /usr/src/marauder/dist/marauder-operator_linux_amd64_v1/mara
 # Run the binary.
 ENTRYPOINT ["/usr/bin/marauderop"]
 
+# The client runner image with marauder client installed.
+FROM alpine:3.18 as client
+
+# Copy the statically compiled binary for alpine
+COPY --from=builder /usr/src/marauder/dist/marauder-client-alpine_linux_amd64_v1/marauder /usr/bin/marauder
