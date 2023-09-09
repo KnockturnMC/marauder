@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/gonvenience/bunt"
@@ -38,12 +39,7 @@ tarball and uploading said artefact to the marauder controller.`,
 	)
 
 	command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		resolvedConfigurationPath, err := utils.EvaluateFilePathTemplate(configurationPath)
-		if err != nil {
-			return fmt.Errorf("failed to execute configuration path template: %w", err)
-		}
-
-		configurationBytes, err := os.ReadFile(resolvedConfigurationPath)
+		configurationBytes, err := ReadFileFromOrStdin(configurationPath, cmd.InOrStdin())
 		if err != nil {
 			return nil //nolint:nilerr
 		}
@@ -56,6 +52,31 @@ tarball and uploading said artefact to the marauder controller.`,
 	}
 
 	return command
+}
+
+// ReadFileFromOrStdin reads the contents found at the path and returns them or, if the path is "-", reads the entire stdin and yields
+// them back.
+func ReadFileFromOrStdin(path string, stdin io.Reader) ([]byte, error) {
+	if path == "-" {
+		stdinBytes, err := io.ReadAll(stdin)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read stdin from pathOrStdin: %w", err)
+		}
+
+		return stdinBytes, nil
+	}
+
+	resolvedPath, err := utils.EvaluateFilePathTemplate(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute path template: %w", err)
+	}
+
+	fileBytes, err := os.ReadFile(resolvedPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", path, err)
+	}
+
+	return fileBytes, nil
 }
 
 // printArtefactFetchResult prints the passed result set to the command output stream.
