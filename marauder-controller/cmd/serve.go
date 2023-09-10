@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+
 	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -22,7 +24,7 @@ func defaultConfiguration() rest.ServerConfiguration {
 	return rest.ServerConfiguration{
 		Host:                "localhost",
 		Port:                8080,
-		TLSPath:             "",
+		TLS:                 utils.TLSConfiguration{},
 		KnownClientKeysFile: "{{.User.HomeDir}}/.local/marauder/controller/authorized_keys",
 		Cronjobs: cronjob.CronjobsConfiguration{RemoveUnused: &cronjob.RemoveUnused{
 			BaseCronjobConfiguration: cronjob.BaseCronjobConfiguration{

@@ -25,28 +25,26 @@ var ErrContextMissingValue = errors.New("context missing value")
 
 // DefaultConfiguration defines the default configuration.
 func DefaultConfiguration() Configuration {
+	defaultTLSFolder := "{{.User.HomeDir}}/.local/marauder/client/tls"
 	return Configuration{
 		ControllerHost: "http://localhost:8080/v1",
-		TLSPath:        "{{.User.HomeDir}}/.local/marauder/client/tls",
-		SigningKey:     "{{.User.HomeDir}}/.local/marauder/client/signingKey",
+		TLS: utils.TLSConfiguration{
+			Folder: &defaultTLSFolder,
+		},
+		SigningKey: "{{.User.HomeDir}}/.local/marauder/client/signingKey",
 	}
 }
 
 // The Configuration type represents the configuration of the client cli.
 type Configuration struct {
-	ControllerHost string `yaml:"controllerHost"`
-	TLSPath        string `yaml:"tlsPath"`
-	SigningKey     string `yaml:"signingKey"`
+	ControllerHost string                 `yaml:"controllerHost"`
+	TLS            utils.TLSConfiguration `yaml:"tls"`
+	SigningKey     string                 `yaml:"signingKey"`
 }
 
 // CreateTLSReadyHTTPClient creates a tls ready http client for communication with the controller.
 func (c Configuration) CreateTLSReadyHTTPClient() (controller.Client, error) {
-	tlsPathResolved, err := utils.EvaluateFilePathTemplate(c.TLSPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse tls path as go template: %w", err)
-	}
-
-	configuration, err := utils.ParseTLSConfiguration(tlsPathResolved)
+	configuration, err := utils.ParseTLSConfigurationFromType(c.TLS)
 	if err != nil {
 		return &controller.HTTPClient{
 			Client:        http.DefaultClient,

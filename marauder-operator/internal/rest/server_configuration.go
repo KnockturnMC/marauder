@@ -3,6 +3,8 @@ package rest
 import (
 	"fmt"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+
 	"gitea.knockturnmc.com/marauder/operator/pkg/manager"
 
 	"github.com/docker/docker/api/types/registry"
@@ -21,7 +23,7 @@ type ServerConfiguration struct {
 
 	Disk Disk `yaml:"disk"`
 
-	TLSPath string `yaml:"tlsPath"`
+	TLS utils.TLSConfiguration `yaml:"tls"`
 }
 
 // Disk contains configuration values for the disk setup of controller.

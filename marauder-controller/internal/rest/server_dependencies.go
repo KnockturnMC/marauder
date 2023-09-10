@@ -49,7 +49,7 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 	}
 
 	logrus.Debug("looking for local tls configuration")
-	tlsConfiguration, err := utils.ParseTLSConfiguration(configuration.TLSPath)
+	tlsConfiguration, err := utils.ParseTLSConfigurationFromType(configuration.TLS)
 	if err != nil {
 		logrus.Warnf("failed to enable tsl: %s", err)
 	}

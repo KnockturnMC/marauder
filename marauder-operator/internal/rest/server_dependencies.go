@@ -37,7 +37,7 @@ type ServerDependencies struct {
 // CreateServerDependencies creates the server configuration for the server based on the configuration.
 func CreateServerDependencies(version string, configuration ServerConfiguration) (ServerDependencies, error) {
 	logrus.Debug("looking for local tls configuration")
-	tlsConfiguration, err := utils.ParseTLSConfiguration(configuration.TLSPath)
+	tlsConfiguration, err := utils.ParseTLSConfigurationFromType(configuration.TLS)
 	if err != nil {
 		logrus.Warnf("failed to enable tsl: %s", err)
 	}

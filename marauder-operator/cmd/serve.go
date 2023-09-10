@@ -6,6 +6,8 @@ import (
 	"io/fs"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+
 	"gitea.knockturnmc.com/marauder/operator/internal/rest"
 
 	"github.com/gonvenience/bunt"
@@ -18,7 +20,7 @@ func defaultConfiguration() rest.ServerConfiguration {
 		Identifier: "localhost",
 		Host:       "localhost",
 		Port:       1981,
-		TLSPath:    "",
+		TLS:        utils.TLSConfiguration{},
 		Docker: rest.Docker{
 			Username:             "",
 			Password:             "",

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+
 	"github.com/ztrue/shutdown"
 
 	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
@@ -34,7 +36,7 @@ type ServerConfiguration struct {
 
 	Cronjobs cronjob.CronjobsConfiguration `yaml:"cronjobs"`
 
-	TLSPath string `yaml:"tlsPath"`
+	TLS utils.TLSConfiguration `yaml:"tls"`
 
 	KnownClientKeysFile string `yaml:"knownClientKeysFile"`
 }
