@@ -106,7 +106,7 @@ func includeMatchInTarball(
 	// We matched the exact file, the exact shortest match.
 	// And the target on disk ends with a slash, indicating it is not a file.
 	if shortestMatch == match && strings.HasSuffix(file.Target, "/") {
-		relativePath = match
+		relativePath = filepath.Base(match)
 	}
 
 	pathInTarball := filepath.Join(file.Target, relativePath)
