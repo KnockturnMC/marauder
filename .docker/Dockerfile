@@ -28,10 +28,20 @@ RUN adduser \
 
 # Copy over project source files
 WORKDIR /usr/src/marauder
+
+COPY go.work go.work.sum ./
+COPY marauder-controller/go.* marauder-controller/
+COPY marauder-client/go.* marauder-client/
+COPY marauder-operator/go.* marauder-operator/
+COPY marauder-lib/go.* marauder-lib/
+
+# Download dependencies without version dependant code.
+RUN go work sync
+
 COPY . .
 
 # Build binaries
-RUN go work sync && goreleaser build --clean --snapshot --id "marauder-controller" --id "marauder-operator" --id "marauder-client-alpine"
+RUN goreleaser build --clean --snapshot --id "marauder-controller" --id "marauder-operator" --id "marauder-client-alpine"
 
 # The running image, from scratch
 FROM scratch as base_runner
