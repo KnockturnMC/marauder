@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/Goldziher/go-utils/sliceutils"
 	"github.com/gonvenience/bunt"
@@ -18,8 +20,9 @@ func WorkflowBuildAndDeployCommand(
 	configuration *Configuration,
 ) *cobra.Command {
 	var (
-		manifestFileLocation  string
-		deploymentEnvironment string
+		manifestFileLocation   string
+		deploymentEnvironment  string
+		restartAffectedServers bool
 	)
 
 	command := &cobra.Command{
@@ -30,6 +33,7 @@ func WorkflowBuildAndDeployCommand(
 
 	command.PersistentFlags().StringVarP(&manifestFileLocation, "manifest", "m", ".marauder.json", "location of the manifest file")
 	command.PersistentFlags().StringVarP(&deploymentEnvironment, "env", "e", "", "environment to deploy into")
+	command.PersistentFlags().BoolVar(&restartAffectedServers, "restart", false, "restart the servers deployed to")
 
 	_ = command.MarkPersistentFlagRequired("env")
 
@@ -75,34 +79,71 @@ func WorkflowBuildAndDeployCommand(
 			return fmt.Errorf("failed to retrieve published artefact from build logic %v: %w", publishedArtefactModel, ErrContextMissingValue)
 		}
 
-		serverTargets, valueFound := tarballLocation.Manifest.DeploymentTargets[deploymentEnvironment]
-		if !valueFound {
-			serverTargets = make([]string, 0)
-			cmd.PrintErrln(bunt.Sprintf("Gray{no servers found for environment %s}", deploymentEnvironment))
-		}
-
-		// Map them to strings for the deployment function
-		serverTargets = sliceutils.Map(serverTargets, func(value string, _ int, _ []string) string {
-			return deploymentEnvironment + "/" + value
-		})
-
-		cmd.PrintErrln(bunt.Sprintf("Gray{deploying to servers: %v}", serverTargets))
-
-		if err := deployArtefactInternalExecute(
+		if err := workflowBuildAndDeployDeployPublishedArtefact(
 			ctx,
 			cmd,
 			client,
-			networkmodel.UpdateServerStateRequest{
-				ArtefactIdentifier: publishedArtefactModel.Identifier,
-				ArtefactUUID:       &publishedArtefactModel.UUID,
-			},
-			serverTargets,
+			tarballLocation,
+			publishedArtefactModel,
+			deploymentEnvironment,
+			restartAffectedServers,
 		); err != nil {
-			return fmt.Errorf("failed to deploy artefact to targeted servers: %w", err)
+			return fmt.Errorf("failed to deploy: %w", err)
 		}
 
 		return nil
 	}
 
 	return command
+}
+
+// workflowBuildAndDeployDeployPublishedArtefact deploys a now published artefact to the configured servers and potentially restarts them.
+func workflowBuildAndDeployDeployPublishedArtefact(
+	ctx context.Context,
+	cmd *cobra.Command,
+	client controller.Client,
+	artefact TarballBuildResult,
+	remoteArtefact networkmodel.ArtefactModel,
+	deploymentEnvironment string,
+	restartAffectedServers bool,
+) error {
+	serverTargets, valueFound := artefact.Manifest.DeploymentTargets[deploymentEnvironment]
+	if !valueFound {
+		serverTargets = make([]string, 0)
+		cmd.PrintErrln(bunt.Sprintf("Gray{no servers found for environment %s}", deploymentEnvironment))
+	}
+
+	// Map them to strings for the deployment function
+	serverTargets = sliceutils.Map(serverTargets, func(value string, _ int, _ []string) string {
+		return deploymentEnvironment + "/" + value
+	})
+
+	cmd.PrintErrln(bunt.Sprintf("Gray{deploying to servers: %v}", serverTargets))
+
+	if err := deployArtefactInternalExecute(
+		ctx,
+		cmd,
+		client,
+		networkmodel.UpdateServerStateRequest{
+			ArtefactIdentifier: remoteArtefact.Identifier,
+			ArtefactUUID:       &remoteArtefact.UUID,
+		},
+		serverTargets,
+	); err != nil {
+		return fmt.Errorf("failed to deploy artefact to targeted servers: %w", err)
+	}
+
+	// Potentially restart affected servers
+	if restartAffectedServers {
+		if err := operateServerInternalExecute(
+			ctx,
+			cmd,
+			client,
+			networkmodel.UpgradeDeployment,
+			serverTargets,
+		); err != nil {
+			return fmt.Errorf("failed to upgrade affected servers: %w", err)
+		}
+	}
+	return nil
 }
