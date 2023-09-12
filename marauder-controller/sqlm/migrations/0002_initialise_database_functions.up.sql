@@ -102,3 +102,18 @@ BEGIN
 				   AND (s.type IS NULL OR s.type = 'HISTORY');
 END
 $$ LANGUAGE plpgsql;
+
+--
+-- Function to query all server states older than the passed timestamp that are HISTORIC.
+--
+CREATE FUNCTION func_find_historic_state_older_than(date TIMESTAMP)
+	RETURNS SETOF server_state
+AS
+$$
+BEGIN
+	RETURN QUERY SELECT server_state.*
+				 FROM server_state
+				 WHERE server_state.definition_date < date
+				   AND server_state.type = 'HISTORY';
+END
+$$ LANGUAGE plpgsql;

@@ -28,6 +28,9 @@ func ComputeCronjobMap(configuration cronjob.CronjobsConfiguration) map[cronjob.
 	if configuration.RemoveUnused != nil {
 		result["removeUnused"] = RemoveUnused(configuration.RemoveUnused.Every, configuration.RemoveUnused.RemoveAfter)
 	}
+	if configuration.RemoveHistoric != nil {
+		result["removeHistoric"] = RemoveHistoric(configuration.RemoveHistoric.Every, configuration.RemoveHistoric.RemoveAfter)
+	}
 
 	return result
 }

@@ -79,3 +79,18 @@ func DeleteNonHistoricServerState(
 
 	return nil
 }
+
+// DeleteHistoricServerState deletes a historic server state.
+func DeleteHistoricServerState(
+	ctx context.Context,
+	db *sqlm.DB,
+	serverStateUUID uuid.UUID,
+) error {
+	if _, err := db.ExecContext(ctx, `
+			DELETE FROM server_state WHERE uuid = $1 AND type = 'HISTORY'
+			`, serverStateUUID); err != nil {
+		return fmt.Errorf("failed to call DELETE FROM: %w", err)
+	}
+
+	return nil
+}

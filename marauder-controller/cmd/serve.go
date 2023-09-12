@@ -26,12 +26,20 @@ func defaultConfiguration() rest.ServerConfiguration {
 		Port:                8080,
 		TLS:                 utils.TLSConfiguration{},
 		KnownClientKeysFile: "{{.User.HomeDir}}/.local/marauder/controller/authorized_keys",
-		Cronjobs: cronjob.CronjobsConfiguration{RemoveUnused: &cronjob.RemoveUnused{
-			BaseCronjobConfiguration: cronjob.BaseCronjobConfiguration{
-				Every: 24 * time.Hour, // run daily
+		Cronjobs: cronjob.CronjobsConfiguration{
+			RemoveUnused: &cronjob.RemoveUnused{
+				BaseCronjobConfiguration: cronjob.BaseCronjobConfiguration{
+					Every: 24 * time.Hour, // run daily
+				},
+				RemoveAfter: 14 * 24 * time.Hour, // delete artefacts older than 14 days that are not used
 			},
-			RemoveAfter: 14 * 24 * time.Hour, // delete artefacts older than 14 days that are not used
-		}},
+			RemoveHistoric: &cronjob.RemoveHistoric{
+				BaseCronjobConfiguration: cronjob.BaseCronjobConfiguration{
+					Every: 24 * time.Hour,
+				},
+				RemoveAfter: 7 * 24 * time.Hour,
+			},
+		},
 	}
 }
 

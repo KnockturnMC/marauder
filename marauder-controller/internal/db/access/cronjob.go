@@ -45,3 +45,15 @@ func FindHistoricArtefactsOlderThan(ctx context.Context, db *sqlm.DB, timestamp 
 
 	return result, nil
 }
+
+// FindHistoricStateOlderThan yields all server state that are older than the passed date and are HISTORIC.
+func FindHistoricStateOlderThan(ctx context.Context, db *sqlm.DB, timestamp time.Time) ([]networkmodel.ServerArtefactStateModel, error) {
+	result := make([]networkmodel.ServerArtefactStateModel, 0)
+	if err := db.SelectContext(ctx, &result, `
+		SELECT * FROM func_find_historic_state_older_than($1)
+		`, timestamp.UTC()); err != nil {
+		return nil, fmt.Errorf("failed to query db: %w", err)
+	}
+
+	return result, nil
+}
