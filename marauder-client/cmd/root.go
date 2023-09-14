@@ -34,7 +34,7 @@ tarball and uploading said artefact to the marauder controller.`,
 		&configurationPath,
 		"configPath",
 		"c",
-		"{{.User.HomeDir}}/.local/marauder/client/config.yml",
+		"{{.User.HomeDir}}/.config/marauder/client/config.yml",
 		"the path on the host to the marauder client configuration",
 	)
 
