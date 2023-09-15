@@ -10,7 +10,10 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
+
+	"github.com/Goldziher/go-utils/sliceutils"
 
 	"github.com/google/uuid"
 
@@ -92,7 +95,7 @@ func (d DockerBasedManager) updateSingleDeployment(
 	if artefactToUninstall != nil {
 		// Delete old artefact files after downloading the new one to fail before moving the server into a non-start-able state
 		// This needs further improvements down the line to do a proper rollback, for now this should be fine.
-		if err := d.deleteOldArtefact(artefactToUninstallManifest, serverFolderLocation); err != nil {
+		if err := d.deleteOldArtefact(artefactToUninstallManifest, serverFolderLocation, true); err != nil {
 			return fmt.Errorf("failed to delete old artefact from server folder: %w", err)
 		}
 	}
@@ -101,6 +104,16 @@ func (d DockerBasedManager) updateSingleDeployment(
 	if artefactToInstall != nil {
 		// Extract the new artefact to the server directory
 		if err := d.unpackArtefactIntoServer(artefactToInstallOnDisk, serverFolderLocation); err != nil {
+			var oldArtefactUUID *uuid.UUID
+			if artefactToUninstall != nil {
+				oldArtefactUUID = &artefactToUninstall.Artefact
+			}
+
+			// Unpacking failed, undo all potentially unpacked files.
+			if err := d.rollbackFailedArtefactInstall(ctx, artefactToInstallOnDisk, oldArtefactUUID, serverFolderLocation); err != nil {
+				return fmt.Errorf("failed to rollback failed artefact installation: %w", err)
+			}
+
 			return fmt.Errorf("failed to unpack new artefact: %w", err)
 		}
 
@@ -146,31 +159,18 @@ func (d DockerBasedManager) validateOldDeploymentHashOnDisk(oldArtefact filemode
 }
 
 // deleteOldArtefact deletes an old artefact in the server folder.
-func (d DockerBasedManager) deleteOldArtefact(oldArtefact filemodel.Manifest, serverFolderLocation string) error {
-	potentiallyEmptyParentDirsAsMap := make(map[string]bool)
-
-	// Delete all files
-	for filePathWithPrefix := range oldArtefact.Hashes {
-		filePathWithoutPrefix, _ := strings.CutPrefix(filePathWithPrefix, pkg.FileParentDirectoryInArtefact)
-		cleanedFilePathWithoutPrefix := path.Clean(filePathWithoutPrefix)
-
-		fullFilePath := path.Join(serverFolderLocation, cleanedFilePathWithoutPrefix)
-		if err := os.Remove(fullFilePath); err != nil {
-			return fmt.Errorf("failed to delete file %s: %w", filePathWithPrefix, err)
-		}
-
-		for {
-			cleanedFilePathWithoutPrefix = path.Dir(cleanedFilePathWithoutPrefix)
-			if cleanedFilePathWithoutPrefix == "." {
-				break
-			}
-
-			potentiallyEmptyParentDirsAsMap[path.Join(serverFolderLocation, cleanedFilePathWithoutPrefix)] = true
-		}
+func (d DockerBasedManager) deleteOldArtefact(
+	oldArtefact filemodel.Manifest,
+	serverFolderLocation string,
+	errorOnMissingFiles bool,
+) error {
+	relativePotentiallyEmptyParentDirsAsMap, err := d.deleteOldFilesAndYieldParents(oldArtefact, serverFolderLocation, errorOnMissingFiles)
+	if err != nil {
+		return fmt.Errorf("failed to delete old files: %w", err)
 	}
 
 	// Sort to depth
-	potentiallyEmptyDirs := maputils.Keys(potentiallyEmptyParentDirsAsMap)
+	potentiallyEmptyDirs := maputils.Keys(relativePotentiallyEmptyParentDirsAsMap)
 	slices.SortFunc(potentiallyEmptyDirs, func(a, b string) int {
 		return strings.Count(b, "/") - strings.Count(a, "/")
 	})
@@ -183,13 +183,65 @@ func (d DockerBasedManager) deleteOldArtefact(oldArtefact filemodel.Manifest, se
 		}
 
 		if len(dirOutput) == 0 {
-			if err := os.Remove(dir); err != nil {
+			if err := os.Remove(path.Join(serverFolderLocation, dir)); err != nil {
 				return fmt.Errorf("failed to remove empty parent dir %s: %w", dir, err)
 			}
 		}
 	}
 
 	return nil
+}
+
+// deleteOldFilesAndYieldParents deletes all old files of a manifest and yields back a map of all parent dirs that might need to be deleted if empty.
+func (d DockerBasedManager) deleteOldFilesAndYieldParents(
+	oldArtefact filemodel.Manifest,
+	serverFolderLocation string,
+	errorOnMissingFiles bool,
+) (map[string]bool, error) {
+	relativePotentiallyEmptyParentDirsAsMap := make(map[string]bool)
+
+	// Delete all files
+	for filePathWithPrefix := range oldArtefact.Hashes {
+		filePathWithoutPrefix, _ := strings.CutPrefix(filePathWithPrefix, pkg.FileParentDirectoryInArtefact)
+		cleanedFilePathWithoutPrefix := path.Clean(filePathWithoutPrefix)
+
+		fullFilePath := path.Join(serverFolderLocation, cleanedFilePathWithoutPrefix)
+		if err := os.Remove(fullFilePath); err != nil && os.IsNotExist(err) && errorOnMissingFiles {
+			return relativePotentiallyEmptyParentDirsAsMap, fmt.Errorf("failed to delete file %s: %w", filePathWithPrefix, err)
+		}
+
+		for {
+			cleanedFilePathWithoutPrefix = path.Dir(cleanedFilePathWithoutPrefix)
+			if cleanedFilePathWithoutPrefix == "." {
+				break
+			}
+
+			relativePotentiallyEmptyParentDirsAsMap[cleanedFilePathWithoutPrefix] = true
+		}
+	}
+
+	// Collect protected dirs from file references
+	protectedDirsSlice := sliceutils.Map(oldArtefact.Files, func(value filemodel.FileReference, index int, slice []filemodel.FileReference) string {
+		if strings.HasSuffix(value.Target, "/") {
+			return strings.TrimSuffix(value.Target, "/") // Return the entire directory (without trailing slash)
+		}
+
+		return filepath.Dir(value.Target) // It's a file, return its dir name. Does not have a trailing slash either
+	})
+	protectedDirsSlice = sliceutils.Unique(protectedDirsSlice)
+
+	// Filter out protected dirs.
+	relativePotentiallyEmptyParentDirsAsMap = maputils.Filter(relativePotentiallyEmptyParentDirsAsMap, func(key string, value bool) bool {
+		for _, protectedDir := range protectedDirsSlice {
+			if strings.Contains(protectedDir, key) {
+				return false
+			}
+		}
+
+		return true
+	})
+
+	return relativePotentiallyEmptyParentDirsAsMap, nil
 }
 
 // unpackArtefactIntoServer unpacks the passed artefact into the server.

@@ -37,14 +37,9 @@ func ReadManifestFromTarball(reader io.Reader) (*artefactlib.Manifest, error) {
 			continue
 		}
 
-		manifestAsBytes, err := io.ReadAll(tarballReader)
+		manifest, err := ReadManifestAtCurrent(tarballReader)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read manifest bytes from tarball: %w", err)
-		}
-
-		manifest := artefactlib.Manifest{}
-		if err := json.Unmarshal(manifestAsBytes, &manifest); err != nil {
-			return nil, fmt.Errorf("failed to parse manifest from json: %w", err)
+			return nil, err
 		}
 
 		manifestPtr = &manifest
@@ -53,4 +48,18 @@ func ReadManifestFromTarball(reader io.Reader) (*artefactlib.Manifest, error) {
 	}
 
 	return manifestPtr, nil
+}
+
+// ReadManifestAtCurrent reads the manifest file from the tar.Reader at the current header.
+func ReadManifestAtCurrent(tarballReader *tar.Reader) (artefactlib.Manifest, error) {
+	manifestAsBytes, err := io.ReadAll(tarballReader)
+	if err != nil {
+		return artefactlib.Manifest{}, fmt.Errorf("failed to read manifest bytes from tarball: %w", err)
+	}
+
+	manifest := artefactlib.Manifest{}
+	if err := json.Unmarshal(manifestAsBytes, &manifest); err != nil {
+		return artefactlib.Manifest{}, fmt.Errorf("failed to parse manifest from json: %w", err)
+	}
+	return manifest, nil
 }

@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -19,9 +18,6 @@ import (
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 )
-
-// ErrMaxFileMatchesExceeded is returned if a matcher/builder for the file manifest matches more than the restricted maximum.
-var ErrMaxFileMatchesExceeded = errors.New("more than max amount matched")
 
 // CreateArtefactTarball creates a new tar ball given a manifest at the specified target path.
 // The method takes a rootFs file system in which it resolves the ci globs.
@@ -77,9 +73,9 @@ func IncludeArtefactFiles(
 			return filemodel.Manifest{}, fmt.Errorf("failed to glob manifest defined file %s: %w", file.CISourceGlob, err)
 		}
 
-		// Honour max restriction if configured
-		if file.Restrictions != nil && file.Restrictions.Max != nil && *file.Restrictions.Max < len(matches) {
-			return filemodel.Manifest{}, fmt.Errorf("matched %d matches for %s: %w", len(matches), file.CISourceGlob, ErrMaxFileMatchesExceeded)
+		// Honour restriction if configured
+		if err := file.Restrictions.ValidateMatchAmount(len(matches)); err != nil {
+			return filemodel.Manifest{}, fmt.Errorf("failed file restriction for %s: %w", file.CISourceGlob, err)
 		}
 
 		for _, match := range matches {

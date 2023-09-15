@@ -1,7 +1,20 @@
 package filemodel
 
 import (
+	"errors"
+	"fmt"
 	"time"
+)
+
+var (
+	// ErrMaxFileMatchesFailed is returned if a matcher/builder for the file manifest matches more than the restricted maximum.
+	ErrMaxFileMatchesFailed = errors.New("more than max amount matched")
+
+	// ErrMinFileMatchesFailed is returned if a matcher/builder for the file manifest matches less than the restricted minimum.
+	ErrMinFileMatchesFailed = errors.New("less than minimal amount matched")
+
+	// ErrExactFileMatchesFailed is returned if a matcher/builder for the file manifest matches a different amount than the exact match count.
+	ErrExactFileMatchesFailed = errors.New("different than exact amount matched")
 )
 
 // The Hashes type holds the hashes of a collections of files.
@@ -80,7 +93,33 @@ type FileReference struct {
 type FileRestriction struct {
 	// Max defines how many files can be matched at max.
 	// If more files are matched, marauder will error before building.
-	Max *int `json:"max"`
+	Max *int `json:"max,omitempty"`
+
+	// Min defines how many files can be matched at min.
+	// If less files are matched, marauder will error before building.
+	Min *int `json:"min,omitempty"`
+
+	// Exact defines how many files can be matched exactly.
+	// If any different amount of files were matched, marauder will error.
+	Exact *int `json:"exact,omitempty"`
+}
+
+// ValidateMatchAmount validates if the passed amount matches the file restrictions.
+func (f *FileRestriction) ValidateMatchAmount(amountMatched int) error {
+	if f == nil {
+		return nil
+	}
+
+	switch {
+	case f.Exact != nil && *f.Exact != amountMatched:
+		return fmt.Errorf("matched %d (expected %d) files: %w", amountMatched, *f.Exact, ErrExactFileMatchesFailed)
+	case f.Min != nil && *f.Min > amountMatched:
+		return fmt.Errorf("matched %d (expected > %d) files: %w", amountMatched, *f.Min, ErrMinFileMatchesFailed)
+	case f.Max != nil && *f.Max < amountMatched:
+		return fmt.Errorf("matched %d (expected < %d) files: %w", amountMatched, *f.Max, ErrMaxFileMatchesFailed)
+	}
+
+	return nil
 }
 
 // The DeploymentTargets type holds a map of environments to a slice of servers in said environment that the artefact should be deployed to.

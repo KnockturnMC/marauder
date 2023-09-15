@@ -6,7 +6,7 @@ linters:
 
     # Archived
     "maligned", "scopelint", "golint", "interfacer", "structcheck", "varcheck", "nosnakecase", "deadcode", "ifshort",
-    
+
     # Linters simply not desirable
     "exhaustivestruct", # This is a rather unnecessary linter, especially when working with the stellar sdk
     "exhaustruct", # Literally the same as above
@@ -30,6 +30,8 @@ linters-settings:
     block-size: 2 # A two line block is fine, especially for unit tests that may only increase counter and then return.
   funlen:
     lines: 120 # 60 is a rather small line count for bigger reactor style avior taskimpl. Thank you go middleware handling and logging for that one!
+  nestif:
+    min-complexity: 7
 issues:
   exclude-rules:
     - path: '(.*)_test\.go'
