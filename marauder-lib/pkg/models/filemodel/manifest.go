@@ -1,6 +1,8 @@
 package filemodel
 
-import "time"
+import (
+	"time"
+)
 
 // The Hashes type holds the hashes of a collections of files.
 type Hashes map[string]string
@@ -69,6 +71,16 @@ type FileReference struct {
 
 	// A string representation of a glob that identifies the files during the ci build of the project that produces the artefact.
 	CISourceGlob string `json:"ciSourceGlob"`
+
+	// A restriction type that may be used to restrict what/how files are matched.
+	Restrictions *FileRestriction `json:"restrictions,omitempty"`
+}
+
+// The FileRestriction type allows to restrict matches by marauder during the artefact building process.
+type FileRestriction struct {
+	// Max defines how many files can be matched at max.
+	// If more files are matched, marauder will error before building.
+	Max *int `json:"max"`
 }
 
 // The DeploymentTargets type holds a map of environments to a slice of servers in said environment that the artefact should be deployed to.
