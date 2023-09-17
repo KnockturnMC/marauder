@@ -31,6 +31,9 @@ func ComputeCronjobMap(configuration cronjob.CronjobsConfiguration) map[cronjob.
 	if configuration.RemoveHistoric != nil {
 		result["removeHistoric"] = RemoveHistoric(configuration.RemoveHistoric.Every, configuration.RemoveHistoric.RemoveAfter)
 	}
+	if configuration.ClearOperatorCaches != nil {
+		result["clearOperatorCaches"] = ClearOperatorCaches(configuration.ClearOperatorCaches.Every, configuration.ClearOperatorCaches.RemoveAfter)
+	}
 
 	return result
 }

@@ -7,8 +7,9 @@ type Type string
 
 // The CronjobsConfiguration defines the available configurations for the known cronjobs.
 type CronjobsConfiguration struct {
-	RemoveUnused   *RemoveUnused   `yaml:"removeUnused,omitempty"`
-	RemoveHistoric *RemoveHistoric `yaml:"removeHistoric,omitempty"`
+	RemoveUnused        *RemoveUnused        `yaml:"removeUnused,omitempty"`
+	RemoveHistoric      *RemoveHistoric      `yaml:"removeHistoric,omitempty"`
+	ClearOperatorCaches *ClearOperatorCaches `yaml:"clearOperatorCaches,omitempty"`
 }
 
 // BaseCronjobConfiguration defines a base struct for all cronjobs configurations.
@@ -24,6 +25,12 @@ type RemoveUnused struct {
 
 // RemoveHistoric defines the configuration for the cronjob to remove historic server state.
 type RemoveHistoric struct {
+	BaseCronjobConfiguration `yaml:",inline"`
+	RemoveAfter              time.Duration `yaml:"removeAfter"`
+}
+
+// ClearOperatorCaches defines the configuration for the cronjob to clean operator caches.
+type ClearOperatorCaches struct {
 	BaseCronjobConfiguration `yaml:",inline"`
 	RemoveAfter              time.Duration `yaml:"removeAfter"`
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/operator"
+
 	"gitea.knockturnmc.com/marauder/controller/internal/cronjobworker"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
@@ -27,15 +29,14 @@ type ServerDependencies struct {
 	// The DatabaseHandle to marauderctl's database.
 	DatabaseHandle *sqlm.DB
 
-	// The OperatorHTTPClient is a http client with a tls configuration authorized to communicate with
-	// operator instances.
-	OperatorHTTPClient *http.Client
-
 	// The ArtefactValidator used by the server to validate uploaded artefacts.
 	ArtefactValidator artefact.Validator
 
 	// CronjobWorker is the cronjob worker the controller server uses.
 	CronjobWorker *cronjobworker.CronjobWorker
+
+	// OperatorClientCache holds the http clients to communicate with the operators managed by the controller.
+	OperatorClientCache *operator.ClientCache
 
 	// The TLSConfig for the server if tls is enabled.
 	TLSConfig *tls.Config
@@ -73,13 +74,16 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 
 	wrappedDatabaseHandle := &sqlm.DB{DB: databaseHandle}
 
-	cronjobWorker := cronjobworker.NewCronjobWorker(wrappedDatabaseHandle, cronjobworker.ComputeCronjobMap(configuration.Cronjobs))
-
-	operatorClient := &http.Client{}
+	operatorClientCacheSharedHTTPClient := &http.Client{}
+	protocol := "http"
+	if tlsConfiguration != nil {
+		protocol = "https"
+	}
+	operatorClientCache := operator.NewOperatorClientCache(operatorClientCacheSharedHTTPClient, protocol)
 
 	// tls is enabled
 	if tlsConfiguration != nil {
-		operatorClient.Transport = &http.Transport{ // Enable on client for operator
+		operatorClientCacheSharedHTTPClient.Transport = &http.Transport{ // Enable on client for operator
 			TLSClientConfig: tlsConfiguration.Clone(),
 		}
 
@@ -88,12 +92,18 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		tlsConfiguration.ClientCAs = tlsConfiguration.RootCAs
 	}
 
+	cronjobWorker := cronjobworker.NewCronjobWorker(
+		wrappedDatabaseHandle,
+		operatorClientCache,
+		cronjobworker.ComputeCronjobMap(configuration.Cronjobs),
+	)
+
 	return ServerDependencies{
-		Version:            version,
-		DatabaseHandle:     wrappedDatabaseHandle,
-		OperatorHTTPClient: operatorClient,
-		ArtefactValidator:  artefact.NewWorkedBasedValidator(artefactValidatorDispatcher, keys),
-		CronjobWorker:      cronjobWorker,
-		TLSConfig:          tlsConfiguration,
+		Version:             version,
+		DatabaseHandle:      wrappedDatabaseHandle,
+		ArtefactValidator:   artefact.NewWorkedBasedValidator(artefactValidatorDispatcher, keys),
+		OperatorClientCache: operatorClientCache,
+		CronjobWorker:       cronjobWorker,
+		TLSConfig:           tlsConfiguration,
 	}, nil
 }

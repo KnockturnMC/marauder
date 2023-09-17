@@ -27,6 +27,9 @@ type ServerDependencies struct {
 	// The http client to communicate with the operator
 	ControllerClient controller.DownloadingClient
 
+	// The used downloading service, cleanable by request.
+	DownloadingService worker.DownloadService
+
 	// The ServerManager is responsible for managing the docker instances on the server.
 	ServerManager manager.Manager
 
@@ -86,9 +89,10 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 	}
 
 	return ServerDependencies{
-		Version:          version,
-		ControllerClient: controllerClient,
-		TLSConfig:        tlsConfiguration,
+		Version:            version,
+		ControllerClient:   controllerClient,
+		TLSConfig:          tlsConfiguration,
+		DownloadingService: downloadService,
 		ServerManager: &manager.DockerBasedManager{
 			ControllerClient:       controllerClient,
 			DockerClient:           dockerClientInstance,

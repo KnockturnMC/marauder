@@ -29,6 +29,7 @@ func StartMarauderOperatorServer(configuration ServerConfiguration, dependencies
 	logrus.Debug("registering routs on gin server")
 	group := server.Group("/v1")
 	group.GET("/version", endpoints.VersionGet(dependencies.Version))
+	group.POST("/cron/cache/clear", endpoints.CronCleanCache(dependencies.DownloadingService))
 
 	group.POST("/server/:uuid/:action", endpoints.ServerLifecycleActionPost(
 		configuration.Identifier,

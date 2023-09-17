@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/operator"
+
 	"github.com/sirupsen/logrus"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
@@ -28,8 +30,9 @@ type FetchedCronjob struct {
 
 // The CronjobWorker struct is the worker that is responsible for executing cronjobs for the controller.
 type CronjobWorker struct {
-	DB       *sqlm.DB
-	cronjobs map[cronjob.Type]*FetchedCronjob
+	DB                  *sqlm.DB
+	OperatorClientCache *operator.ClientCache
+	cronjobs            map[cronjob.Type]*FetchedCronjob
 }
 
 // Start starts the job worker.
@@ -108,7 +111,7 @@ func (j *CronjobWorker) updateFetchedCronjobsFromDB(ctx context.Context) error {
 }
 
 // NewCronjobWorker constructs a new job worker for the given database and configuration.
-func NewCronjobWorker(db *sqlm.DB, executors map[cronjob.Type]CronjobExecutor) *CronjobWorker {
+func NewCronjobWorker(db *sqlm.DB, operatorClientCache *operator.ClientCache, executors map[cronjob.Type]CronjobExecutor) *CronjobWorker {
 	preparedCronjobs := make(map[cronjob.Type]*FetchedCronjob)
 	for cronjobType, executor := range executors {
 		preparedCronjobs[cronjobType] = &FetchedCronjob{
@@ -120,5 +123,9 @@ func NewCronjobWorker(db *sqlm.DB, executors map[cronjob.Type]CronjobExecutor) *
 		}
 	}
 
-	return &CronjobWorker{DB: db, cronjobs: preparedCronjobs}
+	return &CronjobWorker{
+		DB:                  db,
+		OperatorClientCache: operatorClientCache,
+		cronjobs:            preparedCronjobs,
+	}
 }

@@ -39,6 +39,12 @@ func defaultConfiguration() rest.ServerConfiguration {
 				},
 				RemoveAfter: 7 * 24 * time.Hour,
 			},
+			ClearOperatorCaches: &cronjob.ClearOperatorCaches{
+				BaseCronjobConfiguration: cronjob.BaseCronjobConfiguration{
+					Every: 30 * time.Minute,
+				},
+				RemoveAfter: 1 * time.Hour,
+			},
 		},
 	}
 }

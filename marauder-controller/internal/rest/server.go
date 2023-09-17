@@ -114,13 +114,8 @@ func configureRouterGroup(server *gin.Engine, dependencies ServerDependencies) {
 	group.PATCH("/server/:uuid/state/:state", endpoints.ServerDeploymentPatch(dependencies.DatabaseHandle))
 	group.DELETE("/server/:uuid/state/:state", endpoints.ServerDeploymentPatch(dependencies.DatabaseHandle))
 
-	operatorProtocol := "http"
-	if dependencies.TLSConfig != nil {
-		operatorProtocol = "https"
-	}
 	group.Any("/operator/:server/*path", endpoints.OperationServerProxy(
 		dependencies.DatabaseHandle,
-		dependencies.OperatorHTTPClient,
-		operatorProtocol,
+		dependencies.OperatorClientCache,
 	))
 }

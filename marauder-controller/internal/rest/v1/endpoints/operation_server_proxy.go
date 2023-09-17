@@ -4,12 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
-	"strconv"
 
 	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
+	"gitea.knockturnmc.com/marauder/lib/pkg/operator"
 	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -17,8 +16,7 @@ import (
 
 func OperationServerProxy(
 	db *sqlm.DB,
-	operatorClient *http.Client,
-	protocol string,
+	operatorClientCache *operator.ClientCache,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		serverUUIDAsString := context.Param("server")
@@ -41,30 +39,17 @@ func OperationServerProxy(
 			return
 		}
 
-		// Construct request to operator endpoint
-		controllerEndpoint := fmt.Sprintf(
-			"%s://%s/v1%s",
-			protocol,
-			net.JoinHostPort(server.OperatorRef.Host, strconv.Itoa(server.OperatorRef.Port)),
-			context.Param("path"),
-		)
-		request, err := http.NewRequestWithContext(
-			context,
-			context.Request.Method,
-			controllerEndpoint,
-			context.Request.Body,
-		)
-		if err != nil {
-			_ = context.Error(response.RestErrorFromErr(
-				http.StatusInternalServerError,
-				fmt.Errorf("failed to create http request to controller: %w", err),
-			))
-
-			return
-		}
+		// Fetch operator client
+		operatorClient := operatorClientCache.GetOrCreate(server.OperatorIdentifier, server.OperatorRef.Host, server.OperatorRef.Port)
 
 		// Execute request
-		operatorResp, err := operatorClient.Do(request)
+		operatorResp, err := operatorClient.DoHTTPRequest(
+			context,
+			context.Request.Method,
+			context.Param("path"),
+			context.Request.Body,
+			operator.None,
+		)
 		if err != nil {
 			_ = context.Error(response.RestErrorFromErr(
 				http.StatusInternalServerError,

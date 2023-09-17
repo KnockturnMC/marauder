@@ -65,7 +65,7 @@ func operateServerInternalExecute(
 			cmd.PrintErrln(bunt.Sprintf("Red{failed to execute lifecycle action on server %s: %s}", serverUUID, err.Error()))
 			resultingErr = err
 		} else {
-			cmd.PrintErrln(bunt.Sprintf("LimeGreen{performed cation %s to %s}", lifecycleActionType, serverUUID))
+			cmd.PrintErrln(bunt.Sprintf("LimeGreen{performed action %s to %s}", lifecycleActionType, serverUUID))
 		}
 	}
 

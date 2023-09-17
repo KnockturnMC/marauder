@@ -41,7 +41,7 @@ func DeployArtefactCommand(
 		return deployArtefactInternalExecute(ctx, cmd, client, networkmodel.UpdateServerStateRequest{
 			ArtefactIdentifier: artefact.Identifier,
 			ArtefactUUID:       &artefactUUID,
-		}, args[0:])
+		}, args[1:])
 	}
 
 	return command
