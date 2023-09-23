@@ -276,25 +276,45 @@ func (d DockerBasedManager) unpackArtefactIntoServer(artefactPath string, server
 			continue
 		}
 
-		filePathInServerFolder, _ := strings.CutPrefix(tarballHeader.Name, pkg.FileParentDirectoryInArtefact)
-		filePathOnSystem := path.Join(serverFolderLocation, path.Clean(filePathInServerFolder))
-
-		if err := os.MkdirAll(path.Dir(filePathOnSystem), 0o700); err != nil {
-			return fmt.Errorf("failed to create parent directory for %s: %w", filePathOnSystem, err)
+		if err := d.extractFileToServer(tarballHeader, tarballReader, serverFolderLocation); err != nil {
+			return fmt.Errorf("failed to extract tar file: %w", err)
 		}
-
-		targetFileOnSystem, err := os.Create(filePathOnSystem)
-		if err != nil {
-			return fmt.Errorf("failed to open output file %s: %w", filePathOnSystem, err)
-		}
-
-		if _, err := io.CopyN(targetFileOnSystem, tarballReader, tarballHeader.Size); err != nil {
-			_ = targetFileOnSystem.Close()
-			return fmt.Errorf("failed to copy over tarball content to disk file %s: %w", filePathOnSystem, err)
-		}
-
-		_ = targetFileOnSystem.Close()
 	}
 
+	return nil
+}
+
+// extractFileToServer extracts the file in the tarball to the server folder location.
+func (d DockerBasedManager) extractFileToServer(tarballHeader *tar.Header, tarballReader *tar.Reader, serverFolderLocation string) error {
+	filePathInServerFolder, _ := strings.CutPrefix(tarballHeader.Name, pkg.FileParentDirectoryInArtefact)
+	cleanedFilePathInServerFolder := path.Clean(filePathInServerFolder)
+	filePathOnSystem := path.Join(serverFolderLocation, cleanedFilePathInServerFolder)
+
+	if err := os.MkdirAll(path.Dir(filePathOnSystem), 0o700); err != nil {
+		return fmt.Errorf("failed to create parent directory for %s: %w", filePathOnSystem, err)
+	}
+
+	targetFileOnSystem, err := os.Create(filePathOnSystem)
+	if err != nil {
+		return fmt.Errorf("failed to open output file %s: %w", filePathOnSystem, err)
+	}
+
+	if _, err := io.CopyN(targetFileOnSystem, tarballReader, tarballHeader.Size); err != nil {
+		_ = targetFileOnSystem.Close()
+		return fmt.Errorf("failed to copy over tarball content to disk file %s: %w", filePathOnSystem, err)
+	}
+
+	_ = targetFileOnSystem.Close()
+
+	if d.FolderOwner != nil {
+		chownedFilePath := cleanedFilePathInServerFolder
+		for chownedFilePath != "." {
+			if err := os.Chown(path.Join(serverFolderLocation, chownedFilePath), d.FolderOwner.UID, d.FolderOwner.GID); err != nil {
+				return fmt.Errorf("failed to chown deployed file %s: %w", chownedFilePath, err)
+			}
+
+			chownedFilePath = path.Dir(chownedFilePath)
+		}
+	}
 	return nil
 }
