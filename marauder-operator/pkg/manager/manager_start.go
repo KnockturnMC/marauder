@@ -89,10 +89,6 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 			}},
 			PortBindings: hostPortMap,
 			AutoRemove:   d.AutoRemoveContainers,
-			Resources: container.Resources{
-				Memory:    (server.Memory + 500) * 1_000_000, // 500MB buffer and convert to bytes
-				CPUShares: int64(server.CPU),
-			},
 		},
 		nil,
 		&v1.Platform{
