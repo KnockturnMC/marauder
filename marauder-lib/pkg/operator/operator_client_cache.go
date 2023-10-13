@@ -5,6 +5,8 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 )
 
 // The ClientCache holds the different Client instances.
@@ -19,18 +21,23 @@ func NewOperatorClientCache(sharedClient *http.Client, protocol string) *ClientC
 	return &ClientCache{sharedClient: sharedClient, protocol: protocol, clients: make(map[string]Client)}
 }
 
+// GetOrCreateFromRef constructs a new operator client or returns the cached one.
+func (d *ClientCache) GetOrCreateFromRef(operatorRef networkmodel.ServerOperator) Client {
+	return d.GetOrCreate(operatorRef.Identifier, operatorRef.Host, operatorRef.Port)
+}
+
 // GetOrCreate constructs a new operator client or returns the cached one.
-func (o *ClientCache) GetOrCreate(identifier string, host string, port int) Client {
-	client, ok := o.clients[identifier]
+func (d *ClientCache) GetOrCreate(identifier string, host string, port int) Client {
+	client, ok := d.clients[identifier]
 	if ok {
 		return client
 	}
 
 	httpClient := &HTTPClient{
-		Client:      o.sharedClient,
-		OperatorURL: fmt.Sprintf("%s://%s", o.protocol, net.JoinHostPort(host, strconv.Itoa(port))),
+		Client:      d.sharedClient,
+		OperatorURL: fmt.Sprintf("%s://%s", d.protocol, net.JoinHostPort(host, strconv.Itoa(port))),
 	}
-	o.clients[identifier] = httpClient
+	d.clients[identifier] = httpClient
 
 	return httpClient
 }

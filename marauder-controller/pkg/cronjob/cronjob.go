@@ -1,15 +1,34 @@
 package cronjob
 
-import "time"
+import (
+	"time"
+)
 
-// Type represents the available cronjob types.
+const (
+	CronJobRemoveUnusedIdentifier                     Type = "removeUnused"
+	CronJobRemoveHistoricIdentifier                   Type = "removeHistoric"
+	CronJobClearOperatorCacheIdentifier               Type = "clearOperatorCaches"
+	CronJobExecuteScheduledLifecycleActionsIdentifier Type = "executeScheduledLifecycleActions"
+)
+
+// Type is a specific cronjob type runnable by marauder.
 type Type string
+
+// Execution creates a new execution record for the specific cronjob type that expects to be re-run next
+// at the given time.
+func (c Type) Execution(nextExecution time.Time) Execution {
+	return Execution{
+		NextExecution: nextExecution,
+		Type:          c,
+	}
+}
 
 // The CronjobsConfiguration defines the available configurations for the known cronjobs.
 type CronjobsConfiguration struct {
-	RemoveUnused        *RemoveUnused        `yaml:"removeUnused,omitempty"`
-	RemoveHistoric      *RemoveHistoric      `yaml:"removeHistoric,omitempty"`
-	ClearOperatorCaches *ClearOperatorCaches `yaml:"clearOperatorCaches,omitempty"`
+	RemoveUnused                     *RemoveUnused                     `yaml:"removeUnused,omitempty"`
+	RemoveHistoric                   *RemoveHistoric                   `yaml:"removeHistoric,omitempty"`
+	ClearOperatorCaches              *ClearOperatorCaches              `yaml:"clearOperatorCaches,omitempty"`
+	ExecuteScheduledLifecycleActions *ExecuteScheduledLifecycleActions `yaml:"executeScheduledLifecycleActions"`
 }
 
 // BaseCronjobConfiguration defines a base struct for all cronjobs configurations.
@@ -33,6 +52,11 @@ type RemoveHistoric struct {
 type ClearOperatorCaches struct {
 	BaseCronjobConfiguration `yaml:",inline"`
 	RemoveAfter              time.Duration `yaml:"removeAfter"`
+}
+
+// ExecuteScheduledLifecycleActions holds the configuration for the cronjob that is responsible for executing scheduled lifecycle actions.
+type ExecuteScheduledLifecycleActions struct {
+	BaseCronjobConfiguration `yaml:",inline"`
 }
 
 // Execution represents a cronjob the controller should execute on a regular basis.

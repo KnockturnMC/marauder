@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
 
@@ -16,14 +17,18 @@ func OperateServerCommand(
 	ctx context.Context,
 	config *Configuration,
 ) *cobra.Command {
+	var delay time.Duration
+
 	command := &cobra.Command{
 		Use:   "server action servers...",
 		Short: "Executes the operation on the passed servers",
 		Args:  cobra.MinimumNArgs(2),
 	}
 
+	command.PersistentFlags().DurationVar(&delay, "delay", 0, "delay before executing a potential restart")
+
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		actionType := networkmodel.LifecycleChangeActionType(args[0])
+		actionType := networkmodel.LifecycleAction(args[0])
 		if !networkmodel.KnownLifecycleChangeActionType(actionType) {
 			return fmt.Errorf("unknow action %s: %w", actionType, ErrIncorrectArgumentFormat)
 		}
@@ -38,6 +43,7 @@ func OperateServerCommand(
 			cmd,
 			client,
 			actionType,
+			delay,
 			args[1:],
 		)
 	}
@@ -50,7 +56,8 @@ func operateServerInternalExecute(
 	ctx context.Context,
 	cmd *cobra.Command,
 	client controller.Client,
-	lifecycleActionType networkmodel.LifecycleChangeActionType,
+	lifecycleActionType networkmodel.LifecycleAction,
+	delay time.Duration,
 	serverIdentifiers []string,
 ) error {
 	// Iterate over servers
@@ -61,7 +68,7 @@ func operateServerInternalExecute(
 			return fmt.Errorf("failed to fetch server uuid at %d: %w", i, err)
 		}
 
-		if err := client.ExecuteActionOn(ctx, serverUUID, lifecycleActionType); err != nil {
+		if err := client.ExecuteActionOn(ctx, serverUUID, lifecycleActionType, delay); err != nil {
 			cmd.PrintErrln(bunt.Sprintf("Red{failed to execute lifecycle action on server %s: %s}", serverUUID, err.Error()))
 			resultingErr = err
 		} else {

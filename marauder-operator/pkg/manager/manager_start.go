@@ -7,10 +7,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/docker/docker/api/types/filters"
-	v1 "github.com/opencontainers/image-spec/specs-go/v1"
-
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 
 	"github.com/docker/docker/api/types/mount"
@@ -91,10 +89,7 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 			AutoRemove:   d.AutoRemoveContainers,
 		},
 		nil,
-		&v1.Platform{
-			Architecture: "amd64",
-			OS:           "linux",
-		},
+		nil,
 		d.computeUniqueDockerContainerNameFor(server),
 	)
 	if err != nil {

@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
+	"github.com/google/uuid"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 )
 
@@ -26,6 +29,13 @@ type Client interface {
 		body io.Reader,
 		configurator func(r *http.Request) error,
 	) (*http.Response, error)
+
+	// ExecuteLifecycleAction executes a lifecycle action o the specific server on the operator
+	ExecuteLifecycleAction(
+		ctx context.Context,
+		serverUUID uuid.UUID,
+		action networkmodel.LifecycleAction,
+	) error
 
 	// ScheduleCacheClear schedules the clearing of the caches on the operator for any cachable item older than the passed age.
 	ScheduleCacheClear(ctx context.Context, age time.Duration) error
@@ -59,6 +69,31 @@ func (c HTTPClient) DoHTTPRequest(
 	}
 
 	return response, nil
+}
+
+func (c HTTPClient) ExecuteLifecycleAction(
+	ctx context.Context,
+	serverUUID uuid.UUID,
+	action networkmodel.LifecycleAction,
+) error {
+	response, err := c.DoHTTPRequest(
+		ctx,
+		http.MethodPost,
+		fmt.Sprintf("/server/%s/%s", serverUUID.String(), action),
+		&bytes.Buffer{},
+		None,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create http request for lifecycle actions: %w", err)
+	}
+
+	defer func() { _ = response.Body.Close() }()
+
+	if err := utils.IsOkayStatusCodeOrErrorWithBody(response); err != nil {
+		return fmt.Errorf("failed to execute lifecycle action: %w", err)
+	}
+
+	return nil
 }
 
 func (c HTTPClient) ScheduleCacheClear(ctx context.Context, age time.Duration) error {

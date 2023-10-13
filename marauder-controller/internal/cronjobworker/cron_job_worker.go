@@ -33,6 +33,17 @@ type CronjobWorker struct {
 	DB                  *sqlm.DB
 	OperatorClientCache *operator.ClientCache
 	cronjobs            map[cronjob.Type]*FetchedCronjob
+	timerResetChan      chan time.Duration
+}
+
+// RescheduleCronjobAt schedules a new run of the worker in the given duration.
+func (j *CronjobWorker) RescheduleCronjobAt(ctx context.Context, cronjobType cronjob.Type, duration time.Duration) error {
+	if err := access.UpsertCronjobExecution(ctx, j.DB, cronjobType.Execution(time.Now().Add(duration).UTC())); err != nil {
+		return fmt.Errorf("failed to upsert next cronjob execution: %w", err)
+	}
+
+	j.timerResetChan <- duration
+	return nil
 }
 
 // Start starts the job worker.
@@ -41,15 +52,20 @@ func (j *CronjobWorker) Start(ctx context.Context) error {
 		return nil
 	}
 
+	j.timerResetChan = make(chan time.Duration)
 	timer := time.NewTimer(0 * time.Second)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
+		case resetDuration := <-j.timerResetChan:
+			timer.Reset(resetDuration)
 		case <-timer.C:
 			durationTillNext, err := j.runRunnableJobs(ctx)
 			if err != nil {
-				return fmt.Errorf("failed to run jobs: %w", err)
+				logrus.Error(fmt.Errorf("failed to run jobs: %w", err)) // sink error instead of breaking because of it.
+				durationTillNext = 1 * time.Minute                      // Default to sensible back off
 			}
 
 			// Reset the timer, we run again when the next fetchedCronjob is available.
@@ -65,24 +81,32 @@ func (j *CronjobWorker) runRunnableJobs(ctx context.Context) (time.Duration, err
 	}
 
 	timeNow := time.Now().UTC()
-	earliestNextJobExecutionTime := timeNow
 	for cronjobType, fetchedCronjob := range j.cronjobs {
-		if fetchedCronjob.Execution.NextExecution.UTC().Before(timeNow) {
-			if err := fetchedCronjob.Executor.Execute(ctx, j); err != nil {
-				return 0, fmt.Errorf("failed to execute cronjob %s: %w", cronjobType, err)
-			}
-
-			fetchedCronjob.Execution = cronjob.Execution{
-				NextExecution: timeNow.Add(fetchedCronjob.Executor.Cooldown()),
-				Type:          cronjobType,
-			}
-			if err := access.UpsertCronjobExecution(ctx, j.DB, fetchedCronjob.Execution); err != nil {
-				return 0, fmt.Errorf("failed to update chron fetchedCronjob in db: %w", err)
-			}
-
-			logrus.Info("executed cronjob ", cronjobType, " at ", timeNow.UTC())
+		// Cronjob is not scheduled to be executed this run
+		if fetchedCronjob.Execution.NextExecution.UTC().After(timeNow) {
+			continue
 		}
 
+		// Execute the cronjob
+		if err := fetchedCronjob.Executor.Execute(ctx, j); err != nil {
+			return 0, fmt.Errorf("failed to execute cronjob %s: %w", cronjobType, err)
+		}
+
+		// Create a new execution and upsert it into the database.
+		fetchedCronjob.Execution = cronjob.Execution{
+			NextExecution: timeNow.Add(fetchedCronjob.Executor.Cooldown()),
+			Type:          cronjobType,
+		}
+		if err := access.UpsertCronjobExecution(ctx, j.DB, fetchedCronjob.Execution); err != nil {
+			return 0, fmt.Errorf("failed to update chron fetchedCronjob in db: %w", err)
+		}
+
+		logrus.Info("executed cronjob ", cronjobType, " at ", timeNow.UTC())
+	}
+
+	// Update the possible next execution
+	earliestNextJobExecutionTime := timeNow
+	for _, fetchedCronjob := range j.cronjobs {
 		if earliestNextJobExecutionTime == timeNow || fetchedCronjob.Execution.NextExecution.UTC().Before(earliestNextJobExecutionTime) {
 			earliestNextJobExecutionTime = fetchedCronjob.Execution.NextExecution.UTC()
 		}
