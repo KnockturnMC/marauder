@@ -22,6 +22,7 @@ func FetchLastCronjobExecutions(ctx context.Context, db *sqlm.DB) ([]cronjob.Exe
 	return result, nil
 }
 
+// UpsertCronjobExecution upserts a new cronjob execution into the database as the cronjob has been executed/is rescheduled.
 func UpsertCronjobExecution(ctx context.Context, db *sqlm.DB, execution cronjob.Execution) error {
 	if _, err := db.NamedExecContext(ctx, `
 		INSERT INTO cronjob(type, next_execution) VALUES (:type, :next_execution)

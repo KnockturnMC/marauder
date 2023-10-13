@@ -26,13 +26,21 @@ func ComputeCronjobMap(configuration cronjob.CronjobsConfiguration) map[cronjob.
 	result := make(map[cronjob.Type]CronjobExecutor)
 
 	if configuration.RemoveUnused != nil {
-		result["removeUnused"] = RemoveUnused(configuration.RemoveUnused.Every, configuration.RemoveUnused.RemoveAfter)
+		result[cronjob.CronJobRemoveUnusedIdentifier] = RemoveUnused(configuration.RemoveUnused.Every, configuration.RemoveUnused.RemoveAfter)
 	}
 	if configuration.RemoveHistoric != nil {
-		result["removeHistoric"] = RemoveHistoric(configuration.RemoveHistoric.Every, configuration.RemoveHistoric.RemoveAfter)
+		result[cronjob.CronJobRemoveHistoricIdentifier] = RemoveHistoric(configuration.RemoveHistoric.Every, configuration.RemoveHistoric.RemoveAfter)
 	}
 	if configuration.ClearOperatorCaches != nil {
-		result["clearOperatorCaches"] = ClearOperatorCaches(configuration.ClearOperatorCaches.Every, configuration.ClearOperatorCaches.RemoveAfter)
+		result[cronjob.CronJobClearOperatorCacheIdentifier] = ClearOperatorCaches(
+			configuration.ClearOperatorCaches.Every,
+			configuration.ClearOperatorCaches.RemoveAfter,
+		)
+	}
+	if configuration.ExecuteScheduledLifecycleActions != nil {
+		result[cronjob.CronJobExecuteScheduledLifecycleActionsIdentifier] = ExecuteScheduledLifecycleActions(
+			configuration.ExecuteScheduledLifecycleActions.Every,
+		)
 	}
 
 	return result

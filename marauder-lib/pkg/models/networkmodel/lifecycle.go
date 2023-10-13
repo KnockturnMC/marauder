@@ -1,25 +1,25 @@
 package networkmodel
 
-// LifecycleChangeActionType defines a type of change request.
-type LifecycleChangeActionType string
+// LifecycleAction defines a type of change request.
+type LifecycleAction string
 
 const (
 	// Start defines that the server should be started if not online rn.
-	Start LifecycleChangeActionType = "start"
+	Start LifecycleAction = "start"
 
 	// Stop defines that the server should be stopped if not currently online.
-	Stop LifecycleChangeActionType = "stop"
+	Stop LifecycleAction = "stop"
 
 	// Restart simply restarts the server by stopping and then starting it.
-	Restart LifecycleChangeActionType = "restart"
+	Restart LifecycleAction = "restart"
 
 	// UpgradeDeployment updates a servers deployment.
 	// For this, the server is stopped, the artefacts are updated and the server is started again.
-	UpgradeDeployment LifecycleChangeActionType = "update"
+	UpgradeDeployment LifecycleAction = "update"
 )
 
 // KnownLifecycleChangeActionType computes if the passed change action is known by marauder.
-func KnownLifecycleChangeActionType(changeActionType LifecycleChangeActionType) bool {
+func KnownLifecycleChangeActionType(changeActionType LifecycleAction) bool {
 	switch changeActionType {
 	case Start:
 		fallthrough

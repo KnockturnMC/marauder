@@ -114,7 +114,12 @@ func configureRouterGroup(server *gin.Engine, dependencies ServerDependencies) {
 	group.PATCH("/server/:uuid/state/:state", endpoints.ServerDeploymentPatch(dependencies.DatabaseHandle))
 	group.DELETE("/server/:uuid/state/:state", endpoints.ServerDeploymentPatch(dependencies.DatabaseHandle))
 
-	group.Any("/operator/:server/*path", endpoints.OperationServerProxy(
+	group.POST("/operator/:server/lifecycle/:action", endpoints.OperationServerLifecycleAction(
+		dependencies.DatabaseHandle,
+		dependencies.OperatorClientCache,
+		dependencies.CronjobWorker,
+	))
+	group.Any("/operator/:server/proxy/*path", endpoints.OperationServerProxy(
 		dependencies.DatabaseHandle,
 		dependencies.OperatorClientCache,
 	))

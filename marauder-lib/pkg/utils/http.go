@@ -49,6 +49,22 @@ func IsOkayStatusCode(code int) bool {
 	return code >= 200 && code < 400
 }
 
+// IsOkayStatusCodeOrErrorWithBody checks IsOkayStatusCode on the passed response and, if the status code is not okay
+// creates an error that includes the entire body.
+// A ErrBadStatusCode is yielded back if the status code is not okay.
+func IsOkayStatusCodeOrErrorWithBody(response *http.Response) error {
+	if IsOkayStatusCode(response.StatusCode) {
+		return nil
+	}
+
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read body from failed http request: %w", err)
+	}
+
+	return fmt.Errorf("got %s: %w", string(bodyBytes), ErrBadStatusCode)
+}
+
 // PerformHTTPRequest creates a request and publishes it to the passed http client.
 func PerformHTTPRequest(
 	ctx context.Context,

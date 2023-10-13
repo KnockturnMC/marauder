@@ -28,7 +28,7 @@ func ServerLifecycleActionPost(
 			return
 		}
 
-		action := networkmodel.LifecycleChangeActionType(strings.ToLower(context.Param("action")))
+		action := networkmodel.LifecycleAction(strings.ToLower(context.Param("action")))
 		if !networkmodel.KnownLifecycleChangeActionType(action) {
 			_ = context.Error(response.RestErrorFromDescription(http.StatusBadRequest, fmt.Sprintf("unknown action %s", action)))
 			return
@@ -62,7 +62,7 @@ func ServerLifecycleActionPost(
 // handleLifecycleAction handles the passed lifecycle action on the server.
 func handleLifecycleAction(
 	context *gin.Context,
-	action networkmodel.LifecycleChangeActionType,
+	action networkmodel.LifecycleAction,
 	serverManager manager.Manager,
 	server networkmodel.ServerModel,
 ) bool {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/samber/mo"
 
@@ -50,7 +51,7 @@ type Client interface {
 	FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error)
 
 	// ExecuteActionOn posts a lifecycle action to the operator of the server for the given server.
-	ExecuteActionOn(ctx context.Context, server uuid.UUID, action networkmodel.LifecycleChangeActionType) error
+	ExecuteActionOn(ctx context.Context, server uuid.UUID, action networkmodel.LifecycleAction, delay time.Duration) error
 
 	// PublishArtefact publishes the artefact read from the given readers to the controller.
 	// The method returns the status code of the response for further usage.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
 
@@ -23,6 +24,7 @@ func WorkflowBuildAndDeployCommand(
 		manifestFileLocation   string
 		deploymentEnvironment  string
 		restartAffectedServers bool
+		delay                  time.Duration
 	)
 
 	command := &cobra.Command{
@@ -34,6 +36,7 @@ func WorkflowBuildAndDeployCommand(
 	command.PersistentFlags().StringVarP(&manifestFileLocation, "manifest", "m", ".marauder.json", "location of the manifest file")
 	command.PersistentFlags().StringVarP(&deploymentEnvironment, "env", "e", "", "environment to deploy into")
 	command.PersistentFlags().BoolVar(&restartAffectedServers, "restart", false, "restart the servers deployed to")
+	command.PersistentFlags().DurationVar(&delay, "delay", 0, "delay before executing a potential restart")
 
 	_ = command.MarkPersistentFlagRequired("env")
 
@@ -87,6 +90,7 @@ func WorkflowBuildAndDeployCommand(
 			publishedArtefactModel,
 			deploymentEnvironment,
 			restartAffectedServers,
+			delay,
 		); err != nil {
 			return fmt.Errorf("failed to deploy: %w", err)
 		}
@@ -106,6 +110,7 @@ func workflowBuildAndDeployDeployPublishedArtefact(
 	remoteArtefact networkmodel.ArtefactModel,
 	deploymentEnvironment string,
 	restartAffectedServers bool,
+	delay time.Duration,
 ) error {
 	serverTargets, valueFound := artefact.Manifest.DeploymentTargets[deploymentEnvironment]
 	if !valueFound {
@@ -140,6 +145,7 @@ func workflowBuildAndDeployDeployPublishedArtefact(
 			cmd,
 			client,
 			networkmodel.UpgradeDeployment,
+			delay,
 			serverTargets,
 		); err != nil {
 			return fmt.Errorf("failed to upgrade affected servers: %w", err)
