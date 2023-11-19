@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/Goldziher/go-utils/sliceutils"
 
 	"github.com/google/uuid"
@@ -32,15 +34,17 @@ import (
 // ErrServerRunning is returned by UpdateDeployments if the server is running.
 var ErrServerRunning = errors.New("server is running")
 
-func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel networkmodel.ServerModel) error {
-	_, err := d.retrieveContainerInfo(ctx, serverModel)
-	if err == nil {
-		return fmt.Errorf("server %s is running: %w", serverModel.UUID.String(), ErrServerRunning)
-	} else if !utils.CheckDockerError(err, client.IsErrNotFound) {
-		return fmt.Errorf("failed to fetch container info for %s: %w", serverModel.UUID.String(), err)
+func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel networkmodel.ServerModel, requiresRestart bool) error {
+	if requiresRestart {
+		_, err := d.retrieveContainerInfo(ctx, serverModel)
+		if err == nil {
+			return fmt.Errorf("server %s is running: %w", serverModel.UUID.String(), ErrServerRunning)
+		} else if !utils.CheckDockerError(err, client.IsErrNotFound) {
+			return fmt.Errorf("failed to fetch container info for %s: %w", serverModel.UUID.String(), err)
+		}
 	}
 
-	missmatches, err := d.ControllerClient.FetchMissmatchesFor(ctx, serverModel.UUID)
+	missmatches, err := d.ControllerClient.FetchMissmatchesFor(ctx, serverModel.UUID, requiresRestart)
 	if err != nil {
 		return fmt.Errorf("failed to fetch missmatches for %s: %w", serverModel.UUID, err)
 	}
@@ -49,6 +53,8 @@ func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel n
 		if err := d.updateSingleDeployment(ctx, serverModel, update); err != nil {
 			return fmt.Errorf("failed to update %s on %s: %w", update.ArtefactIdentifier, serverModel.UUID.String(), err)
 		}
+
+		logrus.Info("upgraded deployment ", update.ArtefactIdentifier, " on server ", serverModel.Environment, "/", serverModel.Name)
 	}
 
 	return nil
@@ -177,7 +183,7 @@ func (d DockerBasedManager) deleteOldArtefact(
 
 	// Iterate and remove is possible.
 	for _, dir := range potentiallyEmptyDirs {
-		dirOutput, err := os.ReadDir(dir)
+		dirOutput, err := os.ReadDir(path.Join(serverFolderLocation, dir))
 		if err != nil {
 			return fmt.Errorf("failed to read potentially empty parent dir %s: %w", dir, err)
 		}

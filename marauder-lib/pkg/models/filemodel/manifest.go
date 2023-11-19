@@ -29,6 +29,11 @@ type Manifest struct {
 	// The Version of the artefact, following schematic versioning.
 	Version string `json:"version"`
 
+	// The RequiresRestart flag defines if the artefact requires a restart
+	// in order to be installed or uninstalled from the server.
+	// If not defined to a boolean, the default is `true`.
+	RequiresRestart *bool `json:"requiresRestart"`
+
 	// The Files included in this artefact, not flattened.
 	// The file reference may hence include specific files or references to whole folders in the artefact.
 	Files []FileReference `json:"files"`

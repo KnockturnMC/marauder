@@ -73,29 +73,35 @@ func handleLifecycleAction(
 		return handleLifecycleActionStop(context, serverManager, server)
 	case networkmodel.Restart:
 		return handleLifecycleActionStop(context, serverManager, server) && handleLifecycleActionStart(context, serverManager, server)
-	case networkmodel.UpgradeDeployment:
-		if !handleLifecycleActionStop(context, serverManager, server) {
-			return false
-		}
-
-		if err := serverManager.UpdateDeployments(context, server); err != nil {
-			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
-				manager.ErrServerRunning: {
-					ResponseCode: http.StatusBadRequest, Description: fmt.Sprintf("the server %s is running", server.Name),
-				},
-			}, fmt.Errorf("failed to update deployments: %w", err)))
-
-			return false
-		}
-
-		if !handleLifecycleActionStart(context, serverManager, server) {
-			return false
-		}
+	case networkmodel.UpdateWithoutRestart:
+		return updateServerDeployments(context, serverManager, server, false)
+	case networkmodel.UpdateWithRestart:
+		return handleLifecycleActionStop(context, serverManager, server) &&
+			updateServerDeployments(context, serverManager, server, true) &&
+			handleLifecycleActionStart(context, serverManager, server)
 	default:
 		_ = context.Error(response.RestErrorFromDescription(http.StatusInternalServerError, fmt.Sprintf("unhandled action %s", action)))
 		return false
 	}
+}
 
+// updateServerDeployments updates the deployments on a server via the passed server manager.
+// If may only do this for artefacts that do not require a restart if requiresRestart is false.
+func updateServerDeployments(
+	context *gin.Context,
+	serverManager manager.Manager,
+	server networkmodel.ServerModel,
+	restarting bool,
+) bool {
+	if err := serverManager.UpdateDeployments(context, server, restarting); err != nil {
+		_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
+			manager.ErrServerRunning: {
+				ResponseCode: http.StatusBadRequest, Description: fmt.Sprintf("the server %s is running", server.Name),
+			},
+		}, fmt.Errorf("failed to update deployments: %w", err)))
+
+		return false
+	}
 	return true
 }
 

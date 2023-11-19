@@ -20,6 +20,12 @@ type ArtefactModel struct {
 
 	// The UploadDate of the artefact to the controller.
 	UploadDate time.Time `db:"upload_date" json:"uploadDate"`
+
+	// RequiresRestart is a boolean flag that indicates if the artefact requires a server restart in order
+	// to be installed or deleted.
+	// Hence, if either of the artefacts during an upgrade (old or new) require a restart
+	// the upgrade in total also requires one.
+	RequiresRestart bool `db:"requires_restart" json:"requiresRestart"`
 }
 
 // The ArtefactModelWithBinary struct represents a full artefact, including its tarball.

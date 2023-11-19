@@ -5,10 +5,11 @@ CREATE TYPE SERVER_STATE_TYPE AS ENUM ('TARGET', 'IS', 'HISTORY');
 
 CREATE TABLE artefact
 (
-	uuid        UUID          NOT NULL DEFAULT gen_random_uuid(),
-	identifier  VARCHAR       NOT NULL,
-	version     VARCHAR       NOT NULL,
-	upload_date CREATION_DATE NOT NULL,
+	uuid             UUID          NOT NULL DEFAULT gen_random_uuid(),
+	identifier       VARCHAR       NOT NULL,
+	version          VARCHAR       NOT NULL,
+	upload_date      CREATION_DATE NOT NULL,
+	requires_restart BOOLEAN       NOT NULL,
 
 	CONSTRAINT pk_artefact PRIMARY KEY (uuid),
 	CONSTRAINT un_artefact_identifier_version UNIQUE (identifier, version)

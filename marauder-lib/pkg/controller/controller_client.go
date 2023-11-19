@@ -45,7 +45,7 @@ type Client interface {
 	FetchServerStateArtefacts(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType) ([]networkmodel.ArtefactModel, error)
 
 	// FetchMissmatchesFor fetches all outstanding missmatches for a server by its uuid.
-	FetchMissmatchesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.ArtefactVersionMissmatch, error)
+	FetchMissmatchesFor(ctx context.Context, server uuid.UUID, requiresRestart bool) ([]networkmodel.ArtefactVersionMissmatch, error)
 
 	// FetchManifest fetches a manifest based on its uuid.
 	FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error)

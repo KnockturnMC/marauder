@@ -11,7 +11,8 @@ CREATE FUNCTION func_find_server_target_state_missmatches(server_uuid UUID)
 				is_artefact         UUID,
 				is_version          VARCHAR,
 				target_artefact     UUID,
-				target_version      VARCHAR
+				target_version      VARCHAR,
+				requires_restart    BOOLEAN
 			)
 AS
 $$
@@ -20,7 +21,9 @@ BEGIN
 						is_artefact.uuid,
 						is_artefact.version,
 						target_artefact.uuid,
-						target_artefact.version
+						target_artefact.version,
+						COALESCE(target_artefact.requires_restart, false) OR
+						COALESCE(is_artefact.requires_restart, false)                as requires_restart
 				 FROM server_state_target target_state
 						  FULL OUTER JOIN server_state_is is_state ON
 							 target_state.server = is_state.server
