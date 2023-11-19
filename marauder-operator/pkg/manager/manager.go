@@ -20,7 +20,7 @@ type Manager interface {
 	Start(ctx context.Context, server networkmodel.ServerModel) error
 
 	// UpdateDeployments updates all deployments currently defined on the server.
-	UpdateDeployments(ctx context.Context, server networkmodel.ServerModel) error
+	UpdateDeployments(ctx context.Context, server networkmodel.ServerModel, requiresRestart bool) error
 }
 
 // FolderOwner defines the folder owner for the docker based mounting.

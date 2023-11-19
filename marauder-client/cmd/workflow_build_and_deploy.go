@@ -139,17 +139,20 @@ func workflowBuildAndDeployDeployPublishedArtefact(
 	}
 
 	// Potentially restart affected servers
+	updateLifecycle := networkmodel.UpdateWithoutRestart
 	if restartAffectedServers {
-		if err := operateServerInternalExecute(
-			ctx,
-			cmd,
-			client,
-			networkmodel.UpgradeDeployment,
-			delay,
-			serverTargets,
-		); err != nil {
-			return fmt.Errorf("failed to upgrade affected servers: %w", err)
-		}
+		updateLifecycle = networkmodel.UpdateWithRestart
+	}
+
+	if err := operateServerInternalExecute(
+		ctx,
+		cmd,
+		client,
+		updateLifecycle,
+		delay,
+		serverTargets,
+	); err != nil {
+		return fmt.Errorf("failed to upgrade affected servers: %w", err)
 	}
 	return nil
 }

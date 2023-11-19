@@ -26,9 +26,10 @@ func MustHexDecode(val string) []byte {
 
 var fullArtefact = networkmodel.ArtefactModelWithBinary{
 	ArtefactModel: networkmodel.ArtefactModel{
-		Identifier: "spellcore",
-		Version:    "1.0.0+hello",
-		UploadDate: time.Now(),
+		Identifier:      "spellcore",
+		Version:         "1.0.0+hello",
+		UploadDate:      time.Now(),
+		RequiresRestart: true,
 	},
 	TarballBlob: []byte("example data"),
 	Hash:        MustHexDecode("ebbc0ce59cea35533cfb2d63443fb3db650e9d263ba3f91aee70110a108a6ff9"),

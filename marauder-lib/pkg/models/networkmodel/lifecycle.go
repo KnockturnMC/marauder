@@ -13,9 +13,13 @@ const (
 	// Restart simply restarts the server by stopping and then starting it.
 	Restart LifecycleAction = "restart"
 
-	// UpgradeDeployment updates a servers deployment.
+	// UpdateWithRestart updates a servers deployment by restarting the entire server.
 	// For this, the server is stopped, the artefacts are updated and the server is started again.
-	UpgradeDeployment LifecycleAction = "update"
+	UpdateWithRestart LifecycleAction = "update+restart"
+
+	// UpdateWithoutRestart updates a server without restarting it.
+	// During this lifecycle action only artefacts are updated that do not require a restart.
+	UpdateWithoutRestart LifecycleAction = "update-restart"
 )
 
 // KnownLifecycleChangeActionType computes if the passed change action is known by marauder.
@@ -27,7 +31,9 @@ func KnownLifecycleChangeActionType(changeActionType LifecycleAction) bool {
 		fallthrough
 	case Restart:
 		fallthrough
-	case UpgradeDeployment:
+	case UpdateWithRestart:
+		fallthrough
+	case UpdateWithoutRestart:
 		return true
 	}
 

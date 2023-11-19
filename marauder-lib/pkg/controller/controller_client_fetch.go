@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
@@ -19,11 +20,15 @@ func (h *HTTPClient) FetchServer(ctx context.Context, server uuid.UUID) (network
 	return model, nil
 }
 
-func (h *HTTPClient) FetchMissmatchesFor(ctx context.Context, server uuid.UUID) ([]networkmodel.ArtefactVersionMissmatch, error) {
+func (h *HTTPClient) FetchMissmatchesFor(
+	ctx context.Context,
+	server uuid.UUID,
+	requiresRestart bool,
+) ([]networkmodel.ArtefactVersionMissmatch, error) {
 	diffs, err := utils.HTTPGetAndBind(
 		ctx,
 		h.Client,
-		h.ControllerURL+"/server/"+server.String()+"/state/update",
+		fmt.Sprintf("%s/server/%s/state/update?requiresRestart=%s", h.ControllerURL, server.String(), strconv.FormatBool(requiresRestart)),
 		make([]networkmodel.ArtefactVersionMissmatch, 0),
 	)
 	if err != nil {

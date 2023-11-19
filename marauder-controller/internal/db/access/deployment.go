@@ -12,19 +12,25 @@ import (
 )
 
 // FindServerTargetStateMissMatch fetches a miss-match between the servers current is states and target state.
-func FindServerTargetStateMissMatch(ctx context.Context, db *sqlm.DB, server uuid.UUID) ([]networkmodel.ArtefactVersionMissmatch, error) {
+func FindServerTargetStateMissMatch(
+	ctx context.Context,
+	db *sqlm.DB,
+	server uuid.UUID,
+	requiresRestart bool,
+) ([]networkmodel.ArtefactVersionMissmatch, error) {
 	type DBArtefactVersionMissmatchModel struct {
 		ArtefactIdentifier string     `db:"artefact_identifier"`
 		IsArtefact         *uuid.UUID `db:"is_artefact"`
 		IsVersion          *string    `db:"is_version"`
 		TargetArtefact     *uuid.UUID `db:"target_artefact"`
 		TargetVersion      *string    `db:"target_version"`
+		RequiresRestart    bool       `db:"requires_restart"`
 	}
 
 	result := make([]DBArtefactVersionMissmatchModel, 0)
 	if err := db.SelectContext(ctx, &result, `
-		SELECT * FROM func_find_server_target_state_missmatches($1)
-		`, server); err != nil {
+		SELECT * FROM func_find_server_target_state_missmatches($1) WHERE ($2 OR NOT requires_restart)
+		`, server, requiresRestart); err != nil {
 		return nil, fmt.Errorf("failed to execute psql func to fetch missmatch: %w", err)
 	}
 

@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
@@ -63,9 +65,10 @@ func ArtefactUploadGet(
 		manifest := validationResult.Value.Manifest
 		insertArtefact, err := access.InsertArtefact(context, db, networkmodel.ArtefactModelWithBinary{
 			ArtefactModel: networkmodel.ArtefactModel{
-				Identifier: manifest.Identifier,
-				Version:    manifest.Version,
-				UploadDate: time.Now(),
+				Identifier:      manifest.Identifier,
+				Version:         manifest.Version,
+				UploadDate:      time.Now(),
+				RequiresRestart: utils.OrElse(manifest.RequiresRestart, true),
 			},
 			TarballBlob: artefactBytes,
 			Hash:        validationResult.Value.ArtefactHash,

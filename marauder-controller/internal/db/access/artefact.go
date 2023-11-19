@@ -58,8 +58,8 @@ func InsertArtefact(ctx context.Context, db *sqlm.DB, model networkmodel.Artefac
 
 	var result networkmodel.ArtefactModel
 	if err := transaction.NamedGetContext(ctx, &result, `
-        INSERT INTO artefact (identifier, version, upload_date)
-        VALUES (:identifier, :version, :upload_date)
+        INSERT INTO artefact (identifier, version, upload_date, requires_restart)
+        VALUES (:identifier, :version, :upload_date, :requires_restart)
         RETURNING *;`,
 		&model,
 	); err != nil {

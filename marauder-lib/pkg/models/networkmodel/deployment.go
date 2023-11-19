@@ -22,6 +22,10 @@ type ArtefactVersionMissmatch struct {
 	// The ArtefactIdentifier holds the shared identifier between the two versions.
 	ArtefactIdentifier string `json:"artefactIdentifier"`
 
+	// RequiresRestart defines if the missmatch needs a restart to be resolved or if an upgrade
+	// can be done on the running server.
+	RequiresRestart bool `json:"requiresRestart"`
+
 	// The Missmatch defines the missmatch container that holds the potential missmatch.
 	Missmatch ArtefactMissmatch `json:"missmatch"`
 }
