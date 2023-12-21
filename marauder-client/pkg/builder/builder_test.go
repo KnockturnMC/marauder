@@ -42,7 +42,7 @@ var _ = Describe("Building the artefact", Label("unittest"), func() {
 				_, err := builder.IncludeArtefactFiles(&rootFS, filemodel.Manifest{
 					Identifier: "spellcore",
 					Version:    "1.14",
-					Files: []filemodel.FileReference{
+					Files: filemodel.FileReferenceCollection{
 						{Target: "spellcore.jar", CISourceGlob: "spell-plugin/build/libs/spellcore-*.jar"},
 						{Target: "spellapi.jar", CISourceGlob: "spell-api/build/libs/spellbook-*.jar"},
 					},

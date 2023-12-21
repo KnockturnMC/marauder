@@ -39,11 +39,14 @@ func (w *WorkedBasedValidator) verifyArtefactManifestHashes(artefact *os.File) (
 		return artefactlib.Manifest{}, fmt.Errorf("failed to parse tarball: %w", err)
 	}
 
-	if len(manifest.Hashes) != len(fileToHashMap) {
-		return artefactlib.Manifest{}, fmt.Errorf("found %d files and %d hashes: %w", len(fileToHashMap), len(manifest.Hashes), ErrHashMismatch)
+	// Merge hashes together
+	hashes := manifest.Files.MergedHashes()
+
+	if len(hashes) != len(fileToHashMap) {
+		return artefactlib.Manifest{}, fmt.Errorf("found %d files and %d hashes: %w", len(fileToHashMap), len(hashes), ErrHashMismatch)
 	}
 
-	for filePath, fileHash := range manifest.Hashes {
+	for filePath, fileHash := range hashes {
 		foundHash, ok := fileToHashMap[filePath]
 		if !ok {
 			return artefactlib.Manifest{}, fmt.Errorf("file %s not found in artefact but had hash defined: %w", filePath, ErrHashMismatch)

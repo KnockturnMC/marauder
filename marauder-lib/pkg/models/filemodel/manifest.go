@@ -3,6 +3,8 @@ package filemodel
 import (
 	"errors"
 	"fmt"
+	"github.com/Goldziher/go-utils/maputils"
+	"github.com/Goldziher/go-utils/sliceutils"
 	"time"
 )
 
@@ -20,6 +22,18 @@ var (
 // The Hashes type holds the hashes of a collections of files.
 type Hashes map[string]string
 
+// A FileReferenceCollection holds all defined file references of a manifest.
+type FileReferenceCollection []FileReference
+
+// MergedHashes computes a merged set of hashes from all file references present in the file reference collection.
+// While the returned hashes collection lost information about the file reference each hash was matched it, it may be
+// used for quick validation of the artefact in general.
+func (f FileReferenceCollection) MergedHashes() Hashes {
+	return maputils.Merge(sliceutils.Map(f, func(value FileReference, index int, slice []FileReference) map[string]string {
+		return value.Hashes
+	})...)
+}
+
 // The Manifest type defines an artefact's manifest managed by marauder.
 type Manifest struct {
 	// The unique, marauder wide Identifier of the artefact, usually the name of the plugin the artefact is created for.
@@ -36,7 +50,7 @@ type Manifest struct {
 
 	// The Files included in this artefact, not flattened.
 	// The file reference may hence include specific files or references to whole folders in the artefact.
-	Files []FileReference `json:"files"`
+	Files FileReferenceCollection `json:"files"`
 
 	// BuildInformation holds additional information about the manifest based on a potential build.
 	// This field is optional as artefacts might be constructed without build information attached.
@@ -46,12 +60,6 @@ type Manifest struct {
 	// Not all servers require the deployment of a specific artefact, hence this field actively defines which servers
 	// should be targeted during a release.
 	DeploymentTargets DeploymentTargets `json:"deploymentTargets,omitempty"`
-
-	// Hashes contains a collection of hashes for each fully resolved file in the manifest.
-	// While the Files field may hold the globs and targets of specific files, this
-	// field holds a full list of all included files with their hashes.
-	// This cannot be archived on a folder level, as deployments might deploy into folders holding other data.
-	Hashes Hashes `json:"hashes,omitempty"`
 }
 
 // The BuildInformation struct holds potential additional information about the build the manifest was generated for.
@@ -92,6 +100,11 @@ type FileReference struct {
 
 	// A restriction type that may be used to restrict what/how files are matched.
 	Restrictions *FileRestriction `json:"restrictions,omitempty"`
+
+	// Hashes contains a collection of hashes for each fully resolved file matched by this file reference.
+	// This cannot be archived on a folder level, as deployments might deploy into folders holding other data.
+	// Joining all hashes found in all file references into a unique set provides the full list of files included in this artefact.
+	Hashes Hashes `json:"hashes,omitempty"`
 }
 
 // The FileRestriction type allows to restrict matches by marauder during the artefact building process.

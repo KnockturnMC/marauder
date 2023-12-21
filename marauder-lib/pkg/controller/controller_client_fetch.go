@@ -115,9 +115,8 @@ func (h *HTTPClient) FetchServerStateArtefacts(
 // FetchManifest fetches a manifest based on its uuid.
 func (h *HTTPClient) FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error) {
 	manifest, err := utils.HTTPGetAndBind(ctx, h.Client, h.ControllerURL+"/artefact/"+artefact.String()+"/download/manifest", filemodel.Manifest{
-		Files:            make([]filemodel.FileReference, 0),
+		Files:            make(filemodel.FileReferenceCollection, 0),
 		BuildInformation: &filemodel.BuildInformation{},
-		Hashes:           make(filemodel.Hashes),
 	})
 	if err != nil {
 		return filemodel.Manifest{}, fmt.Errorf("failed http get: %w", err)
