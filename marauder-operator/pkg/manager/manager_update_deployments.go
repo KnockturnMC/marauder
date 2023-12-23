@@ -140,7 +140,7 @@ func (d DockerBasedManager) updateSingleDeployment(
 func (d DockerBasedManager) validateOldDeploymentHashOnDisk(oldArtefact filemodel.Manifest, serverFolderLocation string) error {
 	// Check hashes of old deployment, ensuring that the state of the local server dir matches the expected one.
 	// This could differ if some system developer edited files in the server environment.
-	for filePathWithPrefix, fileHashAsString := range oldArtefact.Hashes {
+	for filePathWithPrefix, fileHashAsString := range oldArtefact.Files.MergedHashes() {
 		filePathWithoutPrefix, _ := strings.CutPrefix(filePathWithPrefix, pkg.FileParentDirectoryInArtefact)
 
 		fileToCheck, err := os.Open(path.Join(serverFolderLocation, filePathWithoutPrefix))
@@ -207,7 +207,7 @@ func (d DockerBasedManager) deleteOldFilesAndYieldParents(
 	relativePotentiallyEmptyParentDirsAsMap := make(map[string]bool)
 
 	// Delete all files
-	for filePathWithPrefix := range oldArtefact.Hashes {
+	for filePathWithPrefix := range oldArtefact.Files.MergedHashes() {
 		filePathWithoutPrefix, _ := strings.CutPrefix(filePathWithPrefix, pkg.FileParentDirectoryInArtefact)
 		cleanedFilePathWithoutPrefix := path.Clean(filePathWithoutPrefix)
 

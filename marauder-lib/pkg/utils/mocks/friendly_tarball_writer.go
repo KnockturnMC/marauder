@@ -231,6 +231,50 @@ func (_c *FriendlyTarballWriter_Close_Call) RunAndReturn(run func() error) *Frie
 	return _c
 }
 
+// WithFilter provides a mock function with given fields: filter
+func (_m *FriendlyTarballWriter) WithFilter(filter func(string, string) bool) utils.FriendlyTarballWriter {
+	ret := _m.Called(filter)
+
+	var r0 utils.FriendlyTarballWriter
+	if rf, ok := ret.Get(0).(func(func(string, string) bool) utils.FriendlyTarballWriter); ok {
+		r0 = rf(filter)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(utils.FriendlyTarballWriter)
+		}
+	}
+
+	return r0
+}
+
+// FriendlyTarballWriter_WithFilter_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WithFilter'
+type FriendlyTarballWriter_WithFilter_Call struct {
+	*mock.Call
+}
+
+// WithFilter is a helper method to define mock.On call
+//   - filter func(string , string) bool
+func (_e *FriendlyTarballWriter_Expecter) WithFilter(filter interface{}) *FriendlyTarballWriter_WithFilter_Call {
+	return &FriendlyTarballWriter_WithFilter_Call{Call: _e.mock.On("WithFilter", filter)}
+}
+
+func (_c *FriendlyTarballWriter_WithFilter_Call) Run(run func(filter func(string, string) bool)) *FriendlyTarballWriter_WithFilter_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(func(string, string) bool))
+	})
+	return _c
+}
+
+func (_c *FriendlyTarballWriter_WithFilter_Call) Return(_a0 utils.FriendlyTarballWriter) *FriendlyTarballWriter_WithFilter_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *FriendlyTarballWriter_WithFilter_Call) RunAndReturn(run func(func(string, string) bool) utils.FriendlyTarballWriter) *FriendlyTarballWriter_WithFilter_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Write provides a mock function with given fields: fileContent, header
 func (_m *FriendlyTarballWriter) Write(fileContent []byte, header tar.Header) error {
 	ret := _m.Called(fileContent, header)

@@ -3,9 +3,10 @@ package filemodel
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/Goldziher/go-utils/maputils"
 	"github.com/Goldziher/go-utils/sliceutils"
-	"time"
 )
 
 var (
@@ -46,7 +47,7 @@ type Manifest struct {
 	// The RequiresRestart flag defines if the artefact requires a restart
 	// in order to be installed or uninstalled from the server.
 	// If not defined to a boolean, the default is `true`.
-	RequiresRestart *bool `json:"requiresRestart"`
+	RequiresRestart *bool `json:"requiresRestart,omitempty"`
 
 	// The Files included in this artefact, not flattened.
 	// The file reference may hence include specific files or references to whole folders in the artefact.

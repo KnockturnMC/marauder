@@ -4,6 +4,8 @@ import (
 	"io/fs"
 	"testing/fstest"
 
+	"github.com/samber/mo"
+
 	"gitea.knockturnmc.com/marauder/client/pkg/builder"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
@@ -20,7 +22,7 @@ var _ = Describe("Building the artefact", Label("unittest"), func() {
 		okayTarballResponseSingleFile := func(_ fs.FS, pathOnDisk string, pathInTarball string) ([]utils.WriteResult, error) {
 			return []utils.WriteResult{{
 				PathInRootFS:  pathOnDisk,
-				PathInTarball: pathInTarball,
+				PathInTarball: mo.Some(pathInTarball),
 			}}, nil
 		}
 

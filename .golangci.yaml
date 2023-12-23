@@ -32,6 +32,8 @@ linters-settings:
     lines: 120 # 60 is a rather small line count for bigger reactor style avior taskimpl. Thank you go middleware handling and logging for that one!
   nestif:
     min-complexity: 7
+  perfsprint:
+    sprintf1: false # Do not complain about sptrintf with single arg
 issues:
   exclude-rules:
     - path: '(.*)_test\.go'

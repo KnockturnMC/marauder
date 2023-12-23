@@ -61,13 +61,26 @@ func IncludeArtefactFiles(
 	globCache *utils.ShortestGlobPathCache,
 	tarballWriter utils.FriendlyTarballWriter,
 ) (filemodel.Manifest, error) {
-	// Create Hashes map if needed.
-	if resolvedManifest.Hashes == nil {
-		resolvedManifest.Hashes = make(map[string]string)
-	}
+	outputManifest := resolvedManifest
+
+	filteredTarballWriter := tarballWriter.WithFilter(func(_ string, pathInTarball string) bool {
+		for _, file := range resolvedManifest.Files {
+			if file.Hashes == nil {
+				continue
+			}
+
+			if _, ok := file.Hashes[pathInTarball]; !ok {
+				continue
+			}
+
+			return false
+		}
+
+		return true
+	})
 
 	// Add files defined in manifest
-	for _, file := range resolvedManifest.Files {
+	for idx, file := range resolvedManifest.Files {
 		matches, err := fileglob.Glob(file.CISourceGlob, fileglob.WithFs(rootFs))
 		if err != nil {
 			return filemodel.Manifest{}, fmt.Errorf("failed to glob manifest defined file %s: %w", file.CISourceGlob, err)
@@ -78,34 +91,36 @@ func IncludeArtefactFiles(
 			return filemodel.Manifest{}, fmt.Errorf("failed file restriction for %s: %w", file.CISourceGlob, err)
 		}
 
+		updatedFileReference := file
 		for _, match := range matches {
-			manifest, err2 := includeMatchInTarball(rootFs, resolvedManifest, globCache, tarballWriter, file, match)
-			if err2 != nil {
-				return manifest, err2
+			err := includeMatchInTarball(rootFs, globCache, filteredTarballWriter, &updatedFileReference, match)
+			if err != nil {
+				return outputManifest, err
 			}
 		}
+
+		outputManifest.Files[idx] = updatedFileReference // Update file reference after hash inclusion
 	}
 
-	return resolvedManifest, nil
+	return outputManifest, nil
 }
 
 // includeMatchInTarball includes a single matched file in the rootFs in the tarball writer and the manifest.
 func includeMatchInTarball(
 	rootFs fs.FS,
-	resolvedManifest filemodel.Manifest,
 	globCache *utils.ShortestGlobPathCache,
 	tarballWriter utils.FriendlyTarballWriter,
-	file filemodel.FileReference,
+	file *filemodel.FileReference,
 	match string,
-) (filemodel.Manifest, error) {
+) error {
 	shortestMatch, err := globCache.FindShortestMatch(file.CISourceGlob, match)
 	if err != nil {
-		return filemodel.Manifest{}, fmt.Errorf("failed to compute shortest path for file %s under glob %s: %w", match, file.CISourceGlob, err)
+		return fmt.Errorf("failed to compute shortest path for file %s under glob %s: %w", match, file.CISourceGlob, err)
 	}
 
 	relativePath, err := filepath.Rel(shortestMatch, match)
 	if err != nil {
-		return filemodel.Manifest{}, fmt.Errorf("failed to compute relative path of %s to glob %s: %w", match, shortestMatch, err)
+		return fmt.Errorf("failed to compute relative path of %s to glob %s: %w", match, shortestMatch, err)
 	}
 
 	// We matched the exact file, the exact shortest match.
@@ -117,20 +132,30 @@ func includeMatchInTarball(
 	pathInTarball := filepath.Join(file.Target, relativePath)
 	addedFiles, err := tarballWriter.Add(rootFs, match, pkg.FileParentDirectoryInArtefact+pathInTarball)
 	if err != nil {
-		return filemodel.Manifest{}, fmt.Errorf("failed to add file %s to tarball: %w", match, err)
+		return fmt.Errorf("failed to add file %s to tarball: %w", match, err)
 	}
 
-	// Write hashes
+	// Create hashes instance if needed
+	if file.Hashes == nil {
+		file.Hashes = filemodel.Hashes{}
+	}
+
+	// Write hashes to manifest file
 	for _, addedFile := range addedFiles {
-		hashArray, err := computeHashFor(rootFs, addedFile.PathInRootFS)
-		if err != nil {
-			return filemodel.Manifest{}, fmt.Errorf("faild to compute hash for %s: %w", addedFile.PathInRootFS, err)
+		writeLocation, ok := addedFile.PathInTarball.Get()
+		if !ok {
+			continue
 		}
 
-		resolvedManifest.Hashes[addedFile.PathInTarball] = hex.EncodeToString(hashArray)
+		hashArray, err := computeHashFor(rootFs, addedFile.PathInRootFS)
+		if err != nil {
+			return fmt.Errorf("faild to compute hash for %s: %w", addedFile.PathInRootFS, err)
+		}
+
+		file.Hashes[writeLocation] = hex.EncodeToString(hashArray)
 	}
 
-	return resolvedManifest, nil
+	return nil
 }
 
 // computeHashFor computes a sha256 hash for the file located at the given path in the given file system.
