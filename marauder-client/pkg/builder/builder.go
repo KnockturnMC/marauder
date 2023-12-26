@@ -63,19 +63,14 @@ func IncludeArtefactFiles(
 ) (filemodel.Manifest, error) {
 	outputManifest := resolvedManifest
 
+	filteredTarballWriterMap := make(map[string]struct{})
 	filteredTarballWriter := tarballWriter.WithFilter(func(_ string, pathInTarball string) bool {
-		for _, file := range resolvedManifest.Files {
-			if file.Hashes == nil {
-				continue
-			}
-
-			if _, ok := file.Hashes[pathInTarball]; !ok {
-				continue
-			}
-
+		_, ok := filteredTarballWriterMap[pathInTarball]
+		if ok {
 			return false
 		}
 
+		filteredTarballWriterMap[pathInTarball] = struct{}{}
 		return true
 	})
 
@@ -135,41 +130,24 @@ func includeMatchInTarball(
 		return fmt.Errorf("failed to add file %s to tarball: %w", match, err)
 	}
 
-	// Create hashes instance if needed
-	if file.Hashes == nil {
-		file.Hashes = filemodel.Hashes{}
+	if file.MatchedFiles == nil {
+		file.MatchedFiles = make(map[string]string, 0)
 	}
 
-	// Write hashes to manifest file
+	// Write matched files to manifest file
 	for _, addedFile := range addedFiles {
-		writeLocation, ok := addedFile.PathInTarball.Get()
+		addedFileInTarball, ok := addedFile.PathInTarball.Get()
 		if !ok {
 			continue
 		}
 
-		hashArray, err := computeHashFor(rootFs, addedFile.PathInRootFS)
+		hash, err := utils.ComputeSha256ForFile(rootFs, addedFile.PathInRootFS)
 		if err != nil {
-			return fmt.Errorf("faild to compute hash for %s: %w", addedFile.PathInRootFS, err)
+			return fmt.Errorf("failed to compute hash for included file %s: %w", addedFile.PathInRootFS, err)
 		}
 
-		file.Hashes[writeLocation] = hex.EncodeToString(hashArray)
+		file.MatchedFiles[addedFileInTarball] = hex.EncodeToString(hash)
 	}
 
 	return nil
-}
-
-// computeHashFor computes a sha256 hash for the file located at the given path in the given file system.
-func computeHashFor(rootFs fs.FS, path string) ([]byte, error) {
-	open, err := rootFs.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file %s for hashsum computation: %w", path, err)
-	}
-
-	defer func() { _ = open.Close() }()
-	sha256, err := utils.ComputeSha256(open)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compute sha 256 hash for file: %w", err)
-	}
-
-	return sha256, nil
 }

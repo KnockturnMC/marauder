@@ -23,7 +23,7 @@ func ServersEnvironmentNameGet(
 		server, err := access.FetchServerByNameAndEnv(context, db, name, environment)
 		if err != nil {
 			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
-				sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: fmt.Sprintf("failed to query servers for env %s", environment)},
+				sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: fmt.Sprintf("failed to query server %s/%s", environment, name)},
 			}, fmt.Errorf("failed to fetch servers: %w", err)))
 
 			return

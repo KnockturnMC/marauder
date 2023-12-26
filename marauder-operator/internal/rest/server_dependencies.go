@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/fileeq"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
@@ -100,6 +102,7 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 			AutoRemoveContainers:   configuration.Docker.AutoRemoveContainers,
 			FolderOwner:            configuration.Disk.FolderOwner,
 			ServerDataPathTemplate: configuration.Disk.ServerDataPathTemplate,
+			FileEqualityRegistry:   fileeq.DefaultFileEqualityRegistry(),
 		},
 	}, nil
 }

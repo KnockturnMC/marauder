@@ -4,9 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/Goldziher/go-utils/maputils"
-	"github.com/Goldziher/go-utils/sliceutils"
 )
 
 var (
@@ -20,19 +17,27 @@ var (
 	ErrExactFileMatchesFailed = errors.New("different than exact amount matched")
 )
 
-// The Hashes type holds the hashes of a collections of files.
-type Hashes map[string]string
-
 // A FileReferenceCollection holds all defined file references of a manifest.
 type FileReferenceCollection []FileReference
 
-// MergedHashes computes a merged set of hashes from all file references present in the file reference collection.
-// While the returned hashes collection lost information about the file reference each hash was matched it, it may be
-// used for quick validation of the artefact in general.
-func (f FileReferenceCollection) MergedHashes() Hashes {
-	return maputils.Merge(sliceutils.Map(f, func(value FileReference, index int, slice []FileReference) map[string]string {
-		return value.Hashes
-	})...)
+// MatchedFilesToReferenceMap constructs a map of filenames in the tarball to the file reference they were matched under
+// This allows fast access to the respective file reference without having to iterate over all file references.
+func (f FileReferenceCollection) MatchedFilesToReferenceMap() map[string]*FileReference {
+	result := make(map[string]*FileReference)
+
+	for _, fileReference := range f {
+		matchedFiles := fileReference.MatchedFiles
+		if matchedFiles == nil {
+			continue
+		}
+
+		for matchedFile := range matchedFiles {
+			finalCopy := fileReference
+			result[matchedFile] = &finalCopy
+		}
+	}
+
+	return result
 }
 
 // The Manifest type defines an artefact's manifest managed by marauder.
@@ -102,10 +107,22 @@ type FileReference struct {
 	// A restriction type that may be used to restrict what/how files are matched.
 	Restrictions *FileRestriction `json:"restrictions,omitempty"`
 
-	// Hashes contains a collection of hashes for each fully resolved file matched by this file reference.
-	// This cannot be archived on a folder level, as deployments might deploy into folders holding other data.
-	// Joining all hashes found in all file references into a unique set provides the full list of files included in this artefact.
-	Hashes Hashes `json:"hashes,omitempty"`
+	// The deployment field holds configuration values used during the deployment of the files matched by this file reference.
+	Deployment *FileDeployment `json:"deployment,omitempty"`
+
+	// MatchedFiles contains a collection of paths in the tarball of the manifest that were included because they were matched by
+	// this file reference.
+	MatchedFiles map[string]string `json:"matchedFiles,omitempty"`
+}
+
+// The FileDeployment struct holds configuration values for deploying matched files from a marauder artefact
+// onto servers.
+type FileDeployment struct {
+	// The EqualityProvider defines the way marauder should compare equality between two files
+	// when deploying the specific files of an artefact.
+	// Marauder will first validate if the current deployment of the artefact is intact to not potentially induce invalidate state.
+	// For this, the default equality provider "hash" is used which compares the file on disk to the expected file via their sha256sum hash.
+	EqualityProvider *string `json:"equalityProvider,omitempty"`
 }
 
 // The FileRestriction type allows to restrict matches by marauder during the artefact building process.
@@ -119,7 +136,7 @@ type FileRestriction struct {
 	Min *int `json:"min,omitempty"`
 
 	// Exact defines how many files can be matched exactly.
-	// If any different amount of files were matched, marauder will error.
+	// If any different amount of files was matched, marauder will error.
 	Exact *int `json:"exact,omitempty"`
 }
 

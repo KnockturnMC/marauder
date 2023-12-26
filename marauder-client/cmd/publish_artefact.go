@@ -155,7 +155,7 @@ func publishArtefactCheckExisting(ctx context.Context, client controller.Client,
 	}
 
 	if !reflect.DeepEqual(manifest.Files, remoteArtefactManifest.Files) {
-		return networkmodel.ArtefactModel{}, fmt.Errorf("manifests do not match file hashes: %w", ErrRemoteManifestMismatch)
+		return networkmodel.ArtefactModel{}, fmt.Errorf("manifests do not match completely: %w", ErrRemoteManifestMismatch)
 	}
 
 	return remoteArtefact, nil

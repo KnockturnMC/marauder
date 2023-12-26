@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/fileeq"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
@@ -31,12 +33,16 @@ type FolderOwner struct {
 
 // The DockerBasedManager implements the manager interface and manages server via a docker client.
 type DockerBasedManager struct {
-	DockerClient           *dockerClient.Client
-	DockerEncodedAuth      string
-	ControllerClient       controller.DownloadingClient
-	AutoRemoveContainers   bool
+	DockerClient      *dockerClient.Client
+	DockerEncodedAuth string
+
+	ControllerClient     controller.DownloadingClient
+	AutoRemoveContainers bool
+
 	FolderOwner            *FolderOwner
 	ServerDataPathTemplate string
+
+	FileEqualityRegistry fileeq.FileEqualityRegistry
 }
 
 // computeUniqueDockerContainerNameFor computes the unique docker container name for a given server managed by
