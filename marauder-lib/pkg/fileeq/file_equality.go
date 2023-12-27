@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io"
 	"reflect"
+
+	"gopkg.in/yaml.v3"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 )
@@ -72,9 +73,7 @@ func (j JSONFileEquality) Equals(first io.Reader, second io.Reader) (bool, error
 		}
 
 		return result, nil
-	}, func(first interface{}, second interface{}) bool {
-		return reflect.DeepEqual(first, second)
-	})
+	}, reflect.DeepEqual)
 }
 
 // The YAMLFileEquality compares files by parsing them as yaml.
@@ -89,9 +88,7 @@ func (y YAMLFileEquality) Equals(first io.Reader, second io.Reader) (bool, error
 		}
 
 		return result, nil
-	}, func(first interface{}, second interface{}) bool {
-		return reflect.DeepEqual(first, second)
-	})
+	}, reflect.DeepEqual)
 }
 
 // compareReadersBy is a utility method that compares two readers by mapping them via the passed mapper function and comparing their result.
