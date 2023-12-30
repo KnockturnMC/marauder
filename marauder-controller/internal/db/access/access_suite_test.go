@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v4"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	dockerClient "github.com/docker/docker/client"

@@ -7,6 +7,8 @@ import (
 	"io"
 	"io/fs"
 	"strings"
+
+	"github.com/samber/mo"
 )
 
 // ClosableWriter is a utility interface for writers that may be closed.
@@ -20,7 +22,8 @@ type WriteResult struct {
 	// PathInRootFS represents the path the file was read from
 	PathInRootFS string
 	// PathInTarball represents the path of the file in the tarball.
-	PathInTarball string
+	// The optional may be empty in case the write result was not actually written to the tarball.
+	PathInTarball mo.Option[string]
 }
 
 // The FriendlyTarballWriter interface represents a writer to a tarfile.
@@ -40,12 +43,17 @@ type FriendlyTarballWriter interface {
 
 	// AddFolder writes a whole from the root fs located at the filePathInFS to the tar ball at the filePathInTarball path.
 	AddFolder(rootFs fs.FS, folderPathInFS string, folderPathInTarball string) ([]WriteResult, error)
+
+	// WithFilter mutates this tarball writer to only write a file found to the tarball if the filter yields true for it.
+	// Any existing filters are overwritten.
+	WithFilter(filter func(pathInFS string, pathInTarball string) bool) FriendlyTarballWriter
 }
 
 // The FriendlyTarballWriterImpl struct acts as a utility for creating a tarball and implements the friendly tarball writer interface.
 type FriendlyTarballWriterImpl struct {
 	writerChain   []ClosableWriter
 	tarballWriter *tar.Writer
+	filter        func(string, string) bool
 }
 
 // NewFriendlyTarballWriterGZ constructs a new FriendlyTarballWriter that writes to the passed writer.
@@ -60,6 +68,9 @@ func NewFriendlyTarballWriterGZ(writer io.Writer, level int) (*FriendlyTarballWr
 	return &FriendlyTarballWriterImpl{
 		writerChain:   []ClosableWriter{gzipWriter},
 		tarballWriter: tarballWriter,
+		filter: func(s string, s2 string) bool {
+			return true
+		},
 	}, nil
 }
 
@@ -135,6 +146,12 @@ func (f *FriendlyTarballWriterImpl) AddFile(rootFs fs.FS, filePathInFS string, f
 		return WriteResult{}, fmt.Errorf("failed to read stat of file %s: %w", filePathInFS, err)
 	}
 
+	// Check the filter, do not add file if filter yields false.
+	// Yield back no error but a write result without a filepath in the tarball.
+	if !f.filter(filePathInFS, filePathInTarball) {
+		return WriteResult{PathInRootFS: filePathInFS}, nil
+	}
+
 	header, err := tar.FileInfoHeader(stat, "")
 	if err != nil {
 		return WriteResult{}, fmt.Errorf("failed to construct tar header for %s: %w", filePathInFS, err)
@@ -151,7 +168,7 @@ func (f *FriendlyTarballWriterImpl) AddFile(rootFs fs.FS, filePathInFS string, f
 
 	return WriteResult{
 		PathInRootFS:  filePathInFS,
-		PathInTarball: filePathInTarball,
+		PathInTarball: mo.Some(filePathInTarball),
 	}, nil
 }
 
@@ -181,4 +198,10 @@ func (f *FriendlyTarballWriterImpl) AddFolder(rootFs fs.FS, folderPathInFS strin
 	}
 
 	return results, nil
+}
+
+// WithFilter updates the local filter var in the friendly tarball writer impl.
+func (f *FriendlyTarballWriterImpl) WithFilter(filter func(pathInFS string, pathInTarball string) bool) FriendlyTarballWriter {
+	f.filter = filter
+	return f
 }

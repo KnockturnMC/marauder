@@ -2,9 +2,7 @@ package manager
 
 import (
 	"archive/tar"
-	"compress/gzip"
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -22,7 +20,6 @@ import (
 	"github.com/Goldziher/go-utils/maputils"
 	"golang.org/x/exp/slices"
 
-	"gitea.knockturnmc.com/marauder/controller/pkg/artefact"
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 
@@ -77,16 +74,27 @@ func (d DockerBasedManager) updateSingleDeployment(
 	artefactToUninstall := update.Missmatch.ArtefactToUninstall()
 	var (
 		artefactToUninstallManifest filemodel.Manifest
+		artefactToUninstallOnDisk   string
 		artefactToInstallOnDisk     string
 	)
 
 	if artefactToUninstall != nil {
-		artefactToUninstallManifest, err = d.ControllerClient.FetchManifest(ctx, artefactToUninstall.Artefact)
+		artefactToUninstallOnDisk, err = d.ControllerClient.DownloadArtefact(ctx, artefactToUninstall.Artefact)
 		if err != nil {
-			return fmt.Errorf("failed to fetch old manifest: %w", err)
+			return fmt.Errorf("failed to fetch old artefact to disk: %w", err)
 		}
 
-		if err := d.validateOldDeploymentHashOnDisk(artefactToUninstallManifest, serverFolderLocation); err != nil {
+		artefactToUninstallManifest, err = d.ControllerClient.FetchManifest(ctx, artefactToUninstall.Artefact)
+		if err != nil {
+			return fmt.Errorf("failed to fetch old artefact manifest: %w", err)
+		}
+
+		if err := d.validateOldDeploymentFilesOnDisk(
+			artefactToUninstallManifest,
+			artefactToUninstallOnDisk,
+			serverFolderLocation,
+			d.FileEqualityRegistry,
+		); err != nil {
 			return fmt.Errorf("failed to validate old deployment hashes: %w", err)
 		}
 	}
@@ -136,34 +144,6 @@ func (d DockerBasedManager) updateSingleDeployment(
 	return nil
 }
 
-// validateOldDeploymentHashOnDisk validates an old deployment on the disk.
-func (d DockerBasedManager) validateOldDeploymentHashOnDisk(oldArtefact filemodel.Manifest, serverFolderLocation string) error {
-	// Check hashes of old deployment, ensuring that the state of the local server dir matches the expected one.
-	// This could differ if some system developer edited files in the server environment.
-	for filePathWithPrefix, fileHashAsString := range oldArtefact.Hashes {
-		filePathWithoutPrefix, _ := strings.CutPrefix(filePathWithPrefix, pkg.FileParentDirectoryInArtefact)
-
-		fileToCheck, err := os.Open(path.Join(serverFolderLocation, filePathWithoutPrefix))
-		if err != nil {
-			return fmt.Errorf("failed to open file for hash validation: %w", err)
-		}
-
-		sha256, err := utils.ComputeSha256(fileToCheck)
-		if err != nil {
-			_ = fileToCheck.Close() // Close file, not done via defer as we are in a for loop
-			return fmt.Errorf("failed to compute sha256 hash for %s: %w", fileToCheck.Name(), err)
-		}
-
-		_ = fileToCheck.Close() // close file for good after sha was computed.
-		foundHashAsHex := hex.EncodeToString(sha256)
-		if fileHashAsString != foundHashAsHex {
-			return fmt.Errorf("file %s has hash %s, expected %s: %w", fileToCheck.Name(), foundHashAsHex, fileHashAsString, artefact.ErrHashMismatch)
-		}
-	}
-
-	return nil
-}
-
 // deleteOldArtefact deletes an old artefact in the server folder.
 func (d DockerBasedManager) deleteOldArtefact(
 	oldArtefact filemodel.Manifest,
@@ -207,7 +187,7 @@ func (d DockerBasedManager) deleteOldFilesAndYieldParents(
 	relativePotentiallyEmptyParentDirsAsMap := make(map[string]bool)
 
 	// Delete all files
-	for filePathWithPrefix := range oldArtefact.Hashes {
+	for filePathWithPrefix := range oldArtefact.Files.MatchedFilesToReferenceMap() {
 		filePathWithoutPrefix, _ := strings.CutPrefix(filePathWithPrefix, pkg.FileParentDirectoryInArtefact)
 		cleanedFilePathWithoutPrefix := path.Clean(filePathWithoutPrefix)
 
@@ -252,21 +232,13 @@ func (d DockerBasedManager) deleteOldFilesAndYieldParents(
 
 // unpackArtefactIntoServer unpacks the passed artefact into the server.
 func (d DockerBasedManager) unpackArtefactIntoServer(artefactPath string, serverFolderLocation string) error {
-	plainArtefactReader, err := os.Open(artefactPath)
+	tarballReader, err := utils.NewFriendlyTarballReaderFromPath(artefactPath)
 	if err != nil {
 		return fmt.Errorf("failed to open artefact tar: %w", err)
 	}
 
-	defer func() { _ = plainArtefactReader.Close() }()
+	defer func() { _ = tarballReader.Close(true) }()
 
-	gzippedReader, err := gzip.NewReader(plainArtefactReader)
-	if err != nil {
-		return fmt.Errorf("failed to create gzipped reader for artefact: %w", err)
-	}
-
-	defer func() { _ = gzippedReader.Close() }()
-
-	tarballReader := tar.NewReader(gzippedReader)
 	for {
 		tarballHeader, err := tarballReader.Next()
 		if err != nil {
@@ -282,7 +254,7 @@ func (d DockerBasedManager) unpackArtefactIntoServer(artefactPath string, server
 			continue
 		}
 
-		if err := d.extractFileToServer(tarballHeader, tarballReader, serverFolderLocation); err != nil {
+		if err := d.extractFileToServer(tarballHeader, tarballReader.Reader, serverFolderLocation); err != nil {
 			return fmt.Errorf("failed to extract tar file: %w", err)
 		}
 	}

@@ -17,8 +17,12 @@ var (
 	// ErrUnknownSignature is returned if a signature on an artefact is unknown to the validator.
 	ErrUnknownSignature = errors.New("unknown signature")
 
-	// ErrHashMismatch is returned if the hashes of a manifest do not match the content of the artefact.
-	ErrHashMismatch = errors.New("mismatching hashes")
+	// ErrManifestMissing is yielded back if the manifest is missing from an artefact.
+	ErrManifestMissing = errors.New("manifest missing")
+
+	// ErrUnaccountedForFile is yielded back if the collection of files defined in the manifest does not match the
+	// actual files in the artefact.
+	ErrUnaccountedForFile = errors.New("unaccounted for files")
 )
 
 // The ValidationResult is returned by the Validator via a channel once the validation is completed.

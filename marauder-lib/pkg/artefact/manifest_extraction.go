@@ -2,11 +2,12 @@ package artefact
 
 import (
 	"archive/tar"
-	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+
+	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg"
 	artefactlib "gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
@@ -14,14 +15,13 @@ import (
 
 // ReadManifestFromTarball reads the manifest from the passed reader.
 func ReadManifestFromTarball(reader io.Reader) (*artefactlib.Manifest, error) {
-	gzipReader, err := gzip.NewReader(reader)
+	tarballReader, err := utils.NewFriendlyTarballReaderFromReader(reader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+		return nil, fmt.Errorf("failed to create tarbaöö reader: %w", err)
 	}
 
-	defer func() { _ = gzipReader.Close() }()
+	defer func() { _ = tarballReader.Close(false) }()
 
-	tarballReader := tar.NewReader(gzipReader)
 	var manifestPtr *artefactlib.Manifest
 	for {
 		nextHeader, err := tarballReader.Next()
@@ -37,7 +37,7 @@ func ReadManifestFromTarball(reader io.Reader) (*artefactlib.Manifest, error) {
 			continue
 		}
 
-		manifest, err := ReadManifestAtCurrent(tarballReader)
+		manifest, err := ReadManifestAtCurrent(tarballReader.Reader)
 		if err != nil {
 			return nil, err
 		}
