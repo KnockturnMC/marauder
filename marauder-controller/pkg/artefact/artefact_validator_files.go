@@ -2,9 +2,11 @@ package artefact
 
 import (
 	"archive/tar"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Goldziher/go-utils/sliceutils"
 	"io"
 	"os"
 	"strings"
@@ -14,6 +16,9 @@ import (
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/Goldziher/go-utils/maputils"
 )
+
+// ErrHashMissmatch is yielded if the validator finds a file that does not match its defined hash.
+var ErrHashMissmatch = errors.New("hash missmatch")
 
 // verifyArtefactManifestHashes verifies the included hashes in the artefacts manifest file
 // ensuring that the hashes defined in the manifest of the artefact are correct compared to the files
@@ -34,20 +39,31 @@ func (w *WorkedBasedValidator) verifyArtefactManifestHashes(artefact *os.File) (
 		return artefactlib.Manifest{}, fmt.Errorf("failed to parse tarball: %w", err)
 	}
 
-	manifestIncludedFiles := manifest.Files.MatchedFilesToReferenceMap()
-	if len(manifestIncludedFiles) != len(filesIncluded) {
+	filesToHashesFromManifest := maputils.Merge(
+		sliceutils.Map(
+			manifest.Files,
+			func(value artefactlib.FileReference, index int, slice []artefactlib.FileReference) map[string]string {
+				return value.MatchedFiles
+			},
+		)...,
+	)
+	if len(filesToHashesFromManifest) != len(filesIncluded) {
 		return artefactlib.Manifest{}, fmt.Errorf(
 			"found %d files, expected %d: %w",
 			len(filesIncluded),
-			len(manifestIncludedFiles),
+			len(filesToHashesFromManifest),
 			ErrUnaccountedForFile,
 		)
 	}
 
-	for filePath := range manifestIncludedFiles {
-		_, ok := filesIncluded[filePath]
+	for filePath, expectedHash := range filesToHashesFromManifest {
+		foundHash, ok := filesIncluded[filePath]
 		if !ok {
 			return artefactlib.Manifest{}, fmt.Errorf("file %s not found in artefact but was defined: %w", filePath, ErrUnaccountedForFile)
+		}
+
+		if foundHash != expectedHash {
+			return artefactlib.Manifest{}, fmt.Errorf("file %s did not match expected hash: %w", filePath, ErrHashMissmatch)
 		}
 
 		delete(filesIncluded, filePath)
@@ -67,9 +83,9 @@ func (w *WorkedBasedValidator) verifyArtefactManifestHashes(artefact *os.File) (
 
 // readTarballForValidation reads in the entire tarball from the passed tarball reader and returns the manifest of the tarball
 // as well as a map of file paths in the tarball.
-func readTarballForValidation(tarReader *tar.Reader) (artefactlib.Manifest, map[string]struct{}, error) {
+func readTarballForValidation(tarReader *tar.Reader) (artefactlib.Manifest, map[string]string, error) {
 	var manifest *artefactlib.Manifest
-	includedFiles := make(map[string]struct{})
+	includedFiles := make(map[string]string)
 
 	// Read entire tar file, computing all included files and storing them.
 	for {
@@ -93,7 +109,12 @@ func readTarballForValidation(tarReader *tar.Reader) (artefactlib.Manifest, map[
 				return artefactlib.Manifest{}, nil, fmt.Errorf("failed to parse manifest file: %w", err)
 			}
 		} else {
-			includedFiles[header.Name] = struct{}{}
+			fileHash, err := utils.ComputeSha256(tarReader)
+			if err != nil {
+				return artefactlib.Manifest{}, nil, fmt.Errorf("failed to compute hash for file %s: %w", header.Name, err)
+			}
+
+			includedFiles[header.Name] = hex.EncodeToString(fileHash)
 		}
 	}
 
