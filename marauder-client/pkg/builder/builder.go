@@ -108,20 +108,9 @@ func includeMatchInTarball(
 	file *filemodel.FileReference,
 	match string,
 ) error {
-	shortestMatch, err := globCache.FindShortestMatch(file.CISourceGlob, match)
+	relativePath, err := computeRelativePath(globCache, file, match)
 	if err != nil {
-		return fmt.Errorf("failed to compute shortest path for file %s under glob %s: %w", match, file.CISourceGlob, err)
-	}
-
-	relativePath, err := filepath.Rel(shortestMatch, match)
-	if err != nil {
-		return fmt.Errorf("failed to compute relative path of %s to glob %s: %w", match, shortestMatch, err)
-	}
-
-	// We matched the exact file, the exact shortest match.
-	// And the target on disk ends with a slash, indicating it is not a file.
-	if shortestMatch == match && strings.HasSuffix(file.Target, "/") {
-		relativePath = filepath.Base(match)
+		return err
 	}
 
 	pathInTarball := filepath.Join(file.Target, relativePath)
@@ -131,7 +120,7 @@ func includeMatchInTarball(
 	}
 
 	if file.MatchedFiles == nil {
-		file.MatchedFiles = make(map[string]string, 0)
+		file.MatchedFiles = make(map[string]string)
 	}
 
 	// Write matched files to manifest file
@@ -150,4 +139,34 @@ func includeMatchInTarball(
 	}
 
 	return nil
+}
+
+// computeRelativePath computes the relative path of the specific match to the glob of the file that matched it.
+func computeRelativePath(
+	globCache *utils.ShortestGlobPathCache,
+	file *filemodel.FileReference,
+	match string,
+) (string, error) {
+	shortestMatch, err := globCache.FindShortestMatch(file.CISourceGlob, match)
+	if err != nil {
+		return "", fmt.Errorf("failed to compute shortest path for file %s under glob %s: %w", match, file.CISourceGlob, err)
+	}
+
+	// Respect override for shortest match / source root.
+	if file.CISourceRoot != nil {
+		shortestMatch = *file.CISourceRoot
+	}
+
+	relativePath, err := filepath.Rel(shortestMatch, match)
+	if err != nil {
+		return "", fmt.Errorf("failed to compute relative path of %s to glob %s: %w", match, shortestMatch, err)
+	}
+
+	// We matched the exact file, the exact shortest match.
+	// And the target on disk ends with a slash, indicating it is not a file.
+	if shortestMatch == match && strings.HasSuffix(file.Target, "/") {
+		relativePath = filepath.Base(match)
+	}
+
+	return relativePath, nil
 }

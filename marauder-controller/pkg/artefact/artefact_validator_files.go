@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Goldziher/go-utils/sliceutils"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/Goldziher/go-utils/sliceutils"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg"
 	artefactlib "gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"

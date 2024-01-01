@@ -104,6 +104,11 @@ type FileReference struct {
 	// A string representation of a glob that identifies the files during the ci build of the project that produces the artefact.
 	CISourceGlob string `json:"ciSourceGlob"`
 
+	// CISourceRoot may be defined if the glob itself is too complex for marauder to derive the proper root for all matched files.
+	// E.g. the glob `a/b/**/*yml` would match all files individually, loosing their existing order in the folder b.
+	// To ensure files are still written relative to the folder b, CISourceRoot can be defined as `a/b/`.
+	CISourceRoot *string `json:"ciSourceRoot,omitempty"`
+
 	// A restriction type that may be used to restrict what/how files are matched.
 	Restrictions *FileRestriction `json:"restrictions,omitempty"`
 
