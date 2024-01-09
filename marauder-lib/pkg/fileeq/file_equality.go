@@ -83,8 +83,8 @@ type YAMLFileEquality struct{}
 func (y YAMLFileEquality) Equals(first io.Reader, second io.Reader) (bool, error) {
 	return compareReadersByCmp(first, second, func(reader io.Reader) (interface{}, error) {
 		var result interface{}
-		if err := yaml.NewDecoder(reader).Decode(&result); err != nil {
-			return nil, fmt.Errorf("failed to decode json: %w", err)
+		if err := yaml.NewDecoder(reader).Decode(&result); err != nil && !errors.Is(err, io.EOF) {
+			return nil, fmt.Errorf("failed to decode yaml: %w", err)
 		}
 
 		return result, nil
