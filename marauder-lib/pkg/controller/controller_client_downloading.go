@@ -27,8 +27,8 @@ type DownloadingHTTPClient struct {
 func (h *DownloadingHTTPClient) DownloadArtefact(ctx context.Context, artefactUUID uuid.UUID) (string, error) {
 	downloadedFile, err := h.DownloadService.Download(
 		ctx,
-		fmt.Sprintf("%s/artefact/%s/download", h.ControllerURL, artefactUUID.String()),
-		fmt.Sprintf("%s.tar.gz", artefactUUID.String()),
+		h.ControllerURL+"/artefact/"+artefactUUID.String()+"/download",
+		artefactUUID.String()+".tar.gz",
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to download artefact: %w", err)

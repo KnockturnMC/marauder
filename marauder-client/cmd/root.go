@@ -38,7 +38,7 @@ tarball and uploading said artefact to the marauder controller.`,
 		"the path on the host to the marauder client configuration",
 	)
 
-	command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+	command.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
 		configurationBytes, err := ReadFileFromOrStdin(configurationPath, cmd.InOrStdin())
 		if err != nil {
 			return nil //nolint:nilerr

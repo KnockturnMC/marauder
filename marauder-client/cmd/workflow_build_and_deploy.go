@@ -21,10 +21,11 @@ func WorkflowBuildAndDeployCommand(
 	configuration *Configuration,
 ) *cobra.Command {
 	var (
-		manifestFileLocation   string
-		deploymentEnvironment  string
-		restartAffectedServers bool
-		delay                  time.Duration
+		manifestFileLocation       string
+		deploymentEnvironment      string
+		restartAffectedServers     bool
+		forceUpdateAffectedServers bool
+		delay                      time.Duration
 	)
 
 	command := &cobra.Command{
@@ -36,6 +37,7 @@ func WorkflowBuildAndDeployCommand(
 	command.PersistentFlags().StringVarP(&manifestFileLocation, "manifest", "m", ".marauder.json", "location of the manifest file")
 	command.PersistentFlags().StringVarP(&deploymentEnvironment, "env", "e", "", "environment to deploy into")
 	command.PersistentFlags().BoolVar(&restartAffectedServers, "restart", false, "restart the servers deployed to")
+	command.PersistentFlags().BoolVar(&forceUpdateAffectedServers, "force", false, "forces an update to the server, overwriting local files")
 	command.PersistentFlags().DurationVar(&delay, "delay", 0, "delay before executing a potential restart")
 
 	_ = command.MarkPersistentFlagRequired("env")
@@ -90,6 +92,7 @@ func WorkflowBuildAndDeployCommand(
 			publishedArtefactModel,
 			deploymentEnvironment,
 			restartAffectedServers,
+			forceUpdateAffectedServers,
 			delay,
 		); err != nil {
 			return fmt.Errorf("failed to deploy: %w", err)
@@ -110,6 +113,7 @@ func workflowBuildAndDeployDeployPublishedArtefact(
 	remoteArtefact networkmodel.ArtefactModel,
 	deploymentEnvironment string,
 	restartAffectedServers bool,
+	forceUpdateAffectedServers bool,
 	delay time.Duration,
 ) error {
 	serverTargets, valueFound := artefact.Manifest.DeploymentTargets[deploymentEnvironment]
@@ -138,21 +142,34 @@ func workflowBuildAndDeployDeployPublishedArtefact(
 		return fmt.Errorf("failed to deploy artefact to targeted servers: %w", err)
 	}
 
-	// Potentially restart affected servers
-	updateLifecycle := networkmodel.UpdateWithoutRestart
-	if restartAffectedServers {
-		updateLifecycle = networkmodel.UpdateWithRestart
-	}
-
 	if err := operateServerInternalExecute(
 		ctx,
 		cmd,
 		client,
-		updateLifecycle,
+		computeLifecycleAction(restartAffectedServers, forceUpdateAffectedServers),
 		delay,
 		serverTargets,
 	); err != nil {
 		return fmt.Errorf("failed to upgrade affected servers: %w", err)
 	}
 	return nil
+}
+
+// computeLifecycleAction compute which lifecycle action should be applied to a server based on the passed flags.
+func computeLifecycleAction(
+	restartAffectedServers bool,
+	forceUpdateAffectedServers bool,
+) networkmodel.LifecycleAction {
+	var updateLifecycle networkmodel.LifecycleAction
+	switch {
+	case restartAffectedServers && forceUpdateAffectedServers:
+		updateLifecycle = networkmodel.ForceUpdateWithRestart
+	case restartAffectedServers && !forceUpdateAffectedServers:
+		updateLifecycle = networkmodel.UpdateWithRestart
+	case !restartAffectedServers && forceUpdateAffectedServers:
+		updateLifecycle = networkmodel.ForceUpdateWithoutRestart
+	case !restartAffectedServers && !forceUpdateAffectedServers:
+		updateLifecycle = networkmodel.UpdateWithoutRestart
+	}
+	return updateLifecycle
 }

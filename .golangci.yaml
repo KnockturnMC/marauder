@@ -34,6 +34,10 @@ linters-settings:
     min-complexity: 7
   perfsprint:
     sprintf1: false # Do not complain about sptrintf with single arg
+  revive:
+    rules:
+      - name: unused-parameter
+        disabled: true
 issues:
   exclude-rules:
     - path: '(.*)_test\.go'

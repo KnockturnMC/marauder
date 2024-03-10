@@ -72,12 +72,13 @@ func handleLifecycleAction(
 	case networkmodel.Stop:
 		return handleLifecycleActionStop(context, serverManager, server)
 	case networkmodel.Restart:
-		return handleLifecycleActionStop(context, serverManager, server) && handleLifecycleActionStart(context, serverManager, server)
-	case networkmodel.UpdateWithoutRestart:
-		return updateServerDeployments(context, serverManager, server, false)
-	case networkmodel.UpdateWithRestart:
 		return handleLifecycleActionStop(context, serverManager, server) &&
-			updateServerDeployments(context, serverManager, server, true) &&
+			handleLifecycleActionStart(context, serverManager, server)
+	case networkmodel.UpdateWithoutRestart, networkmodel.ForceUpdateWithoutRestart:
+		return updateServerDeployments(context, serverManager, server, false, action == networkmodel.UpdateWithoutRestart)
+	case networkmodel.UpdateWithRestart, networkmodel.ForceUpdateWithRestart:
+		return handleLifecycleActionStop(context, serverManager, server) &&
+			updateServerDeployments(context, serverManager, server, true, action == networkmodel.UpdateWithRestart) &&
 			handleLifecycleActionStart(context, serverManager, server)
 	default:
 		_ = context.Error(response.RestErrorFromDescription(http.StatusInternalServerError, fmt.Sprintf("unhandled action %s", action)))
@@ -92,8 +93,9 @@ func updateServerDeployments(
 	serverManager manager.Manager,
 	server networkmodel.ServerModel,
 	restarting bool,
+	failOnUnexpectedOldFilesOnDisk bool,
 ) bool {
-	if err := serverManager.UpdateDeployments(context, server, restarting); err != nil {
+	if err := serverManager.UpdateDeployments(context, server, restarting, failOnUnexpectedOldFilesOnDisk); err != nil {
 		_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
 			manager.ErrServerRunning: {
 				ResponseCode: http.StatusBadRequest, Description: fmt.Sprintf("the server %s is running", server.Name),

@@ -28,7 +28,7 @@ func ServerUUIDGet(
 		server, err := access.FetchServer(context, db, serverID)
 		if err != nil {
 			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
-				sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: fmt.Sprintf("failed to find server %s", serverID.String())},
+				sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: "failed to find server " + serverID.String()},
 			}, fmt.Errorf("failed to fetch server: %w", err)))
 
 			return

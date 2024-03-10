@@ -18,6 +18,7 @@ fi
 go list -f '{{.Dir}}' -m | while read module; do
   pushd "$module" >/dev/null
 
+  echo "linting ${module}..."
   golangci-lint --timeout 3m0s run
   staticcheck ./...
 
