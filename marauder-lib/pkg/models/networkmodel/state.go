@@ -1,7 +1,7 @@
 package networkmodel
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,7 +23,7 @@ const (
 )
 
 // ErrUnknownServerState is returned when trying to create a server state with an unknown state type.
-var ErrUnknownServerState = fmt.Errorf("cannot create server state for unknown server state")
+var ErrUnknownServerState = errors.New("cannot create server state for unknown server state")
 
 // KnownServerStateType computes if the passed state is known by marauder.
 func KnownServerStateType(state ServerStateType) bool {

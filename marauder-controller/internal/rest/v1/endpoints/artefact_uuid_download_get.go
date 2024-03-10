@@ -29,7 +29,7 @@ func ArtefactUUIDDownloadGet(
 		tarball, err := access.FetchArtefactTarball(context, db, artefactID)
 		if err != nil {
 			_ = context.Error(response.RestErrorFromKnownErr(map[error]response.KnownErr{
-				sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: fmt.Sprintf("could not find artefact %s", artefactID.String())},
+				sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: "could not find artefact " + artefactID.String()},
 			}, fmt.Errorf("failed to fetch artefact: %w", err)))
 
 			return

@@ -42,7 +42,7 @@ func (h *HTTPClient) PublishArtefact(ctx context.Context, artefact, signature io
 		ctx,
 		h.Client,
 		http.MethodPost,
-		fmt.Sprintf("%s/artefact", h.ControllerURL),
+		h.ControllerURL+"/artefact",
 		multipartWriter.FormDataContentType(),
 		&body,
 	)

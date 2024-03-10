@@ -31,7 +31,12 @@ import (
 // ErrServerRunning is returned by UpdateDeployments if the server is running.
 var ErrServerRunning = errors.New("server is running")
 
-func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel networkmodel.ServerModel, requiresRestart bool) error {
+func (d DockerBasedManager) UpdateDeployments(
+	ctx context.Context,
+	serverModel networkmodel.ServerModel,
+	requiresRestart bool,
+	failOnUnexpectedOldFilesOnDisk bool,
+) error {
 	if requiresRestart {
 		_, err := d.retrieveContainerInfo(ctx, serverModel)
 		if err == nil {
@@ -47,7 +52,7 @@ func (d DockerBasedManager) UpdateDeployments(ctx context.Context, serverModel n
 	}
 
 	for _, update := range missmatches {
-		if err := d.updateSingleDeployment(ctx, serverModel, update); err != nil {
+		if err := d.updateSingleDeployment(ctx, serverModel, update, failOnUnexpectedOldFilesOnDisk); err != nil {
 			return fmt.Errorf("failed to update %s on %s: %w", update.ArtefactIdentifier, serverModel.UUID.String(), err)
 		}
 
@@ -64,6 +69,7 @@ func (d DockerBasedManager) updateSingleDeployment(
 	ctx context.Context,
 	serverModel networkmodel.ServerModel,
 	update networkmodel.ArtefactVersionMissmatch,
+	failOnUnexpectedOldFilesOnDisk bool,
 ) error {
 	serverFolderLocation, err := d.computeServerFolderLocation(serverModel)
 	if err != nil {
@@ -95,7 +101,14 @@ func (d DockerBasedManager) updateSingleDeployment(
 			serverFolderLocation,
 			d.FileEqualityRegistry,
 		); err != nil {
-			return fmt.Errorf("failed to validate old deployment hashes: %w", err)
+			if failOnUnexpectedOldFilesOnDisk {
+				return fmt.Errorf("failed to validate old deployment hashes: %w", err)
+			} else {
+				logrus.Warning(
+					"found unexpected file of ", update.ArtefactIdentifier, " on server ", serverModel.Environment, "/", serverModel.Name+
+						"while upgrading from version "+artefactToUninstall.Version,
+				)
+			}
 		}
 	}
 
