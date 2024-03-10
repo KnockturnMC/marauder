@@ -41,9 +41,10 @@ type Controller struct {
 
 // Docker represents the docker configuration of the controller.
 type Docker struct {
-	Username             string `yaml:"username"`
-	Password             string `yaml:"password"`
-	AutoRemoveContainers bool   `yaml:"autoRemoveContainers"`
+	Username              string `yaml:"username"`
+	Password              string `yaml:"password"`
+	AutoRemoveContainers  bool   `yaml:"autoRemoveContainers"`
+	ContainerMemoryBuffer int64  `yaml:"containerMemoryBuffer"`
 }
 
 // ToBasicAuth converts the docker config into the encoded auth string.

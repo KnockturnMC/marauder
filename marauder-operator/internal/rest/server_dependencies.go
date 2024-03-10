@@ -100,6 +100,7 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 			DockerClient:           dockerClientInstance,
 			DockerEncodedAuth:      dockerEncodedBasicAuth,
 			AutoRemoveContainers:   configuration.Docker.AutoRemoveContainers,
+			ContainerMemoryBuffer:  configuration.Docker.ContainerMemoryBuffer,
 			FolderOwner:            configuration.Disk.FolderOwner,
 			ServerDataPathTemplate: configuration.Disk.ServerDataPathTemplate,
 			FileEqualityRegistry:   fileeq.DefaultFileEqualityRegistry(),

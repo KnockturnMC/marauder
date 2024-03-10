@@ -67,7 +67,7 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 
 	// Compute resources
 	resource := container.Resources{}
-	resource.Memory = (server.Memory + 500) * 1_000_000
+	resource.Memory = (server.Memory + d.ContainerMemoryBuffer) * 1_000_000
 	resource.NanoCPUs = int64(server.CPU * 1_000_000_000)
 
 	computeServerFolderLocation, err := d.DockerClient.ContainerCreate(
