@@ -106,7 +106,7 @@ func (d DockerBasedManager) updateSingleDeployment(
 			} else {
 				logrus.Warning(
 					"found unexpected file of ", update.ArtefactIdentifier, " on server ", serverModel.Environment, "/", serverModel.Name+
-						"while upgrading from version "+artefactToUninstall.Version,
+						" while upgrading from version ", artefactToUninstall.Version, " ", err,
 				)
 			}
 		}
