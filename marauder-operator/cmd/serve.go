@@ -22,9 +22,10 @@ func defaultConfiguration() rest.ServerConfiguration {
 		Port:       1981,
 		TLS:        utils.TLSConfiguration{},
 		Docker: rest.Docker{
-			Username:             "",
-			Password:             "",
-			AutoRemoveContainers: true,
+			Username:              "",
+			Password:              "",
+			AutoRemoveContainers:  true,
+			ContainerMemoryBuffer: 512, // in MB
 		},
 		Controller: rest.Controller{
 			Endpoint:    "http://localhost:8080/v1",
