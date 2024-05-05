@@ -50,7 +50,7 @@ var _ = Describe("Worker", Label("unittest"), func() {
 
 				begin := time.Now()
 				workSlice := make([]<-chan worker.Outcome[string], 0)
-				for i := 0; i < workerCount; i++ {
+				for range workerCount {
 					workSlice = append(workSlice, dispatcher.Dispatch(work))
 				}
 				for _, workChan := range workSlice {

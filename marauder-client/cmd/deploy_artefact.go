@@ -56,7 +56,7 @@ func deployArtefactInternalExecute(
 ) error {
 	// Iterate over servers
 	var resultingErr error
-	for i := 0; i < len(serverIdentifiers); i++ {
+	for i := range len(serverIdentifiers) {
 		serverUUID, err := client.ResolveServerReference(ctx, serverIdentifiers[i])
 		if err != nil {
 			return fmt.Errorf("failed to fetch server uuid at %d: %w", i, err)

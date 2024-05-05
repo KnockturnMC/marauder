@@ -79,33 +79,31 @@ func InsertServer(ctx context.Context, db *sqlm.DB, server networkmodel.ServerMo
 	}
 
 	for index, network := range server.Networks {
-		result := network               // avoid pointer creating to for loop parameter
-		result.ServerUUID = server.UUID // assign uuid generated from previous insertion.
+		network.ServerUUID = server.UUID // assign uuid generated from previous insertion.
 
-		if err := transaction.NamedGetContext(ctx, &result, `
+		if err := transaction.NamedGetContext(ctx, &network, `
                 INSERT INTO server_network (server, network_name, ipv4_address)
                 VALUES (:server, :network_name, :ipv4_address)
                 RETURNING *`,
-			result); err != nil {
+			network); err != nil {
 			return networkmodel.ServerModel{}, fmt.Errorf("failed to insert server network %s: %w", network.NetworkName, err)
 		}
 
-		server.Networks[index] = result
+		server.Networks[index] = network
 	}
 
 	for index, hostPort := range server.HostPorts {
-		result := hostPort              // avoid pointer creating to for loop parameter
-		result.ServerUUID = server.UUID // assign uuid generated from previous insertion.
+		hostPort.ServerUUID = server.UUID // assign uuid generated from previous insertion.
 
-		if err := transaction.NamedGetContext(ctx, &result, `
+		if err := transaction.NamedGetContext(ctx, &hostPort, `
 		            INSERT INTO server_host_port (server, host_ip, host_port, server_port)
 					VALUES (:server, :host_ip, :host_port, :server_port)
 					RETURNING *;
-		        `, result); err != nil {
+		        `, hostPort); err != nil {
 			return networkmodel.ServerModel{}, fmt.Errorf("failed to insert host port %s:%d: %w", hostPort.HostIPAddr, hostPort.HostPort, err)
 		}
 
-		server.HostPorts[index] = result
+		server.HostPorts[index] = hostPort
 	}
 
 	if server, err = fillServerModelOperator(ctx, db, server); err != nil {

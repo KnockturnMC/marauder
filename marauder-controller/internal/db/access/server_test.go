@@ -121,7 +121,7 @@ var _ = Describe("managing servers", Label("functiontest"), func() {
 	Context("when fetching servers by their name", func() {
 		It("should find all servers that exist", func() {
 			insertionCount := 10
-			for i := 0; i < insertionCount; i++ {
+			for i := range insertionCount {
 				server := serverModel
 				server.Environment = strconv.Itoa(i)
 
@@ -148,7 +148,7 @@ var _ = Describe("managing servers", Label("functiontest"), func() {
 	Context("when fetching servers by their environment", func() {
 		It("should find all servers that exist", func() {
 			insertionCount := 10
-			for i := 0; i < insertionCount; i++ {
+			for i := range insertionCount {
 				server := serverModel
 				server.Name = strconv.Itoa(i)
 

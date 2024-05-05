@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Goldziher/go-utils/sliceutils"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
@@ -23,6 +25,18 @@ func OperateServerCommand(
 		Use:   "server action servers...",
 		Short: "Executes the operation on the passed servers",
 		Args:  cobra.MinimumNArgs(2),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) == 0 {
+				return sliceutils.Map(
+					networkmodel.KnownLifecycleActions(),
+					func(value networkmodel.LifecycleAction, index int, slice []networkmodel.LifecycleAction) string {
+						return string(value)
+					},
+				), cobra.ShellCompDirectiveDefault
+			}
+
+			return nil, cobra.ShellCompDirectiveDefault
+		},
 	}
 
 	command.PersistentFlags().DurationVar(&delay, "delay", 0, "delay before executing a potential restart")
@@ -62,7 +76,7 @@ func operateServerInternalExecute(
 ) error {
 	// Iterate over servers
 	var resultingErr error
-	for i := 0; i < len(serverIdentifiers); i++ {
+	for i := range len(serverIdentifiers) {
 		serverUUID, err := client.ResolveServerReference(ctx, serverIdentifiers[i])
 		if err != nil {
 			return fmt.Errorf("failed to fetch server uuid at %d: %w", i, err)

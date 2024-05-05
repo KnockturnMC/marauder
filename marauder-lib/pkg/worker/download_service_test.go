@@ -91,7 +91,7 @@ var _ = Describe("DownloadService", Label("functiontest"), func() {
 				parallelCount := 3
 				downloadService := worker.NewMutexDownloadService(http.DefaultClient, downloadServiceDispatcher(), tempDirFolder)
 
-				for i := 0; i < parallelCount; i++ {
+				for range parallelCount {
 					go func() {
 						download, err := downloadService.Download(context.Background(), fmt.Sprintf("http://%s/good", httpServer.Addr), "good.txt")
 						Expect(err).To(Not(HaveOccurred()))
@@ -105,7 +105,7 @@ var _ = Describe("DownloadService", Label("functiontest"), func() {
 					}()
 				}
 
-				for i := 0; i < parallelCount; i++ {
+				for range parallelCount {
 					Eventually(resultChan).Should(Receive())
 				}
 

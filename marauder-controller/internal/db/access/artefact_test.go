@@ -92,7 +92,7 @@ var _ = Describe("managing artefacts on the db", Label("functiontest"), func() {
 	Context("when fetching an artefact based purely on its identifier", func() {
 		It("should find all registered artefacts with the given identifier", func() {
 			insertionCount := 10
-			for i := 0; i < insertionCount; i++ {
+			for i := range insertionCount {
 				artefact := fullArtefact
 				artefact.Version = strconv.Itoa(i)
 

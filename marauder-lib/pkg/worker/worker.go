@@ -30,7 +30,7 @@ func NewDispatcher[T any](workerCount int) (*Dispatcher[T], error) {
 
 	availableWorkerChan := make(chan Worker[T], workerCount)
 
-	for i := 0; i < workerCount; i++ {
+	for range workerCount {
 		availableWorkerChan <- Worker[T]{}
 	}
 

@@ -86,15 +86,14 @@ func IncludeArtefactFiles(
 			return filemodel.Manifest{}, fmt.Errorf("failed file restriction for %s: %w", file.CISourceGlob, err)
 		}
 
-		updatedFileReference := file
 		for _, match := range matches {
-			err := includeMatchInTarball(rootFs, globCache, filteredTarballWriter, &updatedFileReference, match)
+			err := includeMatchInTarball(rootFs, globCache, filteredTarballWriter, &file, match)
 			if err != nil {
 				return outputManifest, err
 			}
 		}
 
-		outputManifest.Files[idx] = updatedFileReference // Update file reference after hash inclusion
+		outputManifest.Files[idx] = file // Update file reference after hash inclusion
 	}
 
 	return outputManifest, nil

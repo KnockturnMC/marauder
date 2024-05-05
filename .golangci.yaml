@@ -38,6 +38,9 @@ linters-settings:
     rules:
       - name: unused-parameter
         disabled: true
+  gosec:
+    excludes:
+      - "G601" # no longer applies in go 1.22, for loop variables are not reused
 issues:
   exclude-rules:
     - path: '(.*)_test\.go'
