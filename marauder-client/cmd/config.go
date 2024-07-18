@@ -57,8 +57,6 @@ func (c Configuration) CreateTLSReadyHTTPClient() (controller.DownloadingClient,
 		return nil, fmt.Errorf("failed to create dispatcher for download client: %w", err)
 	}
 
-	downloadService := worker.NewMutexDownloadService(http.DefaultClient, dispatcher, cacheDir)
-
 	configuration, err := utils.ParseTLSConfigurationFromType(c.TLS)
 	if err != nil {
 		return &controller.DownloadingHTTPClient{
@@ -66,20 +64,18 @@ func (c Configuration) CreateTLSReadyHTTPClient() (controller.DownloadingClient,
 				Client:        http.DefaultClient,
 				ControllerURL: c.ControllerHost,
 			},
-			DownloadService: downloadService,
+			DownloadService: worker.NewMutexDownloadService(http.DefaultClient, dispatcher, cacheDir),
 		}, fmt.Errorf("failed to parse tls config: %w", err)
 	}
 
+	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: configuration}}
+	tlsDownloadService := worker.NewMutexDownloadService(httpClient, dispatcher, cacheDir)
 	return &controller.DownloadingHTTPClient{
 		HTTPClient: controller.HTTPClient{
-			Client: &http.Client{
-				Transport: &http.Transport{
-					TLSClientConfig: configuration,
-				},
-			},
+			Client:        httpClient,
 			ControllerURL: c.ControllerHost,
 		},
-		DownloadService: downloadService,
+		DownloadService: tlsDownloadService,
 	}, nil
 }
 

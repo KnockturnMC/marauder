@@ -38,11 +38,13 @@ func GetArtefactArchiveCommand(
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{requesting archive by identifier}"))
 
+		// Download manifest
 		manifest, err := client.FetchManifest(ctx, artefactUUID)
 		if err != nil {
 			return fmt.Errorf("failed to fetch artefacts %s: %w", args[0], err)
 		}
 
+		// Download artefact archive
 		file, err := client.DownloadArtefact(ctx, artefactUUID)
 		if err != nil {
 			return fmt.Errorf("failed to download artefact archive: %w", err)
