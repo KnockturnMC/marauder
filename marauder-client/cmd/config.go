@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
+
 	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
 
 	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
@@ -43,22 +45,41 @@ type Configuration struct {
 }
 
 // CreateTLSReadyHTTPClient creates a tls ready http client for communication with the controller.
-func (c Configuration) CreateTLSReadyHTTPClient() (controller.Client, error) {
+func (c Configuration) CreateTLSReadyHTTPClient() (controller.DownloadingClient, error) {
+	// Create download dir
+	cacheDir, err := os.MkdirTemp("", "marauder-client-cache")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create download cache: %w", err)
+	}
+
+	dispatcher, err := worker.NewDispatcher[worker.DownloadResult](1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dispatcher for download client: %w", err)
+	}
+
+	downloadService := worker.NewMutexDownloadService(http.DefaultClient, dispatcher, cacheDir)
+
 	configuration, err := utils.ParseTLSConfigurationFromType(c.TLS)
 	if err != nil {
-		return &controller.HTTPClient{
-			Client:        http.DefaultClient,
-			ControllerURL: c.ControllerHost,
+		return &controller.DownloadingHTTPClient{
+			HTTPClient: controller.HTTPClient{
+				Client:        http.DefaultClient,
+				ControllerURL: c.ControllerHost,
+			},
+			DownloadService: downloadService,
 		}, fmt.Errorf("failed to parse tls config: %w", err)
 	}
 
-	return &controller.HTTPClient{
-		Client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: configuration,
+	return &controller.DownloadingHTTPClient{
+		HTTPClient: controller.HTTPClient{
+			Client: &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: configuration,
+				},
 			},
+			ControllerURL: c.ControllerHost,
 		},
-		ControllerURL: c.ControllerHost,
+		DownloadService: downloadService,
 	}, nil
 }
 
