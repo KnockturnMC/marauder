@@ -12,7 +12,7 @@ import (
 type DownloadingClient interface {
 	Client
 
-	// DownloadArtefact downloads the artefact specified with the given uuid a local cache folder and
+	// DownloadArtefact downloads the artefact specified with the given uuid to the local cache folder and
 	// returns the full path to the downloaded file.
 	DownloadArtefact(ctx context.Context, artefactUUID uuid.UUID) (string, error)
 }

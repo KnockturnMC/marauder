@@ -19,6 +19,7 @@ func main() {
 
 	getArtefactCommand := cmd.GetArtefactCommand(ctx, &configuration)
 	getArtefactCommand.AddCommand(cmd.GetArtefactManifestCommand(ctx, &configuration))
+	getArtefactCommand.AddCommand(cmd.GetArtefactArchiveCommand(ctx, &configuration))
 	getCommand.AddCommand(getArtefactCommand)
 
 	getServerCommand := cmd.GetServerCommand(ctx, &configuration)

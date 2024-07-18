@@ -1,3 +1,4 @@
+version: 2
 builds:
   # The user facing client
   - goos:

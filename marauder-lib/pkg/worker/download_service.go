@@ -1,10 +1,8 @@
 package worker
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path"
@@ -14,8 +12,6 @@ import (
 
 	"github.com/Goldziher/go-utils/maputils"
 	"github.com/Goldziher/go-utils/sliceutils"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 )
 
 // DownloadService is a threadsafe worker capable of properly handling download requests
@@ -110,31 +106,8 @@ func (m *MutexDownloadService) Download(ctx context.Context, url string, filenam
 func (m *MutexDownloadService) downloadURLToFile(ctx context.Context, url string, filename string) (string, error) {
 	downloadTargetPath := path.Join(m.cacheDirectory, path.Base(filename))
 
-	downloadReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, &bytes.Buffer{})
-	if err != nil {
-		return "", fmt.Errorf("failed to create download request: %w", err)
-	}
-
-	downloadResponse, err := m.httpClient.Do(downloadReq)
-	if err != nil {
-		return "", fmt.Errorf("failed to execute download request: %w", err)
-	}
-
-	defer func() { _ = downloadResponse.Body.Close() }()
-
-	if !utils.IsOkayStatusCode(downloadResponse.StatusCode) {
-		return "", fmt.Errorf("failed to download %s, status code %d: %w", url, downloadResponse.StatusCode, utils.ErrBadStatusCode)
-	}
-
-	downloadTarget, err := os.Create(downloadTargetPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to open output file: %w", err)
-	}
-
-	defer func() { _ = downloadTarget.Close() }()
-
-	if _, err := io.Copy(downloadTarget, downloadResponse.Body); err != nil {
-		return "", fmt.Errorf("failed to copy download response to file system: %w", err)
+	if err := DownloadURLTo(ctx, m.httpClient, url, downloadTargetPath); err != nil {
+		return "", fmt.Errorf("failed to download: %w", err)
 	}
 
 	return downloadTargetPath, nil
