@@ -4,6 +4,7 @@ builds:
   - goos:
       - "darwin"
       - "linux"
+      - "windows"
     goarch:
       - "amd64"
       - "arm64"
@@ -11,6 +12,8 @@ builds:
       - goos: "darwin"
         goarch: "amd64"
       - goos: "linux"
+        goarch: "arm64"
+      - goos: "windows"
         goarch: "arm64"
     main: "main.go"
     id: "marauder-client"
@@ -78,5 +81,5 @@ builds:
     mod_timestamp: '{{ .CommitTimestamp }}'
 
 archives:
-  - format: binary
+  - formats: [ binary ]
     allow_different_binary_count: true
