@@ -6,17 +6,15 @@ import (
 	"net/http"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/cronjobworker"
-	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg/operator"
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/cronjobworker"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/pkg/cronjob"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/operator"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
 )
 
 func OperationServerLifecycleAction(
@@ -100,7 +98,7 @@ func OperationServerLifecycleAction(
 		// Schedule the execution cronjob down the line to run the scheduled action inserted above.
 		if err := cronjobWorkerRef.RescheduleCronjobAt(
 			context,
-			cronjob.CronJobExecuteScheduledLifecycleActionsIdentifier,
+			cronjob.ExecuteScheduledLifecycleActionsIdentifier,
 			scheduledLifecycleAction.TimeOfExecution.Sub(time.Now().UTC()),
 		); err != nil {
 			_ = context.Error(response.RestErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to reschedule cronjob: %w", err)))

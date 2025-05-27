@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
 )
 
 // ExecuteScheduledLifecycleActions is responsible for executing lifecycle actions scheduled against an operator and a respective server.

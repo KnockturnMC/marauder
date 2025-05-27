@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	CronJobRemoveUnusedIdentifier                     Type = "removeUnused"
-	CronJobRemoveHistoricIdentifier                   Type = "removeHistoric"
-	CronJobClearOperatorCacheIdentifier               Type = "clearOperatorCaches"
-	CronJobExecuteScheduledLifecycleActionsIdentifier Type = "executeScheduledLifecycleActions"
+	RemoveUnusedIdentifier                     Type = "removeUnused"
+	RemoveHistoricIdentifier                   Type = "removeHistoric"
+	ClearOperatorCacheIdentifier               Type = "clearOperatorCaches"
+	ExecuteScheduledLifecycleActionsIdentifier Type = "executeScheduledLifecycleActions"
 )
 
 // Type is a specific cronjob type runnable by marauder.

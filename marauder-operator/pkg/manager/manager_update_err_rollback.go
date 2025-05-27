@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/artefact"
 )
 
 // rollbackFailedArtefactInstall rolls the server back to the previously installed artefact if the installation process failed.
@@ -16,7 +17,7 @@ func (d DockerBasedManager) rollbackFailedArtefactInstall(
 	oldArtefactUUID *uuid.UUID,
 	serverLocation string,
 ) error {
-	failedInstallArtefact, err := os.Open(artefactFailedToInstall)
+	failedInstallArtefact, err := os.Open(filepath.Clean(artefactFailedToInstall))
 	if err != nil {
 		return fmt.Errorf("failed to open failed new artefact: %w", err)
 	}

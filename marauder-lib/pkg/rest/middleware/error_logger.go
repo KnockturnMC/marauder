@@ -12,24 +12,6 @@ import (
 // The GinLikeJSONFormatter is a logger similar to the gin logger that prints errors to the console.
 type GinLikeJSONFormatter struct{}
 
-// SanitizeDataFields is responsible for sanitizing data fields in an entry to ensure
-// they are properly marshaled into the final log.
-func (g GinLikeJSONFormatter) sanitizeDataFields(entry *logrus.Entry) {
-	for key, value := range entry.Data {
-		switch typedVal := value.(type) {
-		case error:
-			entry.Data[key] = g.sanitizeDataFieldError(typedVal)
-		default:
-		}
-	}
-}
-
-// sanitizeDataFieldError is responsible for sanitizing an error into a string representation
-// for a logrus data field entry.
-func (g GinLikeJSONFormatter) sanitizeDataFieldError(err error) string {
-	return err.Error()
-}
-
 func (g GinLikeJSONFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	g.sanitizeDataFields(entry)
 
@@ -52,6 +34,24 @@ func (g GinLikeJSONFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		callerFile, callerLine,
 		fieldsAsJSON,
 	)), nil
+}
+
+// SanitizeDataFields is responsible for sanitizing data fields in an entry to ensure
+// they are properly marshaled into the final log.
+func (g GinLikeJSONFormatter) sanitizeDataFields(entry *logrus.Entry) {
+	for key, value := range entry.Data {
+		switch typedVal := value.(type) {
+		case error:
+			entry.Data[key] = g.sanitizeDataFieldError(typedVal)
+		default:
+		}
+	}
+}
+
+// sanitizeDataFieldError is responsible for sanitizing an error into a string representation
+// for a logrus data field entry.
+func (g GinLikeJSONFormatter) sanitizeDataFieldError(err error) string {
+	return err.Error()
 }
 
 // The buntColorNameForEntry attempts to find a fitting color for the entry.

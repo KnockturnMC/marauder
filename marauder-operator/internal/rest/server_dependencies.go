@@ -6,17 +6,12 @@ import (
 	"net/http"
 	"os"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/fileeq"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
-
-	"gitea.knockturnmc.com/marauder/operator/pkg/manager"
 	dockerClient "github.com/docker/docker/client"
-
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/fileeq"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/worker"
+	"github.com/knockturnmc/marauder/marauder-operator/pkg/manager"
 	_ "github.com/lib/pq" // postgres driver
 	"github.com/sirupsen/logrus"
 )

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 // ResolveArtefactReference resolves a reference to a specific artefact to its uuid.

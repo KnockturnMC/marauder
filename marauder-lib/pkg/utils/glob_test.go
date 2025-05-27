@@ -1,7 +1,7 @@
 package utils_test
 
 import (
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

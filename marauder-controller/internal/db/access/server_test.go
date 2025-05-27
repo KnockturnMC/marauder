@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -33,6 +32,7 @@ var serverModel = networkmodel.ServerModel{
 			IPV4Address: "172.18.0.4",
 		},
 	},
+	HostPorts: make([]networkmodel.HostPort, 0),
 }
 
 var _ = Describe("managing servers", Label("functiontest"), func() {
@@ -74,6 +74,14 @@ var _ = Describe("managing servers", Label("functiontest"), func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			result.OperatorRef = operator
+
+			hostPorts := make([]networkmodel.HostPort, 0)
+			err = databaseClient.SelectContext(context.Background(), &hostPorts, `
+			SELECT * FROM server_host_port WHERE server = $1
+			`, serverModel.UUID)
+			Expect(err).To(Not(HaveOccurred()))
+
+			result.HostPorts = hostPorts
 			Expect(result).To(BeEquivalentTo(insertedModel))
 		})
 

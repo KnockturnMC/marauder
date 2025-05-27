@@ -3,9 +3,8 @@ package endpoints
 import (
 	"net/http"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-
 	"github.com/gin-gonic/gin"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 )
 
 // VersionGet generates the version endpoint for marauder operator.

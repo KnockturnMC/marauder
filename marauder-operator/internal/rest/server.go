@@ -5,11 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/operator/internal/rest/v1/endpoints"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/middleware"
+	"github.com/knockturnmc/marauder/marauder-operator/internal/rest/v1/endpoints"
 	"github.com/sirupsen/logrus"
 )
 

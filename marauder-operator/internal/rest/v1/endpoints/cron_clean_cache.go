@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
-	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
 	"github.com/gin-gonic/gin"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/worker"
 )
 
 // CronCleanCache creates the endpoint that may be called to clear the operators cache.

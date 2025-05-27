@@ -8,17 +8,15 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-	"github.com/samber/mo"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/artefact"
-
 	"github.com/gonvenience/bunt"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/artefact"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/samber/mo"
 	"github.com/spf13/cobra"
 )
 
@@ -63,14 +61,14 @@ func publishArtefactInternalExecute(
 	client controller.Client,
 	artefactFilePath, signatureFilePath string,
 ) error {
-	artefactFileHandle, err := os.Open(artefactFilePath)
+	artefactFileHandle, err := os.Open(filepath.Clean(artefactFilePath))
 	if err != nil {
 		return fmt.Errorf("failed to open artefact file: %w", err)
 	}
 
 	defer func() { _ = artefactFileHandle.Close() }()
 
-	signatureFileHandle, err := os.Open(signatureFilePath)
+	signatureFileHandle, err := os.Open(filepath.Clean(signatureFilePath))
 	if err != nil {
 		return fmt.Errorf("failed to open artefact file: %w", err)
 	}

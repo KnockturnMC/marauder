@@ -1,6 +1,11 @@
-testonly: False
-with-expecter: True
-keeptree: False
-case: underscore
-inpackage: False
-inpackage-suffix: true
+template: testify
+filename: '{{.InterfaceName | snakecase }}.go'
+dir: '{{.InterfaceDir}}/mocks'
+pkgname: 'mocks'
+structname: '{{.Mock}}{{.InterfaceName}}'
+packages:
+  github.com/knockturnmc/marauder/marauder-lib/pkg/utils:
+    interfaces:
+      FriendlyTarballWriter:
+        config:
+          all: true

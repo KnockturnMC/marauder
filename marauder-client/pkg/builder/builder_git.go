@@ -6,10 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
 	"github.com/go-git/go-git/v5"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
 )
 
 // FetchBuildInformation fetches and inserts build information from the current environment.

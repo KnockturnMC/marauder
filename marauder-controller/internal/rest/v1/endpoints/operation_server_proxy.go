@@ -6,12 +6,12 @@ import (
 	"io"
 	"net/http"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg/operator"
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/operator"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
 )
 
 func OperationServerProxy(

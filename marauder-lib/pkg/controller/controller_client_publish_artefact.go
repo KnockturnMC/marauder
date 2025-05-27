@@ -9,8 +9,8 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	"github.com/samber/mo"
 )
 

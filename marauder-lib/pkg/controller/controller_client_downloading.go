@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/worker"
 )
 
 // DownloadingClient represents a controller client that can also download large files from the controller.

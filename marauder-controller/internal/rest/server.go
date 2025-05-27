@@ -6,19 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"github.com/ztrue/shutdown"
-
-	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
-
-	middleware2 "gitea.knockturnmc.com/marauder/lib/pkg/rest/middleware"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/rest/v1/endpoints"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/rest/v1/endpoints"
+	"github.com/knockturnmc/marauder/marauder-controller/pkg/cronjob"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/middleware"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	"github.com/sirupsen/logrus"
+	"github.com/ztrue/shutdown"
 )
 
 // The ServerConfiguration struct holds relevant configuration values for the rest server.
@@ -88,10 +83,10 @@ func startCronjobWorker(dependencies ServerDependencies) {
 // configureRouterGroup configures the router for the engine, specifically all its endpoints.
 func configureRouterGroup(server *gin.Engine, dependencies ServerDependencies) {
 	logrus.Debug("registering middleware on gin server")
-	server.Use(gin.LoggerWithFormatter(middleware2.RequestLoggerFormatter()))
+	server.Use(gin.LoggerWithFormatter(middleware.RequestLoggerFormatter()))
 	server.Use(gin.Recovery())
 	server.Use(cors.Default())
-	server.Use(middleware2.ErrorHandler())
+	server.Use(middleware.ErrorHandler())
 
 	logrus.Debug("registering routs on gin server")
 	group := server.Group("/v1")

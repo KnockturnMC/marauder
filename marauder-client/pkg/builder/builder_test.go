@@ -4,16 +4,16 @@ import (
 	"io/fs"
 	"testing/fstest"
 
-	"github.com/samber/mo"
+	"github.com/stretchr/testify/mock"
 
-	"gitea.knockturnmc.com/marauder/client/pkg/builder"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils/mocks"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils/mocks"
+	"github.com/knockturnmc/marauder/marauder-client/pkg/builder"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/stretchr/testify/mock"
+	"github.com/samber/mo"
 )
 
 var _ = Describe("Building the artefact", Label("unittest"), func() {
@@ -35,11 +35,12 @@ var _ = Describe("Building the artefact", Label("unittest"), func() {
 				rootFS["spell-plugin/build/libs/spellcore-1.14.jar"] = &fstest.MapFile{Data: []byte("plugin")}
 				rootFS["spell-api/build/libs/spellbook-1.14.jar"] = &fstest.MapFile{Data: []byte("api")}
 
-				writer := mocks.NewFriendlyTarballWriter(GinkgoT())
-				writer.EXPECT().Add(mock.Anything, "spell-plugin/build/libs/spellcore-1.14.jar", "files/spellcore.jar").
-					RunAndReturn(okayTarballResponseSingleFile)
-				writer.EXPECT().Add(mock.Anything, "spell-api/build/libs/spellbook-1.14.jar", "files/spellapi.jar").
-					RunAndReturn(okayTarballResponseSingleFile)
+				writer := mocks.NewMockFriendlyTarballWriter(GinkgoT())
+				writer.On("WithFilter", mock.Anything).Return(writer)
+				writer.On("Add", mock.Anything, "spell-plugin/build/libs/spellcore-1.14.jar", "files/spellcore.jar").
+					Return(okayTarballResponseSingleFile)
+				writer.On("Add", mock.Anything, "spell-api/build/libs/spellbook-1.14.jar", "files/spellapi.jar").
+					Return(okayTarballResponseSingleFile)
 
 				_, err := builder.IncludeArtefactFiles(&rootFS, filemodel.Manifest{
 					Identifier: "spellcore",

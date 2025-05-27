@@ -1,54 +1,48 @@
+version: "2"
 linters:
-  enable-all: true
-  disable: [
+  default: all
+  disable:
     # faulty linters
-    "nlreturn",
-
+    - nlreturn
     # Linters simply not desirable
-    "exhaustruct", # Literally the same as above
-    "ireturn", # While generally a useful linter, this linter is not ready for go 1.18 generic return types.
-    "gci", # The linter clashes with gofumpt and IDE support should handle all import related issues.
-    "wsl", # Cuddle as much as you want to. This linter generally has its purpose, however is not configurable enough to be used.
-    "gomnd", "mnd", # Magic values are already properly abstracted into the constants packages. The linter is not doing anything useful here.
-    "depguard", # Defining go.mod again in a separate file is not smart.
-    "godox", # Lines that indicate todos or other future work are perfectly fine.
-    "dupl", # Duplicates make sense given the logic might change in a but not in b.
-    "interfacebloat", # Interfaces for highly abstracted logic is a pretty nice reason to have a lot of methods.
-
+    - depguard # Defining go.mod again in a separate file is not smart.
+    - dupl # Duplicates make sense given the logic might change in a but not in b.
+    - exhaustruct
+    - godox # Lines that indicate todos or other future work are perfectly fine.
+    - interfacebloat # Interfaces for highly abstracted logic is a pretty nice reason to have a lot of methods.
+    - ireturn # While generally a useful linter, this linter is not ready for go 1.18 generic return types.
+    - mnd # Magic values are already properly abstracted into the constants packages. The linter is not doing anything useful here.
+    - wsl # Cuddle as much as you want to. This linter generally has its purpose, however is not configurable enough to be used.
     # Linters disabled due to generic support missing
-    "rowserrcheck",
-    "wastedassign",
-
-    # archived
-    "execinquery"
-  ]
-linters-settings:
-  lll:
-    line-length: 150
-  nlreturn:
-    block-size: 2 # A two line block is fine, especially for unit tests that may only increase counter and then return.
-  funlen:
-    lines: 120 # 60 is a rather small line count for bigger reactor style avior taskimpl. Thank you go middleware handling and logging for that one!
-  nestif:
-    min-complexity: 7
-  perfsprint:
-    sprintf1: false # Do not complain about sptrintf with single arg
-  revive:
+    - wastedassign
+    - rowserrcheck
+  settings:
+    funlen:
+      lines: 120  # 60 is a rather small line count for bigger reactor style taskimpl. Thank you go middleware handling and logging for that one!
+    gosec:
+      excludes:
+        - G601 # no longer applies in go 1.22, for loop variables are not reused
+    lll:
+      line-length: 150
+    nestif:
+      min-complexity: 7
+    nlreturn:
+      block-size: 2 # A two line block is fine, especially for unit tests that may only increase counter and then return.
+    perfsprint:
+      sprintf1: false # Do not complain about sptrintf with single arg
+    revive:
+      rules:
+        - name: unused-parameter
+          disabled: true
+  exclusions:
     rules:
-      - name: unused-parameter
-        disabled: true
-  gosec:
-    excludes:
-      - "G601" # no longer applies in go 1.22, for loop variables are not reused
-issues:
-  exclude-rules:
-    - path: '(.*)_test\.go'
-      linters:
-        - 'gochecknoglobals'
-        - 'dupword'
-        - 'dupl'
-        - 'unparam'
-        - "revive"
-    - linters:
-        - "varnamelen"
-      text: "db"
+      - linters:
+          - dupl
+          - dupword
+          - gochecknoglobals
+          - revive
+          - unparam
+        path: (.*)_test\.go
+      - linters:
+          - varnamelen
+        text: db

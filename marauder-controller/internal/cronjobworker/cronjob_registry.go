@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
+	"github.com/knockturnmc/marauder/marauder-controller/pkg/cronjob"
 )
 
 // SimpleCronjobExecutor is an implementation that has a static cooldown and a simple execution function.
@@ -26,19 +26,19 @@ func ComputeCronjobMap(configuration cronjob.CronjobsConfiguration) map[cronjob.
 	result := make(map[cronjob.Type]CronjobExecutor)
 
 	if configuration.RemoveUnused != nil {
-		result[cronjob.CronJobRemoveUnusedIdentifier] = RemoveUnused(configuration.RemoveUnused.Every, configuration.RemoveUnused.RemoveAfter)
+		result[cronjob.RemoveUnusedIdentifier] = RemoveUnused(configuration.RemoveUnused.Every, configuration.RemoveUnused.RemoveAfter)
 	}
 	if configuration.RemoveHistoric != nil {
-		result[cronjob.CronJobRemoveHistoricIdentifier] = RemoveHistoric(configuration.RemoveHistoric.Every, configuration.RemoveHistoric.RemoveAfter)
+		result[cronjob.RemoveHistoricIdentifier] = RemoveHistoric(configuration.RemoveHistoric.Every, configuration.RemoveHistoric.RemoveAfter)
 	}
 	if configuration.ClearOperatorCaches != nil {
-		result[cronjob.CronJobClearOperatorCacheIdentifier] = ClearOperatorCaches(
+		result[cronjob.ClearOperatorCacheIdentifier] = ClearOperatorCaches(
 			configuration.ClearOperatorCaches.Every,
 			configuration.ClearOperatorCaches.RemoveAfter,
 		)
 	}
 	if configuration.ExecuteScheduledLifecycleActions != nil {
-		result[cronjob.CronJobExecuteScheduledLifecycleActionsIdentifier] = ExecuteScheduledLifecycleActions(
+		result[cronjob.ExecuteScheduledLifecycleActionsIdentifier] = ExecuteScheduledLifecycleActions(
 			configuration.ExecuteScheduledLifecycleActions.Every,
 		)
 	}

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-controller/pkg/cronjob"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 )
 
 // FetchLastCronjobExecutions fetches all known jobs from the database.

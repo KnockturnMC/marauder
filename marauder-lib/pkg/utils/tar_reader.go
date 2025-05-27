@@ -7,11 +7,20 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 )
+
+// A FriendlyTarballReader is a tarball reader that wraps an existing io.Reader and optionally closes it.
+type FriendlyTarballReader struct {
+	*tar.Reader
+
+	gzipReader *gzip.Reader
+	ioReader   io.Reader
+}
 
 // NewFriendlyTarballReaderFromPath constructs a new reader from the file at the path on the disk.
 func NewFriendlyTarballReaderFromPath(path string) (*FriendlyTarballReader, error) {
-	ioReader, err := os.Open(path)
+	ioReader, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
@@ -41,14 +50,6 @@ func NewFriendlyTarballReaderFromReader(reader io.Reader) (*FriendlyTarballReade
 		gzipReader: gzipReader,
 		ioReader:   reader,
 	}, nil
-}
-
-// A FriendlyTarballReader is a tarball reader that wraps an existing io.Reader and optionally closes it.
-type FriendlyTarballReader struct {
-	*tar.Reader
-
-	gzipReader *gzip.Reader
-	ioReader   io.Reader
 }
 
 // Close closes the underlying gzip reader and potentially the io reader if defined.

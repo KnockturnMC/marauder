@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/gonvenience/bunt"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/spf13/cobra"
 )
 

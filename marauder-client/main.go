@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"gitea.knockturnmc.com/marauder/client/cmd"
+	"github.com/knockturnmc/marauder/marauder-client/cmd"
 )
 
 func main() {

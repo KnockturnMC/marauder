@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/worker"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -52,12 +52,12 @@ func NewWorkedBasedValidator(dispatcher *worker.Dispatcher[ValidationResult], kn
 // SubmitArtefact submits the artefact and its signature to the validator.
 func (w *WorkedBasedValidator) SubmitArtefact(artefactPath, signaturePath string) <-chan worker.Outcome[ValidationResult] {
 	return w.dispatcher.Dispatch(func() (ValidationResult, error) {
-		signature, err := os.ReadFile(signaturePath)
+		signature, err := os.ReadFile(filepath.Clean(signaturePath))
 		if err != nil {
 			return ValidationResult{}, fmt.Errorf("failed to read signature %s: %w", signaturePath, err)
 		}
 
-		artefactFile, err := os.Open(artefactPath)
+		artefactFile, err := os.Open(filepath.Clean(artefactPath))
 		if err != nil {
 			return ValidationResult{}, fmt.Errorf("failed to artefactFile artefact tarball: %w", err)
 		}

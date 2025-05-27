@@ -9,23 +9,18 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
-	"github.com/Goldziher/go-utils/sliceutils"
-
-	"github.com/google/uuid"
-
 	"github.com/Goldziher/go-utils/maputils"
-	"golang.org/x/exp/slices"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
+	"github.com/Goldziher/go-utils/sliceutils"
 	"github.com/docker/docker/client"
+	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/sirupsen/logrus"
 )
 
 // ErrServerRunning is returned by UpdateDeployments if the server is running.
@@ -285,7 +280,7 @@ func (d DockerBasedManager) extractFileToServer(tarballHeader *tar.Header, tarba
 		return fmt.Errorf("failed to create parent directory for %s: %w", filePathOnSystem, err)
 	}
 
-	targetFileOnSystem, err := os.Create(filePathOnSystem)
+	targetFileOnSystem, err := os.Create(filepath.Clean(filePathOnSystem))
 	if err != nil {
 		return fmt.Errorf("failed to open output file %s: %w", filePathOnSystem, err)
 	}

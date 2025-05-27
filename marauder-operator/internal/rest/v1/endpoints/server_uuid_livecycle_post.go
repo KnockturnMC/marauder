@@ -5,14 +5,12 @@ import (
 	"net/http"
 	"strings"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
-
-	"gitea.knockturnmc.com/marauder/operator/pkg/manager"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
+	"github.com/knockturnmc/marauder/marauder-operator/pkg/manager"
 )
 
 func ServerLifecycleActionPost(

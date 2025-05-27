@@ -6,11 +6,9 @@ import (
 	"time"
 
 	"github.com/Goldziher/go-utils/sliceutils"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/gonvenience/bunt"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/spf13/cobra"
 )
 
@@ -76,7 +74,7 @@ func operateServerInternalExecute(
 ) error {
 	// Iterate over servers
 	var resultingErr error
-	for i := range len(serverIdentifiers) {
+	for i := range serverIdentifiers {
 		serverUUID, err := client.ResolveServerReference(ctx, serverIdentifiers[i])
 		if err != nil {
 			return fmt.Errorf("failed to fetch server uuid at %d: %w", i, err)

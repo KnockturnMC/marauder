@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 )
 
 // fillServerModelNetwork fetches the network configuration of a given server model from the database.

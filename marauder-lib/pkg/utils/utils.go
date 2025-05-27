@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 // OrElse resolves a pointer to a type T to the value at the pointer or a default
@@ -18,14 +19,14 @@ func OrElse[T any](nillable *T, defaultVal T) T {
 
 // CopyFile copies the file from the passed input path to the output path.
 func CopyFile(input, output string) error {
-	inStream, err := os.Open(input)
+	inStream, err := os.Open(filepath.Clean(input))
 	if err != nil {
 		return fmt.Errorf("failed to open input file: %w", err)
 	}
 
 	defer func() { _ = inStream.Close() }()
 
-	outStream, err := os.Create(output)
+	outStream, err := os.Create(filepath.Clean(output))
 	if err != nil {
 		return fmt.Errorf("failed to open output file: %w", err)
 	}

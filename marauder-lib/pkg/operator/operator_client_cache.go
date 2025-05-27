@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 )
 
 // The ClientCache holds the different Client instances.

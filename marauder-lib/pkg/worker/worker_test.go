@@ -3,7 +3,7 @@ package worker_test
 import (
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/worker"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

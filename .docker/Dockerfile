@@ -1,9 +1,9 @@
 # Build image
 # We are using alpine, as alpine has the dependencies needed to do a CGO_ENABLED=0 build, allowing us to run from scratch.
-FROM golang:1.22 as builder
+FROM golang:1.24 as builder
 
 # The version of goreleaser to download
-ARG GORELEASER_VERSION="v1.25.1"
+ARG GORELEASER_VERSION="v2.9.0"
 
 # Install bash to run build scripts
 # Install git to fetch version
@@ -72,7 +72,7 @@ COPY --from=builder /usr/src/marauder/dist/marauder-operator_linux_amd64_v1/mara
 ENTRYPOINT ["/usr/bin/marauderop"]
 
 # The client runner image with marauder client installed.
-FROM alpine:3.19 as client
+FROM alpine:3.21 as client
 
 # Copy the statically compiled binary for alpine
 COPY --from=builder /usr/src/marauder/dist/marauder-client-alpine_linux_amd64_v1/marauder /usr/bin/marauder

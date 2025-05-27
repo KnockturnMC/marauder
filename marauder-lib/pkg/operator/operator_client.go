@@ -8,10 +8,9 @@ import (
 	"net/http"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/google/uuid"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 // None is a sample implementation for the Client#DoHTTPRequest methods configurator.
@@ -63,7 +62,7 @@ func (c HTTPClient) DoHTTPRequest(
 		return nil, fmt.Errorf("failed to execute configurator: %w", err)
 	}
 
-	response, err := c.Client.Do(request)
+	response, err := c.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to perform request: %w", err)
 	}

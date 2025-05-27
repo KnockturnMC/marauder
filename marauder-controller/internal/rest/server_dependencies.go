@@ -5,20 +5,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/operator"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/cronjobworker"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/keyauth"
 	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
-
-	"gitea.knockturnmc.com/marauder/controller/pkg/artefact"
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/cronjobworker"
+	"github.com/knockturnmc/marauder/marauder-controller/pkg/artefact"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/keyauth"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/operator"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/worker"
 	_ "github.com/lib/pq" // postgres driver
+	"github.com/sirupsen/logrus"
 )
 
 // The ServerDependencies holds all state and instances needed for the rest server to function.

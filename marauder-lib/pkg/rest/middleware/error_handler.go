@@ -3,10 +3,9 @@ package middleware
 import (
 	"errors"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
-	"github.com/sirupsen/logrus"
-
 	"github.com/gin-gonic/gin"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
+	"github.com/sirupsen/logrus"
 )
 
 // ErrorHandler creates the middleware handler middleware.

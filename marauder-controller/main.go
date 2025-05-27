@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"gitea.knockturnmc.com/marauder/controller/cmd"
+	"github.com/knockturnmc/marauder/marauder-controller/cmd"
 )
 
 func main() {

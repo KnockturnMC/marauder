@@ -15,15 +15,14 @@ builds:
         goarch: "arm64"
       - goos: "windows"
         goarch: "arm64"
-    main: "main.go"
+    main: "marauder-client/main.go"
     id: "marauder-client"
-    dir: "marauder-client"
     binary: "marauder"
     flags:
       - '-trimpath'
     ldflags:
       - '-s -w -extldflags "-static"'
-      - "-X gitea.knockturnmc.com/marauder/client/cmd.version={{.Version}}"
+      - "-X github.com/knockturnmc/marauder/marauder-client/cmd.version={{.Version}}"
     mod_timestamp: '{{ .CommitTimestamp }}'
 
   # The client for alpine
@@ -31,9 +30,8 @@ builds:
       - "linux"
     goarch:
       - "amd64"
-    main: "main.go"
+    main: "marauder-client/main.go"
     id: "marauder-client-alpine"
-    dir: "marauder-client"
     binary: "marauder"
     env:
       - "CGO_ENABLED=0"
@@ -41,7 +39,7 @@ builds:
       - '-trimpath'
     ldflags:
       - '-s -w -extldflags "-static"'
-      - "-X gitea.knockturnmc.com/marauder/client/cmd.version={{.Version}}"
+      - "-X github.com/knockturnmc/marauder/marauder-client/cmd.version={{.Version}}"
     mod_timestamp: '{{ .CommitTimestamp }}'
 
   # The controller
@@ -49,9 +47,8 @@ builds:
       - "linux"
     goarch:
       - "amd64"
-    main: "main.go"
+    main: "marauder-controller/main.go"
     id: "marauder-controller"
-    dir: "marauder-controller"
     binary: "marauderctl"
     env:
       - "CGO_ENABLED=0"
@@ -59,7 +56,7 @@ builds:
       - '-trimpath'
     ldflags:
       - '-s -w -extldflags "-static"'
-      - "-X gitea.knockturnmc.com/marauder/controller/cmd.version={{.Version}}"
+      - "-X github.com/knockturnmc/marauder/marauder-controller/cmd.version={{.Version}}"
     mod_timestamp: '{{ .CommitTimestamp }}'
 
   # The operator
@@ -67,9 +64,8 @@ builds:
       - "linux"
     goarch:
       - "amd64"
-    main: "main.go"
+    main: "marauder-operator/main.go"
     id: "marauder-operator"
-    dir: "marauder-operator"
     binary: "marauderop"
     env:
       - "CGO_ENABLED=0"
@@ -77,7 +73,7 @@ builds:
       - '-trimpath'
     ldflags:
       - '-s -w -extldflags "-static"'
-      - "-X gitea.knockturnmc.com/marauder/operator/cmd.version={{.Version}}"
+      - "-X github.com/knockturnmc/marauder/marauder-operator/cmd.version={{.Version}}"
     mod_timestamp: '{{ .CommitTimestamp }}'
 
 archives:

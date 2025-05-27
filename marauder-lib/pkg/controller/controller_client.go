@@ -7,12 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/samber/mo"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/samber/mo"
 )
 
 // ErrIncorrectReferenceFormat is returned if the reference is in a wrong format.

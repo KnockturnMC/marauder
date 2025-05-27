@@ -6,12 +6,12 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync/atomic"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
-
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/worker"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/phayes/freeport"
@@ -71,7 +71,7 @@ var _ = Describe("DownloadService", Label("functiontest"), func() {
 				download, err := downloadService.Download(context.Background(), fmt.Sprintf("http://%s/good", httpServer.Addr), "good.txt")
 
 				Expect(err).To(Not(HaveOccurred()))
-				downloadedContent, err := os.ReadFile(download)
+				downloadedContent, err := os.ReadFile(filepath.Clean(download))
 				Expect(err).To(Not(HaveOccurred()))
 				Expect(string(downloadedContent)).To(BeEquivalentTo("good"))
 			})
@@ -97,7 +97,7 @@ var _ = Describe("DownloadService", Label("functiontest"), func() {
 						Expect(err).To(Not(HaveOccurred()))
 
 						Expect(err).To(Not(HaveOccurred()))
-						downloadedContent, err := os.ReadFile(download)
+						downloadedContent, err := os.ReadFile(filepath.Clean(download))
 						Expect(err).To(Not(HaveOccurred()))
 						Expect(string(downloadedContent)).To(BeEquivalentTo("good"))
 

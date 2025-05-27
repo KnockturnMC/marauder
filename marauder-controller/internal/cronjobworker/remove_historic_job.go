@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
 )
 
 // RemoveHistoric constructs the cronjob executor that removes historic state older than the passed duration.

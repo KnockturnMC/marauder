@@ -6,12 +6,13 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg"
-	"gitea.knockturnmc.com/marauder/lib/pkg/fileeq"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/fileeq"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 // ErrFileUnequal is yielded back if a file on disk does not match the file in the artefact that should be deployed.
@@ -57,7 +58,7 @@ func (d DockerBasedManager) validateOldDeploymentFilesOnDisk(
 		filePathInServerFolder, _ := strings.CutPrefix(header.Name, pkg.FileParentDirectoryInArtefact)
 		fullyQualifiedFilePath := path.Join(serverFolderLocation, path.Clean(filePathInServerFolder))
 
-		fileOnDisk, err := os.Open(fullyQualifiedFilePath)
+		fileOnDisk, err := os.Open(filepath.Clean(fullyQualifiedFilePath))
 		if err != nil {
 			return fmt.Errorf("failed to open expected file %s: %w", fullyQualifiedFilePath, err)
 		}

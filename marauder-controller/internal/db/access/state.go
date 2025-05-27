@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 )
 
 // FetchServerState fetches a specific server state based on its unique uuid.

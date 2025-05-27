@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/google/uuid"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

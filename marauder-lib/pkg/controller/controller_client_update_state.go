@@ -8,10 +8,9 @@ import (
 	"io"
 	"net/http"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 func (h *HTTPClient) UpdateState(
@@ -42,7 +41,7 @@ func (h *HTTPClient) UpdateState(
 
 	httpReq.Header.Set("Content-Type", "application/json") // Set content type as json, we are patching a json body in.
 
-	httpResp, err := h.Client.Do(httpReq)
+	httpResp, err := h.Do(httpReq)
 	if err != nil {
 		return fmt.Errorf("failed to execute http patch request: %w", err)
 	}

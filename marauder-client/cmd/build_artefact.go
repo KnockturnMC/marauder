@@ -7,16 +7,16 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
-	"golang.org/x/crypto/ssh"
-
-	"gitea.knockturnmc.com/marauder/client/pkg/builder"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
+	"github.com/knockturnmc/marauder/marauder-client/pkg/builder"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh"
 )
 
 type OutputNameData struct {
@@ -79,7 +79,7 @@ func buildArtefactInternalExecute(
 
 	// Create the output file
 	cmd.PrintErrln(bunt.Sprintf("Gray{creating output artefact tarball *%s*}", finalTarballName))
-	tarballFileRef, err := os.Create(finalTarballName)
+	tarballFileRef, err := os.Create(filepath.Clean(finalTarballName))
 	if err != nil {
 		return fmt.Errorf("failed to open output tarball: %w", err)
 	}
@@ -109,7 +109,7 @@ func buildArtefactInternalExecute(
 
 // parseManifestFromDisk parses the manifest from the disk with the given name in the given work directory.
 func parseManifestFromDisk(cmd *cobra.Command, manifestFileLocation string, workDirectory string) (filemodel.Manifest, error) {
-	file, err := os.ReadFile(manifestFileLocation)
+	file, err := os.ReadFile(filepath.Clean(manifestFileLocation))
 	if err != nil {
 		return filemodel.Manifest{}, fmt.Errorf("failed to read %s: %w", manifestFileLocation, err)
 	}

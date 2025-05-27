@@ -27,8 +27,6 @@ type WriteResult struct {
 }
 
 // The FriendlyTarballWriter interface represents a writer to a tarfile.
-//
-//go:generate mockery --name FriendlyTarballWriter
 type FriendlyTarballWriter interface {
 	io.Closer
 

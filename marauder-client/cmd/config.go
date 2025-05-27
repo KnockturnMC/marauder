@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/worker"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/worker"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -86,7 +85,7 @@ func (c Configuration) ParseSigningKey() (ssh.Signer, error) {
 		return nil, fmt.Errorf("failed to evaluate private key file path: %w", err)
 	}
 
-	privateKeyBytes, err := os.ReadFile(privateKeyFilePath)
+	privateKeyBytes, err := os.ReadFile(filepath.Clean(privateKeyFilePath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read private key file for signing: %w", err)
 	}

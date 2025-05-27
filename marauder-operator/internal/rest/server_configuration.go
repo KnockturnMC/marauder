@@ -3,11 +3,9 @@ package rest
 import (
 	"fmt"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"gitea.knockturnmc.com/marauder/operator/pkg/manager"
-
 	"github.com/docker/docker/api/types/registry"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-operator/pkg/manager"
 )
 
 // The ServerConfiguration struct holds relevant configuration values for the rest server.

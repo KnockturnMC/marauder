@@ -7,10 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

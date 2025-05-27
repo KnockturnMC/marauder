@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
 )
 
 // ClearOperatorCaches constructs the cronjob executor that clears the operator caches.

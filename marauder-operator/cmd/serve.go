@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"gitea.knockturnmc.com/marauder/operator/internal/rest"
+	"path/filepath"
 
 	"github.com/gonvenience/bunt"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-operator/internal/rest"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -50,7 +49,7 @@ func ServeCommand() *cobra.Command {
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		configuration := defaultConfiguration()
 
-		file, err := os.ReadFile(configurationPath)
+		file, err := os.ReadFile(filepath.Clean(configurationPath))
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				cmd.Println(bunt.Sprint("Gray{configuration not found, using inbuilt one}"))

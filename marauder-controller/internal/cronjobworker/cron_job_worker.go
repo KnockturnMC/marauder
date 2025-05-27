@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/operator"
-
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/pkg/cronjob"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/operator"
 	"github.com/sirupsen/logrus"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
 )
 
 // CronjobExecutor defines a specific cronjobs executor that can be executed against a job worker parent.
@@ -34,6 +32,26 @@ type CronjobWorker struct {
 	OperatorClientCache *operator.ClientCache
 	cronjobs            map[cronjob.Type]*FetchedCronjob
 	timerResetChan      chan time.Duration
+}
+
+// NewCronjobWorker constructs a new job worker for the given database and configuration.
+func NewCronjobWorker(db *sqlm.DB, operatorClientCache *operator.ClientCache, executors map[cronjob.Type]CronjobExecutor) *CronjobWorker {
+	preparedCronjobs := make(map[cronjob.Type]*FetchedCronjob)
+	for cronjobType, executor := range executors {
+		preparedCronjobs[cronjobType] = &FetchedCronjob{
+			Execution: cronjob.Execution{
+				NextExecution: time.Now().UTC(),
+				Type:          cronjobType,
+			},
+			Executor: executor,
+		}
+	}
+
+	return &CronjobWorker{
+		DB:                  db,
+		OperatorClientCache: operatorClientCache,
+		cronjobs:            preparedCronjobs,
+	}
 }
 
 // RescheduleCronjobAt schedules a new run of the worker in the given duration.
@@ -107,7 +125,7 @@ func (j *CronjobWorker) runRunnableJobs(ctx context.Context) (time.Duration, err
 	// Update the possible next execution
 	earliestNextJobExecutionTime := timeNow
 	for _, fetchedCronjob := range j.cronjobs {
-		if earliestNextJobExecutionTime == timeNow || fetchedCronjob.Execution.NextExecution.UTC().Before(earliestNextJobExecutionTime) {
+		if time.Time.Equal(earliestNextJobExecutionTime, timeNow) || fetchedCronjob.Execution.NextExecution.UTC().Before(earliestNextJobExecutionTime) {
 			earliestNextJobExecutionTime = fetchedCronjob.Execution.NextExecution.UTC()
 		}
 	}
@@ -132,24 +150,4 @@ func (j *CronjobWorker) updateFetchedCronjobsFromDB(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// NewCronjobWorker constructs a new job worker for the given database and configuration.
-func NewCronjobWorker(db *sqlm.DB, operatorClientCache *operator.ClientCache, executors map[cronjob.Type]CronjobExecutor) *CronjobWorker {
-	preparedCronjobs := make(map[cronjob.Type]*FetchedCronjob)
-	for cronjobType, executor := range executors {
-		preparedCronjobs[cronjobType] = &FetchedCronjob{
-			Execution: cronjob.Execution{
-				NextExecution: time.Now().UTC(),
-				Type:          cronjobType,
-			},
-			Executor: executor,
-		}
-	}
-
-	return &CronjobWorker{
-		DB:                  db,
-		OperatorClientCache: operatorClientCache,
-		cronjobs:            preparedCronjobs,
-	}
 }

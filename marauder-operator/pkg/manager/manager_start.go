@@ -7,17 +7,15 @@ import (
 	"os"
 	"strconv"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/client"
-
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.ServerModel) error {
@@ -25,7 +23,7 @@ func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.Serve
 	if err == nil {
 		return nil // It is running
 	}
-	if err != nil && !utils.CheckDockerError(err, client.IsErrNotFound) {
+	if !utils.CheckDockerError(err, client.IsErrNotFound) {
 		return fmt.Errorf("failed to retrieve the container information: %w", err)
 	}
 
@@ -106,13 +104,13 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 		if err := d.DockerClient.NetworkConnect(ctx, networkConfiguration.NetworkName, computeServerFolderLocation.ID, &network.EndpointSettings{
 			IPAddress: networkConfiguration.IPV4Address,
 		}); err != nil {
-			_ = d.DockerClient.ContainerRemove(ctx, computeServerFolderLocation.ID, types.ContainerRemoveOptions{})
+			_ = d.DockerClient.ContainerRemove(ctx, computeServerFolderLocation.ID, container.RemoveOptions{})
 			return fmt.Errorf("failed to connect server to network %s: %w", networkConfiguration.NetworkName, err)
 		}
 	}
 
-	if err := d.DockerClient.ContainerStart(ctx, computeServerFolderLocation.ID, types.ContainerStartOptions{}); err != nil {
-		_ = d.DockerClient.ContainerRemove(ctx, computeServerFolderLocation.ID, types.ContainerRemoveOptions{})
+	if err := d.DockerClient.ContainerStart(ctx, computeServerFolderLocation.ID, container.StartOptions{}); err != nil {
+		_ = d.DockerClient.ContainerRemove(ctx, computeServerFolderLocation.ID, container.RemoveOptions{})
 		return fmt.Errorf("failed to start container: %w", err)
 	}
 
@@ -120,9 +118,9 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 }
 
 // ensureLocalImageExists ensures that the passed image exists locally, ready for a container to be created from.
-func (d DockerBasedManager) ensureLocalImageExists(ctx context.Context, image string) error {
-	list, err := d.DockerClient.ImageList(ctx, types.ImageListOptions{
-		Filters: filters.NewArgs(filters.Arg("reference", image)),
+func (d DockerBasedManager) ensureLocalImageExists(ctx context.Context, imageRef string) error {
+	list, err := d.DockerClient.ImageList(ctx, image.ListOptions{
+		Filters: filters.NewArgs(filters.Arg("reference", imageRef)),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to list existing images on host: %w", err)
@@ -132,7 +130,7 @@ func (d DockerBasedManager) ensureLocalImageExists(ctx context.Context, image st
 		return nil // There is an image with the given reference.
 	}
 
-	reader, err := d.DockerClient.ImagePull(ctx, image, types.ImagePullOptions{
+	reader, err := d.DockerClient.ImagePull(ctx, imageRef, image.PullOptions{
 		RegistryAuth: d.DockerEncodedAuth,
 	})
 	if err != nil {

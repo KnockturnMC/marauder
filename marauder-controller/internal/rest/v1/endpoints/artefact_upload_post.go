@@ -6,19 +6,16 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/pkg/artefact"
-
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/gin-gonic/gin"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/pkg/artefact"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 // ArtefactUploadGet creates the upload endpoint to which new artefact can be uploaded.
@@ -52,7 +49,7 @@ func ArtefactUploadGet(
 			return
 		}
 
-		artefactBytes, err := os.ReadFile(pathToArtefact)
+		artefactBytes, err := os.ReadFile(filepath.Clean(pathToArtefact))
 		if err != nil {
 			_ = context.Error(response.RestErrorFromErr(
 				http.StatusInternalServerError,

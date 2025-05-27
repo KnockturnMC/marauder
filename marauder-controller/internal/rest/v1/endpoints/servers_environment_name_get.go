@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/gin-gonic/gin"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
 )
 
 // ServersEnvironmentNameGet creates the get endpoint that may be used to fetch servers based on their environment and name.

@@ -5,17 +5,16 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-
-	"gitea.knockturnmc.com/marauder/controller/pkg/cronjob"
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/sirupsen/logrus"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/rest"
 	"github.com/gonvenience/bunt"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/rest"
+	"github.com/knockturnmc/marauder/marauder-controller/pkg/cronjob"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -66,7 +65,7 @@ func ServeCommand() *cobra.Command {
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		configuration := defaultConfiguration()
 
-		file, err := os.ReadFile(configurationPath)
+		file, err := os.ReadFile(filepath.Clean(configurationPath))
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				cmd.Println(bunt.Sprint("Gray{configuration not found, using inbuilt one}"))

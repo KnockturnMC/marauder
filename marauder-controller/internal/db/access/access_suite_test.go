@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/avast/retry-go/v4"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	dockerClient "github.com/docker/docker/client"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jmoiron/sqlx"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
 	_ "github.com/lib/pq" // Include postgres driver.
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -30,7 +30,7 @@ const (
 var (
 	databaseClient       *sqlm.DB
 	dockerContainer      container.CreateResponse
-	dockerClientInstance *dockerClient.Client
+	dockerClientInstance *client.Client
 	ctx                  context.Context
 )
 
@@ -48,7 +48,7 @@ var _ = BeforeSuite(func() {
 	ctx = context.Background()
 	var err error
 
-	dockerClientInstance, err = dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
+	dockerClientInstance, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	Expect(err).To(Not(HaveOccurred()))
 
 	port, err := freeport.GetFreePort()
@@ -57,7 +57,7 @@ var _ = BeforeSuite(func() {
 	databaseStartupCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(2*time.Minute))
 	defer cancelFunc()
 
-	pullReader, err := dockerClientInstance.ImagePull(databaseStartupCtx, DBDockerImage, types.ImagePullOptions{})
+	pullReader, err := dockerClientInstance.ImagePull(databaseStartupCtx, DBDockerImage, image.PullOptions{})
 	Expect(err).To(Not(HaveOccurred()))
 	_, _ = io.ReadAll(pullReader)
 	defer func() { _ = pullReader.Close() }()
@@ -83,7 +83,7 @@ var _ = BeforeSuite(func() {
 	)
 	Expect(err).To(Not(HaveOccurred()))
 
-	err = dockerClientInstance.ContainerStart(databaseStartupCtx, dockerContainer.ID, types.ContainerStartOptions{})
+	err = dockerClientInstance.ContainerStart(databaseStartupCtx, dockerContainer.ID, container.StartOptions{})
 	Expect(err).To(Not(HaveOccurred()))
 
 	databaseConnectionString := fmt.Sprintf(

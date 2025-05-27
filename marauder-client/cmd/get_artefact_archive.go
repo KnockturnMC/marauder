@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/gonvenience/bunt"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	"github.com/spf13/cobra"
 )
 

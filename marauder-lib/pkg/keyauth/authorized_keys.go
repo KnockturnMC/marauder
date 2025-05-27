@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -19,7 +20,7 @@ func ParseKnownPublicKeys(authorizedKeyPath string) ([]ssh.PublicKey, error) {
 
 	// Parse authorized keys from disk
 	authorizedKeys := make([]ssh.PublicKey, 0)
-	authorizedKeysFile, err := os.Open(authorizedKeyPath)
+	authorizedKeysFile, err := os.Open(filepath.Clean(authorizedKeyPath))
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return nil, fmt.Errorf("failed to open authorized key file: %w", err)

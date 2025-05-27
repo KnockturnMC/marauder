@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 func (h *HTTPClient) FetchServer(ctx context.Context, server uuid.UUID) (networkmodel.ServerModel, error) {

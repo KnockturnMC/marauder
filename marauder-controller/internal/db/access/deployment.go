@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Goldziher/go-utils/sliceutils"
-
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 )
 
 // FindServerTargetStateMissMatch fetches a miss-match between the servers current is states and target state.

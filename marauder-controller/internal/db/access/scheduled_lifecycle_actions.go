@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 )
 
 // InsertOrMergeScheduledLifecycleAction inserts the passed scheduled lifecycle action into the database.

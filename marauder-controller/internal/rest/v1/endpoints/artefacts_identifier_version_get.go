@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
 	"github.com/gin-gonic/gin"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
 )
 
 // ArtefactIdentifierVersionGet creates the get endpoint to query an artefact based on its identifier and version.

@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg"
 )
 
 // The TLSConfiguration represents a tls configuration for any marauder application.
@@ -73,7 +73,7 @@ func ParseTLSConfigurationTopPath(tlsPath string) (*tls.Config, error) {
 	certPath := fmt.Sprintf("%s%c%s", tlsPath, filepath.Separator, pkg.TLSCertificateFileName)
 	keyPath := fmt.Sprintf("%s%c%s", tlsPath, filepath.Separator, pkg.TLSKeyFileName)
 	poolPath := fmt.Sprintf("%s%c%s", tlsPath, filepath.Separator, pkg.TLSPoolDir)
-	poolPathFiles, err := os.ReadDir(poolPath)
+	poolPathFiles, err := os.ReadDir(filepath.Clean(poolPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to list pool path files: %w", err)
 	}
@@ -94,12 +94,12 @@ func ParseTLSConfigurationTopPath(tlsPath string) (*tls.Config, error) {
 // ParseTLSConfigurationFromPaths parses a bare bone tls configuration from the specific set of files.
 // This expects the paths to be fully resolved.
 func ParseTLSConfigurationFromPaths(certPath string, keyPath string, rootCerts ...string) (*tls.Config, error) {
-	certificateBytes, err := os.ReadFile(certPath)
+	certificateBytes, err := os.ReadFile(filepath.Clean(certPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to load our certificate at %s: %w", certPath, err)
 	}
 
-	key, err := os.ReadFile(keyPath)
+	key, err := os.ReadFile(filepath.Clean(keyPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to load key at %s: %w", keyPath, err)
 	}
@@ -111,7 +111,7 @@ func ParseTLSConfigurationFromPaths(certPath string, keyPath string, rootCerts .
 
 	certPool := x509.NewCertPool()
 	for _, certificatePath := range rootCerts {
-		poolEntryBytes, err := os.ReadFile(certificatePath)
+		poolEntryBytes, err := os.ReadFile(filepath.Clean(certificatePath))
 		if err != nil {
 			return nil, fmt.Errorf("failed to read cert %s: %w", certificatePath, err)
 		}

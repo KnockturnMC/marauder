@@ -6,14 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-	"github.com/docker/docker/api/types"
-
-	"github.com/docker/docker/client"
-
 	"github.com/docker/docker/api/types/container"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
+	"github.com/docker/docker/client"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 // ErrContainerNotRemovedInTime is returned if the stop logic did not find the container to be removed in time.
@@ -41,7 +37,7 @@ func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.S
 			return err
 		}
 	} else {
-		if err := d.DockerClient.ContainerRemove(ctx, serverName, types.ContainerRemoveOptions{}); err != nil {
+		if err := d.DockerClient.ContainerRemove(ctx, serverName, container.RemoveOptions{}); err != nil {
 			return fmt.Errorf("failed to manually remove the container %s: %w", serverName, err)
 		}
 	}
@@ -52,11 +48,7 @@ func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.S
 // awaitAutoRemoval awaits a container that was constructed with auto removal to remove itself after stopping.
 func (d DockerBasedManager) awaitAutoRemoval(ctx context.Context, serverModel networkmodel.ServerModel, deadline time.Time) error {
 	// Await removal via AutoRemove: true flag in container creation.
-	for {
-		if time.Now().After(deadline) {
-			break
-		}
-
+	for !time.Now().After(deadline) {
 		if _, err := d.retrieveContainerInfo(ctx, serverModel); err != nil {
 			if utils.CheckDockerError(err, client.IsErrNotFound) {
 				return nil

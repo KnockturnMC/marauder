@@ -6,12 +6,10 @@ import (
 	"os"
 	"time"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/Goldziher/go-utils/sliceutils"
 	"github.com/gonvenience/bunt"
-
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/spf13/cobra"
 )
 

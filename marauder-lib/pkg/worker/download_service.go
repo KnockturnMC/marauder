@@ -103,16 +103,6 @@ func (m *MutexDownloadService) Download(ctx context.Context, url string, filenam
 	return outcome.Value.fullFileName, nil
 }
 
-func (m *MutexDownloadService) downloadURLToFile(ctx context.Context, url string, filename string) (string, error) {
-	downloadTargetPath := path.Join(m.cacheDirectory, path.Base(filename))
-
-	if err := DownloadURLTo(ctx, m.httpClient, url, downloadTargetPath); err != nil {
-		return "", fmt.Errorf("failed to download: %w", err)
-	}
-
-	return downloadTargetPath, nil
-}
-
 // CleanLocalCache cleans the local cache folder.
 func (m *MutexDownloadService) CleanLocalCache(fileAge time.Duration) error {
 	m.resultListenersMutex.Lock()
@@ -149,4 +139,14 @@ func (m *MutexDownloadService) CleanLocalCache(fileAge time.Duration) error {
 	}
 
 	return nil
+}
+
+func (m *MutexDownloadService) downloadURLToFile(ctx context.Context, url string, filename string) (string, error) {
+	downloadTargetPath := path.Join(m.cacheDirectory, path.Base(filename))
+
+	if err := DownloadURLTo(ctx, m.httpClient, url, downloadTargetPath); err != nil {
+		return "", fmt.Errorf("failed to download: %w", err)
+	}
+
+	return downloadTargetPath, nil
 }

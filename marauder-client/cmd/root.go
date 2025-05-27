@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/gonvenience/bunt"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -71,7 +71,7 @@ func ReadFileFromOrStdin(path string, stdin io.Reader) ([]byte, error) {
 		return nil, fmt.Errorf("failed to execute path template: %w", err)
 	}
 
-	fileBytes, err := os.ReadFile(resolvedPath)
+	fileBytes, err := os.ReadFile(filepath.Clean(resolvedPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %w", path, err)
 	}

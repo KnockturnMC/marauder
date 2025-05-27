@@ -8,9 +8,8 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	"gopkg.in/yaml.v3"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
 )
 
 // ErrUnknownFileEquality may be returned if a file equality is not found for a string identifier in a FileEqualityRegistry.

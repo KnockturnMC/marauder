@@ -7,8 +7,9 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 // DownloadURLTo downloads the contents at the specific url to the passed path.
@@ -30,7 +31,7 @@ func DownloadURLTo(ctx context.Context, httpClient *http.Client, url string, pat
 		return fmt.Errorf("failed to download %s, status code %d: %w", url, downloadResponse.StatusCode, utils.ErrBadStatusCode)
 	}
 
-	downloadTarget, err := os.Create(path)
+	downloadTarget, err := os.Create(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf("failed to open output file: %w", err)
 	}

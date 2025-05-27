@@ -5,13 +5,12 @@ import (
 	"net/http"
 	"strings"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/rest/response"
-
-	"gitea.knockturnmc.com/marauder/controller/internal/db/access"
-	"gitea.knockturnmc.com/marauder/controller/sqlm"
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/knockturnmc/marauder/marauder-controller/internal/db/access"
+	"github.com/knockturnmc/marauder/marauder-controller/sqlm"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
 )
 
 // ServerStateGet creates the get endpoint that fetches the deployments of a server.

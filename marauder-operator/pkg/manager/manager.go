@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/fileeq"
+	"github.com/docker/docker/api/types/container"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg/controller"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/networkmodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
-	"github.com/docker/docker/api/types"
 	dockerClient "github.com/docker/docker/client"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/fileeq"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 type Manager interface {
@@ -76,12 +75,12 @@ func (d DockerBasedManager) computeServerFolderLocation(server networkmodel.Serv
 // retrieveContainerInfo retrieves the container json about a specific server models potential container.
 //
 //nolint:unparam
-func (d DockerBasedManager) retrieveContainerInfo(ctx context.Context, server networkmodel.ServerModel) (types.ContainerJSON, error) {
+func (d DockerBasedManager) retrieveContainerInfo(ctx context.Context, server networkmodel.ServerModel) (container.InspectResponse, error) {
 	identifier := d.computeUniqueDockerContainerNameFor(server)
-	container, err := d.DockerClient.ContainerInspect(ctx, identifier)
+	inspectResponse, err := d.DockerClient.ContainerInspect(ctx, identifier)
 	if err != nil {
-		return types.ContainerJSON{}, fmt.Errorf("failed to inspect container %s: %w", identifier, err)
+		return container.InspectResponse{}, fmt.Errorf("failed to inspect container %s: %w", identifier, err)
 	}
 
-	return container, nil
+	return inspectResponse, nil
 }

@@ -11,12 +11,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitea.knockturnmc.com/marauder/lib/pkg"
-
 	"github.com/goreleaser/fileglob"
-
-	"gitea.knockturnmc.com/marauder/lib/pkg/models/filemodel"
-	"gitea.knockturnmc.com/marauder/lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
 // CreateArtefactTarball creates a new tar ball given a manifest at the specified target path.
