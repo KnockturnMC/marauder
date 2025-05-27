@@ -1,6 +1,6 @@
 # Build image
-# We are using alpine, as alpine has the dependencies needed to do a CGO_ENABLED=0 build, allowing us to run from scratch.
-FROM golang:1.24 as builder
+# We are using alpine, AS alpine has the dependencies needed to do a CGO_ENABLED=0 build, allowing us to run from scratch.
+FROM golang:1.24 AS builder
 
 # The version of goreleaser to download
 ARG GORELEASER_VERSION="v2.9.0"
@@ -29,22 +29,19 @@ RUN adduser \
 # Copy over project source files
 WORKDIR /usr/src/marauder
 
-COPY go.work go.work.sum ./
-COPY marauder-controller/go.* marauder-controller/
-COPY marauder-client/go.* marauder-client/
-COPY marauder-operator/go.* marauder-operator/
-COPY marauder-lib/go.* marauder-lib/
+COPY go.mod go.sum .
 
 # Download dependencies without version dependant code.
-RUN go work sync
+RUN go get -u ./...
 
+# Copy entire rest
 COPY . .
 
 # Build binaries
 RUN goreleaser build --clean --snapshot --id "marauder-controller" --id "marauder-operator" --id "marauder-client-static"
 
 # The running image, from scratch
-FROM scratch as base_runner
+FROM scratch AS base_runner
 
 # Import the user and group files from the builder.
 COPY --from=builder /etc/passwd /etc/passwd
@@ -54,7 +51,7 @@ COPY --from=builder /etc/group /etc/group
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # The controller image
-FROM base_runner as controller
+FROM base_runner AS controller
 
 # Copy binary
 COPY --from=builder /usr/src/marauder/dist/marauder-controller_linux_amd64_v1/marauderctl /usr/bin/marauderctl
@@ -63,7 +60,7 @@ COPY --from=builder /usr/src/marauder/dist/marauder-controller_linux_amd64_v1/ma
 ENTRYPOINT ["/usr/bin/marauderctl"]
 
 # The controller image
-FROM base_runner as operator
+FROM base_runner AS operator
 
 # Copy binary
 COPY --from=builder /usr/src/marauder/dist/marauder-operator_linux_amd64_v1/marauderop /usr/bin/marauderop
@@ -72,7 +69,7 @@ COPY --from=builder /usr/src/marauder/dist/marauder-operator_linux_amd64_v1/mara
 ENTRYPOINT ["/usr/bin/marauderop"]
 
 # The client runner image with marauder client installed.
-FROM alpine:3.21 as client
+FROM alpine:3.21 AS client
 
 # Copy the statically compiled binary for alpine
 COPY --from=builder /usr/src/marauder/dist/marauder-client-static_linux_amd64_v1/marauder-static /usr/bin/marauder
