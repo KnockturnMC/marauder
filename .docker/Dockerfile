@@ -41,7 +41,7 @@ RUN go work sync
 COPY . .
 
 # Build binaries
-RUN goreleaser build --clean --snapshot --id "marauder-controller" --id "marauder-operator" --id "marauder-client-alpine"
+RUN goreleaser build --clean --snapshot --id "marauder-controller" --id "marauder-operator" --id "marauder-client-static"
 
 # The running image, from scratch
 FROM scratch as base_runner
@@ -75,4 +75,4 @@ ENTRYPOINT ["/usr/bin/marauderop"]
 FROM alpine:3.21 as client
 
 # Copy the statically compiled binary for alpine
-COPY --from=builder /usr/src/marauder/dist/marauder-client-alpine_linux_amd64_v1/marauder /usr/bin/marauder
+COPY --from=builder /usr/src/marauder/dist/marauder-client-static_linux_amd64_v1/marauder-static /usr/bin/marauder

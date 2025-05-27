@@ -31,8 +31,8 @@ builds:
     goarch:
       - "amd64"
     main: "marauder-client/main.go"
-    id: "marauder-client-alpine"
-    binary: "marauder"
+    id: "marauder-client-static"
+    binary: "marauder-static"
     env:
       - "CGO_ENABLED=0"
     flags:
