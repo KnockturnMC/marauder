@@ -61,6 +61,10 @@ func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.Serve
 }
 
 func (d DockerBasedManager) starDockerContainer(ctx context.Context, server networkmodel.ServerModel, systemPath string) error {
+	if strings.TrimSpace(server.Image) == "" {
+		return nil // Do not start a server with no image assigned.
+	}
+
 	hostPortMap := make(nat.PortMap)
 	for _, hostPort := range server.HostPorts {
 		hostPortMap[nat.Port(strconv.Itoa(hostPort.ServerPort))] = []nat.PortBinding{{
@@ -73,11 +77,6 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 	resource := container.Resources{}
 	resource.Memory = (server.Memory + d.ContainerMemoryBuffer) * 1_000_000
 	resource.NanoCPUs = int64(server.CPU * 1_000_000_000)
-
-	// Do not start a server with no image assigned.
-	if strings.TrimSpace(server.Image) == "" {
-		return nil
-	}
 
 	computeServerFolderLocation, err := d.DockerClient.ContainerCreate(
 		ctx,
@@ -130,6 +129,10 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 
 // ensureLocalImageExists ensures that the passed image exists locally, ready for a container to be created from.
 func (d DockerBasedManager) ensureLocalImageExists(ctx context.Context, imageRef string) error {
+	if strings.TrimSpace(imageRef) == "" {
+		return nil // An empty image means whatever marauder manages does not require a docker image
+	}
+
 	list, err := d.DockerClient.ImageList(ctx, image.ListOptions{
 		Filters: filters.NewArgs(filters.Arg("reference", imageRef)),
 	})
