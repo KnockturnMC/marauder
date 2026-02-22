@@ -77,7 +77,6 @@ func ServeCommand() *cobra.Command {
 				return fmt.Errorf("failed to parse configuration file %s: %w", configurationPath, err)
 			}
 		}
-
 		dependencies, err := rest.CreateServerDependencies(version, configuration)
 		if err != nil {
 			return fmt.Errorf("failed to create server dependencies: %w", err)

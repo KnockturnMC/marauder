@@ -62,5 +62,6 @@ type Client interface {
 // HTTPClient implements the Client interface by using the controllers rest API.
 type HTTPClient struct {
 	*http.Client
+	
 	ControllerURL string
 }

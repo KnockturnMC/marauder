@@ -55,6 +55,7 @@ func deployArtefactInternalExecute(
 ) error {
 	// Iterate over servers
 	var resultingErr error
+
 	for i := range serverIdentifiers {
 		serverUUID, err := client.ResolveServerReference(ctx, serverIdentifiers[i])
 		if err != nil {

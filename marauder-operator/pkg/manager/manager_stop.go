@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
@@ -24,7 +24,7 @@ func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.S
 	if err := d.DockerClient.ContainerStop(ctx, serverName, container.StopOptions{
 		Timeout: &timeoutInSeconds,
 	}); err != nil {
-		if utils.CheckDockerError(err, client.IsErrNotFound) {
+		if utils.CheckDockerError(err, errdefs.IsNotFound) {
 			return nil // Server is just not running
 		}
 
@@ -50,7 +50,7 @@ func (d DockerBasedManager) awaitAutoRemoval(ctx context.Context, serverModel ne
 	// Await removal via AutoRemove: true flag in container creation.
 	for !time.Now().After(deadline) {
 		if _, err := d.retrieveContainerInfo(ctx, serverModel); err != nil {
-			if utils.CheckDockerError(err, client.IsErrNotFound) {
+			if utils.CheckDockerError(err, errdefs.IsNotFound) {
 				return nil
 			}
 

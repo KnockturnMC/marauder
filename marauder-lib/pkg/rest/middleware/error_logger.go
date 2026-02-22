@@ -27,13 +27,13 @@ func (g GinLikeJSONFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		callerLine = strconv.Itoa(entry.Caller.Line)
 	}
 
-	return []byte(fmt.Sprintf("[marauder] %v |%s| %s | %s:%s |  %s\n",
+	return fmt.Appendf([]byte{}, "[marauder] %v |%s| %s | %s:%s |  %s\n",
 		entry.Time.Format("2006/01/02 - 15:04:05"),
 		bunt.Sprintf(buntColorNameForEntry(entry)+"{"+entry.Level.String()+"}"),
 		entry.Message,
 		callerFile, callerLine,
 		fieldsAsJSON,
-	)), nil
+	), nil
 }
 
 // SanitizeDataFields is responsible for sanitizing data fields in an entry to ensure

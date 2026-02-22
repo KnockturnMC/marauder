@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sync"
 	"time"
 
@@ -122,7 +123,7 @@ func (m *MutexDownloadService) CleanLocalCache(fileAge time.Duration) error {
 
 	now := time.Now()
 	for _, entry := range dirContent {
-		if sliceutils.Includes(currentlyDownloadingFiles, entry.Name()) {
+		if slices.Contains(currentlyDownloadingFiles, entry.Name()) {
 			continue // Don't delete currently fetching files
 		}
 

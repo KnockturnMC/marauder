@@ -99,7 +99,7 @@ func buildArtefactInternalExecute(
 	}))
 
 	if sign {
-		if err := signCreatedArtefact(cmd, configuration, tarballFileRef, finalTarballName); err != nil {
+		if err := signCreatedArtefact(cmd, configuration, tarballFileRef); err != nil {
 			return err
 		}
 	}
@@ -155,7 +155,7 @@ func parseManifestFromDisk(cmd *cobra.Command, manifestFileLocation string, work
 }
 
 // signCreatedArtefact signs the tarball file ref and stores it under the same name .sig.
-func signCreatedArtefact(cmd *cobra.Command, configuration *Configuration, tarballFileRef *os.File, tarballName string) error {
+func signCreatedArtefact(cmd *cobra.Command, configuration *Configuration, tarballFileRef *os.File) error {
 	key, err := configuration.ParseSigningKey()
 	if err != nil {
 		return fmt.Errorf("failed to parse signing key: %w", err)
@@ -175,7 +175,7 @@ func signCreatedArtefact(cmd *cobra.Command, configuration *Configuration, tarba
 		return fmt.Errorf("failed to sign sha hashsum: %w", err)
 	}
 
-	signatureFileName := tarballName + ".sig"
+	signatureFileName := tarballFileRef.Name() + ".sig"
 	if err := os.WriteFile(signatureFileName, ssh.Marshal(signature), 0o600); err != nil {
 		return fmt.Errorf("failed to write signature to %s: %w", signatureFileName, err)
 	}

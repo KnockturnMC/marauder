@@ -39,19 +39,22 @@ type BaseCronjobConfiguration struct {
 // RemoveUnused defines the configuration for the cronjob remove unused.
 type RemoveUnused struct {
 	BaseCronjobConfiguration `yaml:",inline"`
-	RemoveAfter              time.Duration `yaml:"removeAfter"`
+
+	RemoveAfter time.Duration `yaml:"removeAfter"`
 }
 
 // RemoveHistoric defines the configuration for the cronjob to remove historic server state.
 type RemoveHistoric struct {
 	BaseCronjobConfiguration `yaml:",inline"`
-	RemoveAfter              time.Duration `yaml:"removeAfter"`
+
+	RemoveAfter time.Duration `yaml:"removeAfter"`
 }
 
 // ClearOperatorCaches defines the configuration for the cronjob to clean operator caches.
 type ClearOperatorCaches struct {
 	BaseCronjobConfiguration `yaml:",inline"`
-	RemoveAfter              time.Duration `yaml:"removeAfter"`
+
+	RemoveAfter time.Duration `yaml:"removeAfter"`
 }
 
 // ExecuteScheduledLifecycleActions holds the configuration for the cronjob that is responsible for executing scheduled lifecycle actions.

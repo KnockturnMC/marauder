@@ -57,7 +57,7 @@ var _ = Describe("managing artefacts on the db", Label("functiontest"), func() {
 			defer func() { _ = tarballRow.Close() }()
 
 			Expect(tarballRow.Next()).To(BeTrue())
-			res := map[string]interface{}{}
+			res := map[string]any{}
 			Expect(tarballRow.MapScan(res)).To(Not(HaveOccurred()))
 			Expect(res["tarball"]).To(BeEquivalentTo([]byte("example data")))
 		})

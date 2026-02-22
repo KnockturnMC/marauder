@@ -14,7 +14,7 @@ import (
 
 	"github.com/Goldziher/go-utils/maputils"
 	"github.com/Goldziher/go-utils/sliceutils"
-	"github.com/docker/docker/client"
+	"github.com/containerd/errdefs"
 	"github.com/google/uuid"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
@@ -36,7 +36,7 @@ func (d DockerBasedManager) UpdateDeployments(
 		_, err := d.retrieveContainerInfo(ctx, serverModel)
 		if err == nil {
 			return fmt.Errorf("server %s is running: %w", serverModel.UUID.String(), ErrServerRunning)
-		} else if !utils.CheckDockerError(err, client.IsErrNotFound) {
+		} else if !utils.CheckDockerError(err, errdefs.IsNotFound) {
 			return fmt.Errorf("failed to fetch container info for %s: %w", serverModel.UUID.String(), err)
 		}
 	}
@@ -125,14 +125,14 @@ func (d DockerBasedManager) updateSingleDeployment(
 	var artefactToInstallUUID *uuid.UUID
 	if artefactToInstall != nil {
 		// Extract the new artefact to the server directory
-		if err := d.unpackArtefactIntoServer(artefactToInstallOnDisk, serverFolderLocation); err != nil {
+		if err := d.unpackArtefactIntoServer(serverModel, artefactToInstallOnDisk, serverFolderLocation); err != nil {
 			var oldArtefactUUID *uuid.UUID
 			if artefactToUninstall != nil {
 				oldArtefactUUID = &artefactToUninstall.Artefact
 			}
 
 			// Unpacking failed, undo all potentially unpacked files.
-			if err := d.rollbackFailedArtefactInstall(ctx, artefactToInstallOnDisk, oldArtefactUUID, serverFolderLocation); err != nil {
+			if err := d.rollbackFailedArtefactInstall(ctx, serverModel, artefactToInstallOnDisk, oldArtefactUUID, serverFolderLocation); err != nil {
 				return fmt.Errorf("failed to rollback failed artefact installation: %w", err)
 			}
 
@@ -216,11 +216,8 @@ func (d DockerBasedManager) deleteOldFilesAndYieldParents(
 
 	// Collect protected dirs from file references
 	protectedDirsSlice := sliceutils.Map(oldArtefact.Files, func(value filemodel.FileReference, index int, slice []filemodel.FileReference) string {
-		if strings.HasSuffix(value.Target, "/") {
-			return strings.TrimSuffix(value.Target, "/") // Return the entire directory (without trailing slash)
-		}
-
-		return filepath.Dir(value.Target) // It's a file, return its dir name. Does not have a trailing slash either
+		relativePath, _ := strings.CutPrefix(value.Target, "/")
+		return filepath.Dir(relativePath) // It's a file, return its dir name. Does not have a trailing slash either
 	})
 	protectedDirsSlice = sliceutils.Unique(protectedDirsSlice)
 
@@ -239,7 +236,11 @@ func (d DockerBasedManager) deleteOldFilesAndYieldParents(
 }
 
 // unpackArtefactIntoServer unpacks the passed artefact into the server.
-func (d DockerBasedManager) unpackArtefactIntoServer(artefactPath string, serverFolderLocation string) error {
+func (d DockerBasedManager) unpackArtefactIntoServer(
+	server networkmodel.ServerModel,
+	artefactPath string,
+	serverFolderLocation string,
+) error {
 	tarballReader, err := utils.NewFriendlyTarballReaderFromPath(artefactPath)
 	if err != nil {
 		return fmt.Errorf("failed to open artefact tar: %w", err)
@@ -262,7 +263,7 @@ func (d DockerBasedManager) unpackArtefactIntoServer(artefactPath string, server
 			continue
 		}
 
-		if err := d.extractFileToServer(tarballHeader, tarballReader.Reader, serverFolderLocation); err != nil {
+		if err := d.extractFileToServer(server, tarballHeader, tarballReader.Reader, serverFolderLocation); err != nil {
 			return fmt.Errorf("failed to extract tar file: %w", err)
 		}
 	}
@@ -271,7 +272,12 @@ func (d DockerBasedManager) unpackArtefactIntoServer(artefactPath string, server
 }
 
 // extractFileToServer extracts the file in the tarball to the server folder location.
-func (d DockerBasedManager) extractFileToServer(tarballHeader *tar.Header, tarballReader *tar.Reader, serverFolderLocation string) error {
+func (d DockerBasedManager) extractFileToServer(
+	server networkmodel.ServerModel,
+	tarballHeader *tar.Header,
+	tarballReader *tar.Reader,
+	serverFolderLocation string,
+) error {
 	filePathInServerFolder, _ := strings.CutPrefix(tarballHeader.Name, pkg.FileParentDirectoryInArtefact)
 	cleanedFilePathInServerFolder := path.Clean(filePathInServerFolder)
 	filePathOnSystem := path.Join(serverFolderLocation, cleanedFilePathInServerFolder)
@@ -292,10 +298,15 @@ func (d DockerBasedManager) extractFileToServer(tarballHeader *tar.Header, tarba
 
 	_ = targetFileOnSystem.Close()
 
-	if d.FolderOwner != nil {
+	diskConfig, err := d.FindDiskConfig(server)
+	if err != nil {
+		return fmt.Errorf("failed to find disk config: %w", err)
+	}
+
+	if diskConfig.FolderOwner != nil {
 		chownedFilePath := cleanedFilePathInServerFolder
 		for chownedFilePath != "." {
-			if err := os.Chown(path.Join(serverFolderLocation, chownedFilePath), d.FolderOwner.UID, d.FolderOwner.GID); err != nil {
+			if err := os.Chown(path.Join(serverFolderLocation, chownedFilePath), diskConfig.FolderOwner.UID, diskConfig.FolderOwner.GID); err != nil {
 				return fmt.Errorf("failed to chown deployed file %s: %w", chownedFilePath, err)
 			}
 

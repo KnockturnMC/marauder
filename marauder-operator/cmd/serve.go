@@ -10,6 +10,7 @@ import (
 	"github.com/gonvenience/bunt"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 	"github.com/knockturnmc/marauder/marauder-operator/internal/rest"
+	"github.com/knockturnmc/marauder/marauder-operator/pkg/manager"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -31,8 +32,12 @@ func defaultConfiguration() rest.ServerConfiguration {
 			WorkerCount: 5,
 		},
 		Disk: rest.Disk{
-			DownloadPath:           "/var/local/marauder/operator/cache/downloads",
-			ServerDataPathTemplate: "/var/local/marauder/operator/servers/{{.Environment}}/{{.Name}}",
+			DownloadPath: "/var/local/marauder/operator/cache/downloads",
+			Paths: manager.DiskPathMapping{
+				"*": manager.EnvironmentDiskConfig{
+					ServerDataPathTemplate: "/var/local/marauder/operator/servers/{{.Environment}}/{{.Name}}",
+				},
+			},
 		},
 	}
 }

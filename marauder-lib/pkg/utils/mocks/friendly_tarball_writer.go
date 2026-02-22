@@ -76,7 +76,7 @@ type MockFriendlyTarballWriter_Add_Call struct {
 //   - rootFs fs.FS
 //   - filePathInFS string
 //   - filePathInTarball string
-func (_e *MockFriendlyTarballWriter_Expecter) Add(rootFs interface{}, filePathInFS interface{}, filePathInTarball interface{}) *MockFriendlyTarballWriter_Add_Call {
+func (_e *MockFriendlyTarballWriter_Expecter) Add(rootFs any, filePathInFS any, filePathInTarball any) *MockFriendlyTarballWriter_Add_Call {
 	return &MockFriendlyTarballWriter_Add_Call{Call: _e.mock.On("Add", rootFs, filePathInFS, filePathInTarball)}
 }
 
@@ -148,7 +148,7 @@ type MockFriendlyTarballWriter_AddFile_Call struct {
 //   - rootFs fs.FS
 //   - filePathInFS string
 //   - filePathInTarball string
-func (_e *MockFriendlyTarballWriter_Expecter) AddFile(rootFs interface{}, filePathInFS interface{}, filePathInTarball interface{}) *MockFriendlyTarballWriter_AddFile_Call {
+func (_e *MockFriendlyTarballWriter_Expecter) AddFile(rootFs any, filePathInFS any, filePathInTarball any) *MockFriendlyTarballWriter_AddFile_Call {
 	return &MockFriendlyTarballWriter_AddFile_Call{Call: _e.mock.On("AddFile", rootFs, filePathInFS, filePathInTarball)}
 }
 
@@ -222,7 +222,7 @@ type MockFriendlyTarballWriter_AddFolder_Call struct {
 //   - rootFs fs.FS
 //   - folderPathInFS string
 //   - folderPathInTarball string
-func (_e *MockFriendlyTarballWriter_Expecter) AddFolder(rootFs interface{}, folderPathInFS interface{}, folderPathInTarball interface{}) *MockFriendlyTarballWriter_AddFolder_Call {
+func (_e *MockFriendlyTarballWriter_Expecter) AddFolder(rootFs any, folderPathInFS any, folderPathInTarball any) *MockFriendlyTarballWriter_AddFolder_Call {
 	return &MockFriendlyTarballWriter_AddFolder_Call{Call: _e.mock.On("AddFolder", rootFs, folderPathInFS, folderPathInTarball)}
 }
 
@@ -329,7 +329,7 @@ type MockFriendlyTarballWriter_WithFilter_Call struct {
 
 // WithFilter is a helper method to define mock.On call
 //   - filter func(pathInFS string, pathInTarball string) bool
-func (_e *MockFriendlyTarballWriter_Expecter) WithFilter(filter interface{}) *MockFriendlyTarballWriter_WithFilter_Call {
+func (_e *MockFriendlyTarballWriter_Expecter) WithFilter(filter any) *MockFriendlyTarballWriter_WithFilter_Call {
 	return &MockFriendlyTarballWriter_WithFilter_Call{Call: _e.mock.On("WithFilter", filter)}
 }
 
@@ -381,7 +381,7 @@ type MockFriendlyTarballWriter_Write_Call struct {
 // Write is a helper method to define mock.On call
 //   - fileContent []byte
 //   - header tar.Header
-func (_e *MockFriendlyTarballWriter_Expecter) Write(fileContent interface{}, header interface{}) *MockFriendlyTarballWriter_Write_Call {
+func (_e *MockFriendlyTarballWriter_Expecter) Write(fileContent any, header any) *MockFriendlyTarballWriter_Write_Call {
 	return &MockFriendlyTarballWriter_Write_Call{Call: _e.mock.On("Write", fileContent, header)}
 }
 

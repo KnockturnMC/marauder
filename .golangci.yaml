@@ -13,6 +13,9 @@ linters:
     - ireturn # While generally a useful linter, this linter is not ready for go 1.18 generic return types.
     - mnd # Magic values are already properly abstracted into the constants packages. The linter is not doing anything useful here.
     - wsl # Cuddle as much as you want to. This linter generally has its purpose, however is not configurable enough to be used.
+    - wsl_v5 # Cuddle as much as you want to. This linter generally has its purpose, however is not configurable enough to be used.
+    - noinlineerr # Too verbose for my liking
+    - unqueryvet # Full selects are by choice
     # Linters disabled due to generic support missing
     - wastedassign
     - rowserrcheck
@@ -22,6 +25,10 @@ linters:
     gosec:
       excludes:
         - G601 # no longer applies in go 1.22, for loop variables are not reused
+        - G701 # gosecs taint detection is terrible..
+        - G703 # gosecs taint detection is terrible..
+        - G704 # gosecs taint detection is terrible..
+        - G117 # Secret pattern LOL
     lll:
       line-length: 150
     nestif:
@@ -42,6 +49,7 @@ linters:
           - gochecknoglobals
           - revive
           - unparam
+          - prealloc
         path: (.*)_test\.go
       - linters:
           - varnamelen

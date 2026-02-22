@@ -91,14 +91,13 @@ func CreateServerDependencies(version string, configuration ServerConfiguration)
 		TLSConfig:          tlsConfiguration,
 		DownloadingService: downloadService,
 		ServerManager: &manager.DockerBasedManager{
-			ControllerClient:       controllerClient,
-			DockerClient:           dockerClientInstance,
-			DockerEncodedAuth:      dockerEncodedBasicAuth,
-			AutoRemoveContainers:   configuration.Docker.AutoRemoveContainers,
-			ContainerMemoryBuffer:  configuration.Docker.ContainerMemoryBuffer,
-			FolderOwner:            configuration.Disk.FolderOwner,
-			ServerDataPathTemplate: configuration.Disk.ServerDataPathTemplate,
-			FileEqualityRegistry:   fileeq.DefaultFileEqualityRegistry(),
+			ControllerClient:      controllerClient,
+			DockerClient:          dockerClientInstance,
+			DockerEncodedAuth:     dockerEncodedBasicAuth,
+			AutoRemoveContainers:  configuration.Docker.AutoRemoveContainers,
+			ContainerMemoryBuffer: configuration.Docker.ContainerMemoryBuffer,
+			DiskPathMapping:       configuration.Disk.Paths,
+			FileEqualityRegistry:  fileeq.DefaultFileEqualityRegistry(),
 		},
 	}, nil
 }

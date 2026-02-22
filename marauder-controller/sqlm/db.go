@@ -14,7 +14,7 @@ type DB struct {
 }
 
 // NamedGetContext runs a single named query context and scans the first resulting row into the passed destination.
-func (db *DB) NamedGetContext(ctx context.Context, dest interface{}, query string, args interface{}) error {
+func (db *DB) NamedGetContext(ctx context.Context, dest any, query string, args any) error {
 	return NamedGetContext(ctx, db, dest, query, args)
 }
 
@@ -33,11 +33,11 @@ type Tx struct {
 }
 
 // NamedGetContext runs a single named query context and scans the first resulting row into the passed destination.
-func (db *Tx) NamedGetContext(ctx context.Context, dest interface{}, query string, args interface{}) error {
+func (db *Tx) NamedGetContext(ctx context.Context, dest any, query string, args any) error {
 	return NamedGetContext(ctx, db, dest, query, args)
 }
 
-func NamedGetContext(ctx context.Context, e sqlx.ExtContext, dest interface{}, query string, args interface{}) error {
+func NamedGetContext(ctx context.Context, e sqlx.ExtContext, dest any, query string, args any) error {
 	rows, err := sqlx.NamedQueryContext(ctx, e, query, args)
 	if err != nil {
 		return fmt.Errorf("failed to run named query: %w", err)

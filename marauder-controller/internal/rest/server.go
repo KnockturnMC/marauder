@@ -77,6 +77,7 @@ func startCronjobWorker(dependencies ServerDependencies) {
 			return
 		}
 	}()
+
 	shutdown.Add(cronjobWorkerCancel) // shutdown worker on shutdown
 }
 

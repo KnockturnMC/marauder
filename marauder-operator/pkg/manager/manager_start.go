@@ -6,13 +6,14 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 
+	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
@@ -23,7 +24,7 @@ func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.Serve
 	if err == nil {
 		return nil // It is running
 	}
-	if !utils.CheckDockerError(err, client.IsErrNotFound) {
+	if !utils.CheckDockerError(err, errdefs.IsNotFound) {
 		return fmt.Errorf("failed to retrieve the container information: %w", err)
 	}
 
@@ -40,8 +41,13 @@ func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.Serve
 		return fmt.Errorf("failed to mkdir the server data folder %s: %w", location, err)
 	}
 
-	if d.FolderOwner != nil {
-		if err := os.Chown(location, d.FolderOwner.UID, d.FolderOwner.GID); err != nil {
+	diskConfig, err := d.FindDiskConfig(server)
+	if err != nil {
+		return fmt.Errorf("failed to find disk config: %w", err)
+	}
+
+	if diskConfig.FolderOwner != nil {
+		if err := os.Chown(location, diskConfig.FolderOwner.UID, diskConfig.FolderOwner.GID); err != nil {
 			return fmt.Errorf("failed to chown server directory %s: %w", location, err)
 		}
 	}
@@ -67,6 +73,11 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 	resource := container.Resources{}
 	resource.Memory = (server.Memory + d.ContainerMemoryBuffer) * 1_000_000
 	resource.NanoCPUs = int64(server.CPU * 1_000_000_000)
+
+	// Do not start a server with no image assigned.
+	if strings.TrimSpace(server.Image) == "" {
+		return nil
+	}
 
 	computeServerFolderLocation, err := d.DockerClient.ContainerCreate(
 		ctx,

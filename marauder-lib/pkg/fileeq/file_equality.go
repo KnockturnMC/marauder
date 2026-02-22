@@ -65,8 +65,8 @@ func (n NOOPFileEquality) Equals(_ io.Reader, _ io.Reader) (bool, error) {
 type JSONFileEquality struct{}
 
 func (j JSONFileEquality) Equals(first io.Reader, second io.Reader) (bool, error) {
-	return compareReadersByCmp(first, second, func(reader io.Reader) (interface{}, error) {
-		var result interface{}
+	return compareReadersByCmp(first, second, func(reader io.Reader) (any, error) {
+		var result any
 		if err := json.NewDecoder(reader).Decode(&result); err != nil {
 			return nil, fmt.Errorf("failed to decode json: %w", err)
 		}
@@ -80,8 +80,8 @@ func (j JSONFileEquality) Equals(first io.Reader, second io.Reader) (bool, error
 type YAMLFileEquality struct{}
 
 func (y YAMLFileEquality) Equals(first io.Reader, second io.Reader) (bool, error) {
-	return compareReadersByCmp(first, second, func(reader io.Reader) (interface{}, error) {
-		var result interface{}
+	return compareReadersByCmp(first, second, func(reader io.Reader) (any, error) {
+		var result any
 		if err := yaml.NewDecoder(reader).Decode(&result); err != nil && !errors.Is(err, io.EOF) {
 			return nil, fmt.Errorf("failed to decode yaml: %w", err)
 		}

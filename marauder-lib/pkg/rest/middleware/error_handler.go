@@ -22,7 +22,7 @@ func ErrorHandler() gin.HandlerFunc {
 				continue
 			}
 
-			logger := logrus.WithFields(map[string]interface{}{
+			logger := logrus.WithFields(map[string]any{
 				"errorIdentifier": aviorErr.Identifier,
 				"endpointUri":     context.Request.RequestURI,
 				"clientIP":        context.ClientIP(),

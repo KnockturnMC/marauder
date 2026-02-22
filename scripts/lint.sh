@@ -4,7 +4,7 @@ set -euo pipefail
 if [ ! $(command -v golangci-lint) ]; then
   echo -e "\033[0;31mCannot find golangci-lint executable required for linting!"
   echo -e "\033[0;31mPlease install it using any of the instructions found here:"
-  echo -e "  https://golangci-lint.run/usage/install/#local-installation"
+  echo -e "  https://golangci-lint.run/docs/welcome/install/local/"
   exit 1
 fi
 

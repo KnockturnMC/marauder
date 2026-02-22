@@ -1,9 +1,9 @@
 # Build image
 # We are using alpine, AS alpine has the dependencies needed to do a CGO_ENABLED=0 build, allowing us to run from scratch.
-FROM golang:1.24 AS builder
+FROM golang:1.26 AS builder
 
 # The version of goreleaser to download
-ARG GORELEASER_VERSION="v2.9.0"
+ARG GORELEASER_VERSION="v2.14.0"
 
 # Install bash to run build scripts
 # Install git to fetch version

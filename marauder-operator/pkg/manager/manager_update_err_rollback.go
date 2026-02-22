@@ -8,11 +8,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/artefact"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 )
 
 // rollbackFailedArtefactInstall rolls the server back to the previously installed artefact if the installation process failed.
 func (d DockerBasedManager) rollbackFailedArtefactInstall(
 	ctx context.Context,
+	server networkmodel.ServerModel,
 	artefactFailedToInstall string,
 	oldArtefactUUID *uuid.UUID,
 	serverLocation string,
@@ -40,7 +42,7 @@ func (d DockerBasedManager) rollbackFailedArtefactInstall(
 			return fmt.Errorf("failed to download old artefact onto disk: %w", err)
 		}
 
-		if err := d.unpackArtefactIntoServer(oldArtefactOnDisk, serverLocation); err != nil {
+		if err := d.unpackArtefactIntoServer(server, oldArtefactOnDisk, serverLocation); err != nil {
 			return fmt.Errorf("failed to unpack old artefact onto server: %w", err)
 		}
 	}
