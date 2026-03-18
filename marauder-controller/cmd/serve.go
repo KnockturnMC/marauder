@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -99,10 +100,17 @@ func ServeCommand() *cobra.Command {
 }
 
 func migrateDatabase(dependencies rest.ServerDependencies, configuration rest.ServerConfiguration) error {
-	migrationDatabaseDriver, err := postgres.WithInstance(dependencies.DatabaseHandle.DB.DB, &postgres.Config{})
+	connection, err := dependencies.DatabaseHandle.Conn(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to open connection from connection pool: %w", err)
+	}
+
+	migrationDatabaseDriver, err := postgres.WithConnection(context.Background(), connection, &postgres.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to create postgres migration driver for database: %w", err)
 	}
+
+	defer func() { utils.Swallow(migrationDatabaseDriver.Close()) }()
 
 	if err := sqlm.ApplyMigrations(migrationDatabaseDriver, configuration.Database.Database); err != nil {
 		return fmt.Errorf("failed to apply migrations to database: %w", err)

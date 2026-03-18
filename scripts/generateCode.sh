@@ -8,6 +8,13 @@ if [ ! $(command -v mockery) ]; then
   exit 1
 fi
 
+if [ ! $(command -v protoc) ]; then
+  echo -e "\033[0;31mCannot find protoc executable required for generating protobuf definitions!"
+  echo -e "\033[0;31mPlease install it using any of the instructions found here:"
+  echo -e "  https://protobuf.dev/downloads/"
+  exit 1
+fi
+
 go list -f '{{.Dir}}' -m | while read module; do
   pushd "$module" >/dev/null
 
@@ -15,3 +22,5 @@ go list -f '{{.Dir}}' -m | while read module; do
 
   popd >/dev/null
 done
+
+protoc -I "marauder-proto/src/main" --go_out "marauder-proto/src/main/golang" "marauder-proto/src/main/proto/servers.proto"

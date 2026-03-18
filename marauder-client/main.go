@@ -48,6 +48,10 @@ func main() {
 	workflowCommand.AddCommand(cmd.WorkflowBuildAndDeployCommand(ctx, &configuration))
 	root.AddCommand(workflowCommand)
 
+	manageCommand := cmd.ManageCommand()
+	manageCommand.AddCommand(cmd.ManageServerPlayersCommand(ctx, &configuration))
+	root.AddCommand(manageCommand)
+
 	root.SetOut(os.Stdout) // By default, the output should properly be printed to stdout.
 
 	if err := root.Execute(); err != nil {

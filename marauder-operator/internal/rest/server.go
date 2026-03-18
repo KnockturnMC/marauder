@@ -36,6 +36,12 @@ func StartMarauderOperatorServer(configuration ServerConfiguration, dependencies
 		dependencies.ServerManager,
 	))
 
+	group.GET("/server/:uuid/management/players", endpoints.ServerManagementPlayers(
+		configuration.Identifier,
+		dependencies.ControllerClient,
+		dependencies.ServerManager,
+	))
+
 	logrus.Info("staring server on port ", configuration.Port)
 	engine := &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", configuration.Host, configuration.Port),

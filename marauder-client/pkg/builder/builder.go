@@ -26,7 +26,7 @@ func CreateArtefactTarball(rootFs fs.FS, manifest filemodel.Manifest, writer io.
 		return fmt.Errorf("faild to create friendly tarball writer: %w", err)
 	}
 
-	defer utils.SwallowClose(tarballWriter)
+	defer func() { utils.SwallowClose(tarballWriter) }()
 
 	// Include files specified in tarball.
 	globCache := utils.NewShortestGlobPathCache()

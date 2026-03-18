@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
+	"github.com/knockturnmc/marauder/marauder-proto/src/main/golang/marauderpb"
 	"github.com/samber/mo"
 )
 
@@ -42,6 +43,9 @@ type Client interface {
 	// FetchServerStateArtefacts fetches the artefacts defined for the specific state on the given server.
 	FetchServerStateArtefacts(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType) ([]networkmodel.ArtefactModel, error)
 
+	// FetchServerPlayers fetches all players currently on the passed server.
+	FetchServerPlayers(ctx context.Context, server uuid.UUID) ([]marauderpb.Player, error)
+
 	// FetchMissmatchesFor fetches all outstanding missmatches for a server by its uuid.
 	FetchMissmatchesFor(ctx context.Context, server uuid.UUID, requiresRestart bool) ([]networkmodel.ArtefactVersionMissmatch, error)
 
@@ -62,6 +66,6 @@ type Client interface {
 // HTTPClient implements the Client interface by using the controllers rest API.
 type HTTPClient struct {
 	*http.Client
-	
+
 	ControllerURL string
 }
