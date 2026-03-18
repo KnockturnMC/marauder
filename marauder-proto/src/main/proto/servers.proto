@@ -1,0 +1,52 @@
+edition = "2023";
+package knockturnmc;
+
+import "google/protobuf/any.proto";
+
+option go_package = "./marauderpb";
+option java_package = "com.knockturnmc.marauder.protobuf";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+
+message Message {
+	google.protobuf.Any payload = 1;
+}
+
+message ServerStatusRequest {
+	message Response {
+		ServerStatus status = 1;
+	}
+}
+
+message ServerPlayerRequest {
+	message Response {
+		repeated Player players = 1;
+	}
+}
+
+message ServerShutdownRequest {
+	string reason = 1;
+
+	message Response {
+
+	}
+}
+
+message ServerToggleSaveRequest {
+	bool save = 1;
+
+	message Response {
+
+	}
+}
+
+message Player {
+	string uuid = 1;
+	string name = 2;
+}
+
+enum ServerStatus {
+	STARTING = 0;
+	RUNNING = 1;
+	STOPPING = 2;
+}

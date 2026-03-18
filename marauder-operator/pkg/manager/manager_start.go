@@ -19,6 +19,9 @@ import (
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
 )
 
+// ServerMountTarget is the target folder of the mount when a container is started.
+const ServerMountTarget = "/home/server"
+
 func (d DockerBasedManager) Start(ctx context.Context, server networkmodel.ServerModel) error {
 	_, err := d.retrieveContainerInfo(ctx, server)
 	if err == nil {
@@ -77,6 +80,13 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 	resource := container.Resources{}
 	resource.Memory = (server.Memory + d.ContainerMemoryBuffer) * 1_000_000
 	resource.NanoCPUs = int64(server.CPU * 1_000_000_000)
+	environment := []string{
+		fmt.Sprintf("SERVER_MEMORY=%dM", server.Memory),
+	}
+
+	if server.ManagementSocketPath != "" {
+		environment = append(environment, "MARAUDER_MANAGEMENT_SOCKET_PATH="+server.ManagementSocketPath)
+	}
 
 	computeServerFolderLocation, err := d.DockerClient.ContainerCreate(
 		ctx,
@@ -88,15 +98,13 @@ func (d DockerBasedManager) starDockerContainer(ctx context.Context, server netw
 			AttachStderr: true,
 			Tty:          true,
 			OpenStdin:    true,
-			Env: []string{
-				fmt.Sprintf("SERVER_MEMORY=%dM", server.Memory),
-			},
+			Env:          environment,
 		},
 		&container.HostConfig{
 			Mounts: []mount.Mount{{
 				Type:   mount.TypeBind,
 				Source: systemPath,
-				Target: "/home/server",
+				Target: ServerMountTarget,
 			}},
 			PortBindings: hostPortMap,
 			AutoRemove:   d.AutoRemoveContainers,

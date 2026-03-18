@@ -54,3 +54,6 @@ linters:
       - linters:
           - varnamelen
         text: db
+      - linters:
+          - prealloc # A result slice cannot be pre-allocated
+        path: marauder-client
