@@ -23,4 +23,4 @@ go list -f '{{.Dir}}' -m | while read module; do
   popd >/dev/null
 done
 
-protoc -I "marauder-proto/src" --go_out "marauder-proto/pkg" "marauder-proto/src/servers.proto"
+protoc -I "marauder-proto/src/main" --go_out "marauder-proto/src/main/golang" "marauder-proto/src/main/proto/servers.proto"

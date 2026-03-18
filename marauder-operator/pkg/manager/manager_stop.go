@@ -10,6 +10,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-proto/src/main/golang/marauderpb"
+	"github.com/sirupsen/logrus"
 )
 
 // ErrContainerNotRemovedInTime is returned if the stop logic did not find the container to be removed in time.
@@ -19,16 +21,21 @@ func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.S
 	serverName := d.computeUniqueDockerContainerNameFor(serverModel)
 
 	timeout := time.Minute * 5
-	timeoutInSeconds := int(timeout.Seconds())
 	deadline := time.Now().Add(timeout)
-	if err := d.DockerClient.ContainerStop(ctx, serverName, container.StopOptions{
-		Timeout: &timeoutInSeconds,
-	}); err != nil {
-		if utils.CheckDockerError(err, errdefs.IsNotFound) {
-			return nil // Server is just not running
-		}
+	withDeadline, cancelFunction := context.WithDeadline(ctx, deadline)
+	defer cancelFunction()
 
-		return fmt.Errorf("failed to stop container %s: %w", serverName, err)
+	// If the server has a management socket path assigned, first try to send a server stop note.
+	if serverModel.ManagementSocketPath != "" {
+		attemptShutdownViaManagementSocket(withDeadline, d, serverModel, serverName)
+	}
+
+	if err := d.DockerClient.ContainerStop(ctx, serverName, container.StopOptions{
+		Timeout: new(int(timeout.Seconds())),
+	}); err != nil {
+		if !utils.CheckDockerError(err, errdefs.IsNotFound) {
+			return fmt.Errorf("failed to stop container %s: %w", serverName, err)
+		}
 	}
 
 	if d.AutoRemoveContainers {
@@ -38,7 +45,9 @@ func (d DockerBasedManager) Stop(ctx context.Context, serverModel networkmodel.S
 		}
 	} else {
 		if err := d.DockerClient.ContainerRemove(ctx, serverName, container.RemoveOptions{}); err != nil {
-			return fmt.Errorf("failed to manually remove the container %s: %w", serverName, err)
+			if !utils.CheckDockerError(err, errdefs.IsNotFound) {
+				return fmt.Errorf("failed to manually remove the container %s: %w", serverName, err)
+			}
 		}
 	}
 
@@ -58,4 +67,30 @@ func (d DockerBasedManager) awaitAutoRemoval(ctx context.Context, serverModel ne
 		}
 	}
 	return ErrContainerNotRemovedInTime
+}
+
+func attemptShutdownViaManagementSocket(
+	ctx context.Context,
+	dockerBasedManager DockerBasedManager,
+	serverModel networkmodel.ServerModel,
+	serverName string,
+) {
+	err := dockerBasedManager.ExchangeManagementMessage(
+		ctx, serverModel, &marauderpb.ServerShutdownRequest{Reason: new("Shutdown via marauder")}, &marauderpb.ServerPlayerRequest_Response{},
+	)
+	if err != nil {
+		logrus.Warn("failed to stop server via management message ", err)
+	} else {
+		waitChan, errChan := dockerBasedManager.DockerClient.ContainerWait(ctx, serverName, container.WaitConditionNotRunning)
+	reader:
+		for {
+			select {
+			case <-waitChan:
+				break reader
+			case err = <-errChan:
+				logrus.Warn("failed to await stopping container via management message ", err)
+				break reader
+			}
+		}
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
+	"google.golang.org/protobuf/proto"
 
 	dockerClient "github.com/docker/docker/client"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
@@ -32,6 +33,9 @@ type Manager interface {
 		requiresRestart bool,
 		failOnUnexpectedOldFilesOnDisk bool,
 	) error
+
+	// ExchangeManagementMessage exchanges an outgoing message to a server with an incoming return message.
+	ExchangeManagementMessage(ctx context.Context, server networkmodel.ServerModel, outgoing proto.Message, response proto.Message) error
 }
 
 // FolderOwner defines the folder owner for the docker based mounting.

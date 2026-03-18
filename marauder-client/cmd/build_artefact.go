@@ -83,7 +83,7 @@ func buildArtefactInternalExecute(
 	if err != nil {
 		return fmt.Errorf("failed to open output tarball: %w", err)
 	}
-	defer utils.SwallowClose(tarballFileRef)
+	defer func() { utils.SwallowClose(tarballFileRef) }()
 
 	// Build and write the tarball to file.
 	if err := builder.CreateArtefactTarball(os.DirFS(workDirectory), manifest, tarballFileRef); err != nil {

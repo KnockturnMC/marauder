@@ -28,6 +28,14 @@ func HTTPGetAndBind[T any](ctx context.Context, client *http.Client, path string
 
 	defer func() { _ = resp.Body.Close() }()
 
+	return HTTPResponseBind[T](resp, bindTarget)
+}
+
+// HTTPResponseBind binds a http response to a bind target value
+// If a response code that is not 200<=code<=400, an error is returned.
+func HTTPResponseBind[T any](resp *http.Response, bindTarget T) (T, error) {
+	defer func() { _ = resp.Body.Close() }()
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return bindTarget, fmt.Errorf("failed to read body of get request: %w", err)

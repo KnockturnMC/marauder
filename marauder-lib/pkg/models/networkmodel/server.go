@@ -35,6 +35,10 @@ type ServerModel struct {
 	// Image defines the docker image the server should be spun up with.
 	Image string `db:"image" json:"image"`
 
+	// ManagementSocketPath defines an optional path to the management socket used by the operator
+	// to communicate with the running server.
+	ManagementSocketPath string `db:"management_socket_path" json:"managementSocketPath"`
+
 	// The Networks struct holds all networks the server model is part of.
 	Networks []ServerNetwork `db:"-" json:"networks"`
 
