@@ -50,6 +50,7 @@ func main() {
 
 	manageCommand := cmd.ManageCommand()
 	manageCommand.AddCommand(cmd.ManageServerPlayersCommand(ctx, &configuration))
+	manageCommand.AddCommand(cmd.ManageServerToggleSaveCommand(ctx, &configuration))
 	root.AddCommand(manageCommand)
 
 	root.SetOut(os.Stdout) // By default, the output should properly be printed to stdout.

@@ -34,15 +34,9 @@ func HTTPGetAndBind[T any](ctx context.Context, client *http.Client, path string
 // HTTPResponseBind binds a http response to a bind target value
 // If a response code that is not 200<=code<=400, an error is returned.
 func HTTPResponseBind[T any](resp *http.Response, bindTarget T) (T, error) {
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := io.ReadAll(resp.Body)
+	body, err := HTTPResponseBody(resp)
 	if err != nil {
-		return bindTarget, fmt.Errorf("failed to read body of get request: %w", err)
-	}
-
-	if !IsOkayStatusCode(resp.StatusCode) {
-		return bindTarget, fmt.Errorf("remote returned '%s' (%d): %w", string(body), resp.StatusCode, ErrBadStatusCode)
+		return bindTarget, fmt.Errorf("failed to read body: %w", err)
 	}
 
 	if err := json.Unmarshal(body, &bindTarget); err != nil {
@@ -50,6 +44,23 @@ func HTTPResponseBind[T any](resp *http.Response, bindTarget T) (T, error) {
 	}
 
 	return bindTarget, nil
+}
+
+// HTTPResponseBody checks a http response to a be valid.
+// If a response code that is not 200<=code<=400, an error is returned.
+func HTTPResponseBody(resp *http.Response) ([]byte, error) {
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read body of get request: %w", err)
+	}
+
+	if !IsOkayStatusCode(resp.StatusCode) {
+		return nil, fmt.Errorf("remote returned '%s' (%d): %w", string(body), resp.StatusCode, ErrBadStatusCode)
+	}
+
+	return body, nil
 }
 
 // IsOkayStatusCode defines if a status code is considered okay.

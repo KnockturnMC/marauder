@@ -43,14 +43,17 @@ type Client interface {
 	// FetchServerStateArtefacts fetches the artefacts defined for the specific state on the given server.
 	FetchServerStateArtefacts(ctx context.Context, server uuid.UUID, state networkmodel.ServerStateType) ([]networkmodel.ArtefactModel, error)
 
-	// FetchServerPlayers fetches all players currently on the passed server.
-	FetchServerPlayers(ctx context.Context, server uuid.UUID) ([]marauderpb.Player, error)
-
 	// FetchMissmatchesFor fetches all outstanding missmatches for a server by its uuid.
 	FetchMissmatchesFor(ctx context.Context, server uuid.UUID, requiresRestart bool) ([]networkmodel.ArtefactVersionMissmatch, error)
 
 	// FetchManifest fetches a manifest based on its uuid.
 	FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error)
+
+	// ManageServerPlayers fetches all players currently on the passed server.
+	ManageServerPlayers(ctx context.Context, server uuid.UUID) ([]marauderpb.Player, error)
+
+	// ManageServerToggleSave fetches all players currently on the passed server.
+	ManageServerToggleSave(ctx context.Context, server uuid.UUID, shouldSave bool) error
 
 	// ExecuteActionOn posts a lifecycle action to the operator of the server for the given server.
 	ExecuteActionOn(ctx context.Context, server uuid.UUID, action networkmodel.LifecycleAction, delay time.Duration) error
