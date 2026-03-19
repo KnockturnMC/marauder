@@ -17,7 +17,7 @@ func ManageServerPlayersCommand(
 	command := &cobra.Command{
 		Use:   "players serverUUID",
 		Short: "Fetches the live player list from the specified server uuid",
-		Args:  cobra.RangeArgs(1, 2),
+		Args:  cobra.ExactArgs(1),
 	}
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
@@ -38,7 +38,7 @@ func ManageServerPlayersCommand(
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{requesting players for %s}", serverUUID))
 
-		artefacts, err := client.FetchServerPlayers(ctx, serverUUID)
+		artefacts, err := client.ManageServerPlayers(ctx, serverUUID)
 		if err != nil {
 			return fmt.Errorf("failed to fetch server state for %s: %w", args[0], err)
 		}

@@ -41,6 +41,11 @@ func StartMarauderOperatorServer(configuration ServerConfiguration, dependencies
 		dependencies.ControllerClient,
 		dependencies.ServerManager,
 	))
+	group.POST("/server/:uuid/management/togglesave", endpoints.ServerManagementToggleSave(
+		configuration.Identifier,
+		dependencies.ControllerClient,
+		dependencies.ServerManager,
+	))
 
 	logrus.Info("staring server on port ", configuration.Port)
 	engine := &http.Server{
