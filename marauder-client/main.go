@@ -46,6 +46,7 @@ func main() {
 
 	workflowCommand := cmd.WorkflowCommand()
 	workflowCommand.AddCommand(cmd.WorkflowBuildAndDeployCommand(ctx, &configuration))
+	workflowCommand.AddCommand(cmd.WorkflowToggleEnvironmentSave(ctx, &configuration))
 	root.AddCommand(workflowCommand)
 
 	manageCommand := cmd.ManageCommand()
