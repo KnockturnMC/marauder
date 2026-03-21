@@ -55,7 +55,7 @@ func ServerManagementToggleSave(
 		if err := serverManager.ExchangeManagementMessage(
 			context,
 			server,
-			&marauderpb.ServerToggleSaveRequest{Save: &body.ShouldSave},
+			marauderpb.ServerToggleSaveRequest_builder{Save: &body.ShouldSave}.Build(),
 			&manageResponse,
 		); err != nil {
 			_ = context.Error(response.RestErrorFromErr(

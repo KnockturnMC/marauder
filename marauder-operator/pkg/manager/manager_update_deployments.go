@@ -20,6 +20,7 @@ import (
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
+	"github.com/knockturnmc/marauder/marauder-proto/src/main/golang/marauderpb"
 	"github.com/sirupsen/logrus"
 )
 
@@ -32,13 +33,16 @@ func (d DockerBasedManager) UpdateDeployments(
 	requiresRestart bool,
 	failOnUnexpectedOldFilesOnDisk bool,
 ) error {
-	if requiresRestart {
-		_, err := d.retrieveContainerInfo(ctx, serverModel)
-		if err == nil {
-			return fmt.Errorf("server %s is running: %w", serverModel.UUID.String(), ErrServerRunning)
-		} else if !utils.CheckDockerError(err, errdefs.IsNotFound) {
-			return fmt.Errorf("failed to fetch container info for %s: %w", serverModel.UUID.String(), err)
-		}
+	_, err := d.retrieveContainerInfo(ctx, serverModel)
+	var serverRunning bool
+	if err == nil {
+		serverRunning = true
+	} else if !utils.CheckDockerError(err, errdefs.IsNotFound) {
+		return fmt.Errorf("failed to fetch container info for %s: %w", serverModel.UUID.String(), err)
+	}
+
+	if serverRunning && requiresRestart {
+		return fmt.Errorf("server %s is running: %w", serverModel.UUID.String(), ErrServerRunning)
 	}
 
 	missmatches, err := d.ControllerClient.FetchMissmatchesFor(ctx, serverModel.UUID, requiresRestart)
@@ -47,7 +51,7 @@ func (d DockerBasedManager) UpdateDeployments(
 	}
 
 	for _, update := range missmatches {
-		if err := d.updateSingleDeployment(ctx, serverModel, update, failOnUnexpectedOldFilesOnDisk); err != nil {
+		if err := d.updateSingleDeployment(ctx, serverModel, update, failOnUnexpectedOldFilesOnDisk, serverRunning); err != nil {
 			return fmt.Errorf("failed to update %s on %s: %w", update.ArtefactIdentifier, serverModel.UUID.String(), err)
 		}
 
@@ -65,6 +69,7 @@ func (d DockerBasedManager) updateSingleDeployment(
 	serverModel networkmodel.ServerModel,
 	update networkmodel.ArtefactVersionMissmatch,
 	failOnUnexpectedOldFilesOnDisk bool,
+	serverIsRunning bool,
 ) error {
 	serverFolderLocation, err := d.computeServerFolderLocation(serverModel)
 	if err != nil {
@@ -149,6 +154,45 @@ func (d DockerBasedManager) updateSingleDeployment(
 		return fmt.Errorf("failed to update controllers is state for server: %w", err)
 	}
 
+	if err := d.possiblySendUpdateNotification(ctx, serverModel, update, serverIsRunning, artefactToInstall, artefactToUninstall); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d DockerBasedManager) possiblySendUpdateNotification(
+	ctx context.Context,
+	serverModel networkmodel.ServerModel,
+	update networkmodel.ArtefactVersionMissmatch,
+	serverIsRunning bool,
+	artefactToInstall *networkmodel.ArtefactVersionMissmatchArtefactInfo,
+	artefactToUninstall *networkmodel.ArtefactVersionMissmatchArtefactInfo,
+) error {
+	if !serverIsRunning || serverModel.ManagementSocketPath == "" {
+		return nil
+	}
+	
+	var oldVersion, newVersion *string
+	if artefactToInstall != nil {
+		newVersion = &artefactToInstall.Version
+	}
+	if artefactToUninstall != nil {
+		oldVersion = &artefactToUninstall.Version
+	}
+
+	if err := d.ExchangeManagementMessage(
+		ctx,
+		serverModel,
+		marauderpb.ServerArtefactUpgradeNotification_builder{
+			Artefact:   &update.ArtefactIdentifier,
+			OldVersion: oldVersion,
+			NewVersion: newVersion,
+		}.Build(),
+		&marauderpb.ServerArtefactUpgradeNotification_Response{},
+	); err != nil {
+		return fmt.Errorf("failed to send update notification to running server %s: %w", serverModel.UUID, err)
+	}
 	return nil
 }
 
