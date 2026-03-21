@@ -11,7 +11,6 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
-	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -66,16 +65,11 @@ func (x ServerStatus) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use ServerStatus.Descriptor instead.
-func (ServerStatus) EnumDescriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{0}
-}
-
 type Message struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Payload       *anypb.Any             `protobuf:"bytes,1,opt,name=payload" json:"payload,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Payload *anypb.Any             `protobuf:"bytes,1,opt,name=payload"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Message) Reset() {
@@ -103,20 +97,44 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Message.ProtoReflect.Descriptor instead.
-func (*Message) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{0}
-}
-
 func (x *Message) GetPayload() *anypb.Any {
 	if x != nil {
-		return x.Payload
+		return x.xxx_hidden_Payload
 	}
 	return nil
 }
 
+func (x *Message) SetPayload(v *anypb.Any) {
+	x.xxx_hidden_Payload = v
+}
+
+func (x *Message) HasPayload() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Payload != nil
+}
+
+func (x *Message) ClearPayload() {
+	x.xxx_hidden_Payload = nil
+}
+
+type Message_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Payload *anypb.Any
+}
+
+func (b0 Message_builder) Build() *Message {
+	m0 := &Message{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Payload = b.Payload
+	return m0
+}
+
 type ServerStatusRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state         protoimpl.MessageState `protogen:"opaque.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -146,13 +164,20 @@ func (x *ServerStatusRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServerStatusRequest.ProtoReflect.Descriptor instead.
-func (*ServerStatusRequest) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{1}
+type ServerStatusRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+}
+
+func (b0 ServerStatusRequest_builder) Build() *ServerStatusRequest {
+	m0 := &ServerStatusRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	return m0
 }
 
 type ServerPlayerRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state         protoimpl.MessageState `protogen:"opaque.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -182,16 +207,25 @@ func (x *ServerPlayerRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServerPlayerRequest.ProtoReflect.Descriptor instead.
-func (*ServerPlayerRequest) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{2}
+type ServerPlayerRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+}
+
+func (b0 ServerPlayerRequest_builder) Build() *ServerPlayerRequest {
+	m0 := &ServerPlayerRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	return m0
 }
 
 type ServerShutdownRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Reason        *string                `protobuf:"bytes,1,opt,name=reason" json:"reason,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Reason      *string                `protobuf:"bytes,1,opt,name=reason"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *ServerShutdownRequest) Reset() {
@@ -219,23 +253,57 @@ func (x *ServerShutdownRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServerShutdownRequest.ProtoReflect.Descriptor instead.
-func (*ServerShutdownRequest) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{3}
-}
-
 func (x *ServerShutdownRequest) GetReason() string {
-	if x != nil && x.Reason != nil {
-		return *x.Reason
+	if x != nil {
+		if x.xxx_hidden_Reason != nil {
+			return *x.xxx_hidden_Reason
+		}
+		return ""
 	}
 	return ""
 }
 
+func (x *ServerShutdownRequest) SetReason(v string) {
+	x.xxx_hidden_Reason = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+}
+
+func (x *ServerShutdownRequest) HasReason() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *ServerShutdownRequest) ClearReason() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Reason = nil
+}
+
+type ServerShutdownRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Reason *string
+}
+
+func (b0 ServerShutdownRequest_builder) Build() *ServerShutdownRequest {
+	m0 := &ServerShutdownRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Reason != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		x.xxx_hidden_Reason = b.Reason
+	}
+	return m0
+}
+
 type ServerToggleSaveRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Save          *bool                  `protobuf:"varint,1,opt,name=save" json:"save,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Save        bool                   `protobuf:"varint,1,opt,name=save"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *ServerToggleSaveRequest) Reset() {
@@ -263,29 +331,204 @@ func (x *ServerToggleSaveRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServerToggleSaveRequest.ProtoReflect.Descriptor instead.
-func (*ServerToggleSaveRequest) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{4}
-}
-
 func (x *ServerToggleSaveRequest) GetSave() bool {
-	if x != nil && x.Save != nil {
-		return *x.Save
+	if x != nil {
+		return x.xxx_hidden_Save
 	}
 	return false
 }
 
+func (x *ServerToggleSaveRequest) SetSave(v bool) {
+	x.xxx_hidden_Save = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+}
+
+func (x *ServerToggleSaveRequest) HasSave() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *ServerToggleSaveRequest) ClearSave() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Save = false
+}
+
+type ServerToggleSaveRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Save *bool
+}
+
+func (b0 ServerToggleSaveRequest_builder) Build() *ServerToggleSaveRequest {
+	m0 := &ServerToggleSaveRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Save != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		x.xxx_hidden_Save = *b.Save
+	}
+	return m0
+}
+
+type ServerArtefactUpgradeNotification struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Artefact    *string                `protobuf:"bytes,1,opt,name=artefact"`
+	xxx_hidden_OldVersion  *string                `protobuf:"bytes,2,opt,name=old_version,json=oldVersion"`
+	xxx_hidden_NewVersion  *string                `protobuf:"bytes,3,opt,name=new_version,json=newVersion"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *ServerArtefactUpgradeNotification) Reset() {
+	*x = ServerArtefactUpgradeNotification{}
+	mi := &file_proto_servers_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ServerArtefactUpgradeNotification) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ServerArtefactUpgradeNotification) ProtoMessage() {}
+
+func (x *ServerArtefactUpgradeNotification) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_servers_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *ServerArtefactUpgradeNotification) GetArtefact() string {
+	if x != nil {
+		if x.xxx_hidden_Artefact != nil {
+			return *x.xxx_hidden_Artefact
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ServerArtefactUpgradeNotification) GetOldVersion() string {
+	if x != nil {
+		if x.xxx_hidden_OldVersion != nil {
+			return *x.xxx_hidden_OldVersion
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ServerArtefactUpgradeNotification) GetNewVersion() string {
+	if x != nil {
+		if x.xxx_hidden_NewVersion != nil {
+			return *x.xxx_hidden_NewVersion
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *ServerArtefactUpgradeNotification) SetArtefact(v string) {
+	x.xxx_hidden_Artefact = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 3)
+}
+
+func (x *ServerArtefactUpgradeNotification) SetOldVersion(v string) {
+	x.xxx_hidden_OldVersion = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 3)
+}
+
+func (x *ServerArtefactUpgradeNotification) SetNewVersion(v string) {
+	x.xxx_hidden_NewVersion = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 3)
+}
+
+func (x *ServerArtefactUpgradeNotification) HasArtefact() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *ServerArtefactUpgradeNotification) HasOldVersion() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *ServerArtefactUpgradeNotification) HasNewVersion() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *ServerArtefactUpgradeNotification) ClearArtefact() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Artefact = nil
+}
+
+func (x *ServerArtefactUpgradeNotification) ClearOldVersion() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_OldVersion = nil
+}
+
+func (x *ServerArtefactUpgradeNotification) ClearNewVersion() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_NewVersion = nil
+}
+
+type ServerArtefactUpgradeNotification_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Artefact   *string
+	OldVersion *string
+	NewVersion *string
+}
+
+func (b0 ServerArtefactUpgradeNotification_builder) Build() *ServerArtefactUpgradeNotification {
+	m0 := &ServerArtefactUpgradeNotification{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Artefact != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 3)
+		x.xxx_hidden_Artefact = b.Artefact
+	}
+	if b.OldVersion != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 3)
+		x.xxx_hidden_OldVersion = b.OldVersion
+	}
+	if b.NewVersion != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 3)
+		x.xxx_hidden_NewVersion = b.NewVersion
+	}
+	return m0
+}
+
 type Player struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Uuid          *string                `protobuf:"bytes,1,opt,name=uuid" json:"uuid,omitempty"`
-	Name          *string                `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Uuid        *string                `protobuf:"bytes,1,opt,name=uuid"`
+	xxx_hidden_Name        *string                `protobuf:"bytes,2,opt,name=name"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *Player) Reset() {
 	*x = Player{}
-	mi := &file_proto_servers_proto_msgTypes[5]
+	mi := &file_proto_servers_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -297,7 +540,7 @@ func (x *Player) String() string {
 func (*Player) ProtoMessage() {}
 
 func (x *Player) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_servers_proto_msgTypes[5]
+	mi := &file_proto_servers_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -308,35 +551,94 @@ func (x *Player) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Player.ProtoReflect.Descriptor instead.
-func (*Player) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{5}
-}
-
 func (x *Player) GetUuid() string {
-	if x != nil && x.Uuid != nil {
-		return *x.Uuid
+	if x != nil {
+		if x.xxx_hidden_Uuid != nil {
+			return *x.xxx_hidden_Uuid
+		}
+		return ""
 	}
 	return ""
 }
 
 func (x *Player) GetName() string {
-	if x != nil && x.Name != nil {
-		return *x.Name
+	if x != nil {
+		if x.xxx_hidden_Name != nil {
+			return *x.xxx_hidden_Name
+		}
+		return ""
 	}
 	return ""
 }
 
+func (x *Player) SetUuid(v string) {
+	x.xxx_hidden_Uuid = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 2)
+}
+
+func (x *Player) SetName(v string) {
+	x.xxx_hidden_Name = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+}
+
+func (x *Player) HasUuid() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *Player) HasName() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *Player) ClearUuid() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Uuid = nil
+}
+
+func (x *Player) ClearName() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Name = nil
+}
+
+type Player_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Uuid *string
+	Name *string
+}
+
+func (b0 Player_builder) Build() *Player {
+	m0 := &Player{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Uuid != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 2)
+		x.xxx_hidden_Uuid = b.Uuid
+	}
+	if b.Name != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_Name = b.Name
+	}
+	return m0
+}
+
 type ServerStatusRequest_Response struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        *ServerStatus          `protobuf:"varint,1,opt,name=status,enum=knockturnmc.ServerStatus" json:"status,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Status      ServerStatus           `protobuf:"varint,1,opt,name=status,enum=knockturnmc.ServerStatus"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *ServerStatusRequest_Response) Reset() {
 	*x = ServerStatusRequest_Response{}
-	mi := &file_proto_servers_proto_msgTypes[6]
+	mi := &file_proto_servers_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -348,7 +650,7 @@ func (x *ServerStatusRequest_Response) String() string {
 func (*ServerStatusRequest_Response) ProtoMessage() {}
 
 func (x *ServerStatusRequest_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_servers_proto_msgTypes[6]
+	mi := &file_proto_servers_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -359,28 +661,59 @@ func (x *ServerStatusRequest_Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServerStatusRequest_Response.ProtoReflect.Descriptor instead.
-func (*ServerStatusRequest_Response) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{1, 0}
-}
-
 func (x *ServerStatusRequest_Response) GetStatus() ServerStatus {
-	if x != nil && x.Status != nil {
-		return *x.Status
+	if x != nil {
+		if protoimpl.X.Present(&(x.XXX_presence[0]), 0) {
+			return x.xxx_hidden_Status
+		}
 	}
 	return ServerStatus_STARTING
 }
 
+func (x *ServerStatusRequest_Response) SetStatus(v ServerStatus) {
+	x.xxx_hidden_Status = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 1)
+}
+
+func (x *ServerStatusRequest_Response) HasStatus() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *ServerStatusRequest_Response) ClearStatus() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Status = ServerStatus_STARTING
+}
+
+type ServerStatusRequest_Response_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Status *ServerStatus
+}
+
+func (b0 ServerStatusRequest_Response_builder) Build() *ServerStatusRequest_Response {
+	m0 := &ServerStatusRequest_Response{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Status != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 1)
+		x.xxx_hidden_Status = *b.Status
+	}
+	return m0
+}
+
 type ServerPlayerRequest_Response struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Players       []*Player              `protobuf:"bytes,1,rep,name=players" json:"players,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Players *[]*Player             `protobuf:"bytes,1,rep,name=players"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ServerPlayerRequest_Response) Reset() {
 	*x = ServerPlayerRequest_Response{}
-	mi := &file_proto_servers_proto_msgTypes[7]
+	mi := &file_proto_servers_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -392,7 +725,7 @@ func (x *ServerPlayerRequest_Response) String() string {
 func (*ServerPlayerRequest_Response) ProtoMessage() {}
 
 func (x *ServerPlayerRequest_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_servers_proto_msgTypes[7]
+	mi := &file_proto_servers_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -403,27 +736,42 @@ func (x *ServerPlayerRequest_Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServerPlayerRequest_Response.ProtoReflect.Descriptor instead.
-func (*ServerPlayerRequest_Response) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{2, 0}
-}
-
 func (x *ServerPlayerRequest_Response) GetPlayers() []*Player {
 	if x != nil {
-		return x.Players
+		if x.xxx_hidden_Players != nil {
+			return *x.xxx_hidden_Players
+		}
 	}
 	return nil
 }
 
+func (x *ServerPlayerRequest_Response) SetPlayers(v []*Player) {
+	x.xxx_hidden_Players = &v
+}
+
+type ServerPlayerRequest_Response_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Players []*Player
+}
+
+func (b0 ServerPlayerRequest_Response_builder) Build() *ServerPlayerRequest_Response {
+	m0 := &ServerPlayerRequest_Response{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Players = &b.Players
+	return m0
+}
+
 type ServerShutdownRequest_Response struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state         protoimpl.MessageState `protogen:"opaque.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ServerShutdownRequest_Response) Reset() {
 	*x = ServerShutdownRequest_Response{}
-	mi := &file_proto_servers_proto_msgTypes[8]
+	mi := &file_proto_servers_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -435,7 +783,7 @@ func (x *ServerShutdownRequest_Response) String() string {
 func (*ServerShutdownRequest_Response) ProtoMessage() {}
 
 func (x *ServerShutdownRequest_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_servers_proto_msgTypes[8]
+	mi := &file_proto_servers_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -446,20 +794,27 @@ func (x *ServerShutdownRequest_Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServerShutdownRequest_Response.ProtoReflect.Descriptor instead.
-func (*ServerShutdownRequest_Response) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{3, 0}
+type ServerShutdownRequest_Response_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+}
+
+func (b0 ServerShutdownRequest_Response_builder) Build() *ServerShutdownRequest_Response {
+	m0 := &ServerShutdownRequest_Response{}
+	b, x := &b0, m0
+	_, _ = b, x
+	return m0
 }
 
 type ServerToggleSaveRequest_Response struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state         protoimpl.MessageState `protogen:"opaque.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ServerToggleSaveRequest_Response) Reset() {
 	*x = ServerToggleSaveRequest_Response{}
-	mi := &file_proto_servers_proto_msgTypes[9]
+	mi := &file_proto_servers_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -471,7 +826,7 @@ func (x *ServerToggleSaveRequest_Response) String() string {
 func (*ServerToggleSaveRequest_Response) ProtoMessage() {}
 
 func (x *ServerToggleSaveRequest_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_servers_proto_msgTypes[9]
+	mi := &file_proto_servers_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -482,9 +837,59 @@ func (x *ServerToggleSaveRequest_Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServerToggleSaveRequest_Response.ProtoReflect.Descriptor instead.
-func (*ServerToggleSaveRequest_Response) Descriptor() ([]byte, []int) {
-	return file_proto_servers_proto_rawDescGZIP(), []int{4, 0}
+type ServerToggleSaveRequest_Response_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+}
+
+func (b0 ServerToggleSaveRequest_Response_builder) Build() *ServerToggleSaveRequest_Response {
+	m0 := &ServerToggleSaveRequest_Response{}
+	b, x := &b0, m0
+	_, _ = b, x
+	return m0
+}
+
+type ServerArtefactUpgradeNotification_Response struct {
+	state         protoimpl.MessageState `protogen:"opaque.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ServerArtefactUpgradeNotification_Response) Reset() {
+	*x = ServerArtefactUpgradeNotification_Response{}
+	mi := &file_proto_servers_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ServerArtefactUpgradeNotification_Response) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ServerArtefactUpgradeNotification_Response) ProtoMessage() {}
+
+func (x *ServerArtefactUpgradeNotification_Response) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_servers_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+type ServerArtefactUpgradeNotification_Response_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+}
+
+func (b0 ServerArtefactUpgradeNotification_Response_builder) Build() *ServerArtefactUpgradeNotification_Response {
+	m0 := &ServerArtefactUpgradeNotification_Response{}
+	b, x := &b0, m0
+	_, _ = b, x
+	return m0
 }
 
 var File_proto_servers_proto protoreflect.FileDescriptor
@@ -507,6 +912,14 @@ const file_proto_servers_proto_rawDesc = "" +
 	"\x17ServerToggleSaveRequest\x12\x12\n" +
 	"\x04save\x18\x01 \x01(\bR\x04save\x1a\n" +
 	"\n" +
+	"\bResponse\"\x8d\x01\n" +
+	"!ServerArtefactUpgradeNotification\x12\x1a\n" +
+	"\bartefact\x18\x01 \x01(\tR\bartefact\x12\x1f\n" +
+	"\vold_version\x18\x02 \x01(\tR\n" +
+	"oldVersion\x12\x1f\n" +
+	"\vnew_version\x18\x03 \x01(\tR\n" +
+	"newVersion\x1a\n" +
+	"\n" +
 	"\bResponse\"0\n" +
 	"\x06Player\x12\x12\n" +
 	"\x04uuid\x18\x01 \x01(\tR\x04uuid\x12\x12\n" +
@@ -514,41 +927,31 @@ const file_proto_servers_proto_rawDesc = "" +
 	"\fServerStatus\x12\f\n" +
 	"\bSTARTING\x10\x00\x12\v\n" +
 	"\aRUNNING\x10\x01\x12\f\n" +
-	"\bSTOPPING\x10\x02B6\n" +
-	"!com.knockturnmc.marauder.protobufP\x01Z\f./marauderpb\xa0\x01\x01b\beditionsp\xe8\a"
-
-var (
-	file_proto_servers_proto_rawDescOnce sync.Once
-	file_proto_servers_proto_rawDescData []byte
-)
-
-func file_proto_servers_proto_rawDescGZIP() []byte {
-	file_proto_servers_proto_rawDescOnce.Do(func() {
-		file_proto_servers_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_servers_proto_rawDesc), len(file_proto_servers_proto_rawDesc)))
-	})
-	return file_proto_servers_proto_rawDescData
-}
+	"\bSTOPPING\x10\x02B4\n" +
+	"!com.knockturnmc.marauder.protobufZ\f./marauderpb\xa0\x01\x01b\beditionsp\xe9\a"
 
 var file_proto_servers_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_proto_servers_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_proto_servers_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_proto_servers_proto_goTypes = []any{
-	(ServerStatus)(0),                        // 0: knockturnmc.ServerStatus
-	(*Message)(nil),                          // 1: knockturnmc.Message
-	(*ServerStatusRequest)(nil),              // 2: knockturnmc.ServerStatusRequest
-	(*ServerPlayerRequest)(nil),              // 3: knockturnmc.ServerPlayerRequest
-	(*ServerShutdownRequest)(nil),            // 4: knockturnmc.ServerShutdownRequest
-	(*ServerToggleSaveRequest)(nil),          // 5: knockturnmc.ServerToggleSaveRequest
-	(*Player)(nil),                           // 6: knockturnmc.Player
-	(*ServerStatusRequest_Response)(nil),     // 7: knockturnmc.ServerStatusRequest.Response
-	(*ServerPlayerRequest_Response)(nil),     // 8: knockturnmc.ServerPlayerRequest.Response
-	(*ServerShutdownRequest_Response)(nil),   // 9: knockturnmc.ServerShutdownRequest.Response
-	(*ServerToggleSaveRequest_Response)(nil), // 10: knockturnmc.ServerToggleSaveRequest.Response
-	(*anypb.Any)(nil),                        // 11: google.protobuf.Any
+	(ServerStatus)(0),                                  // 0: knockturnmc.ServerStatus
+	(*Message)(nil),                                    // 1: knockturnmc.Message
+	(*ServerStatusRequest)(nil),                        // 2: knockturnmc.ServerStatusRequest
+	(*ServerPlayerRequest)(nil),                        // 3: knockturnmc.ServerPlayerRequest
+	(*ServerShutdownRequest)(nil),                      // 4: knockturnmc.ServerShutdownRequest
+	(*ServerToggleSaveRequest)(nil),                    // 5: knockturnmc.ServerToggleSaveRequest
+	(*ServerArtefactUpgradeNotification)(nil),          // 6: knockturnmc.ServerArtefactUpgradeNotification
+	(*Player)(nil),                                     // 7: knockturnmc.Player
+	(*ServerStatusRequest_Response)(nil),               // 8: knockturnmc.ServerStatusRequest.Response
+	(*ServerPlayerRequest_Response)(nil),               // 9: knockturnmc.ServerPlayerRequest.Response
+	(*ServerShutdownRequest_Response)(nil),             // 10: knockturnmc.ServerShutdownRequest.Response
+	(*ServerToggleSaveRequest_Response)(nil),           // 11: knockturnmc.ServerToggleSaveRequest.Response
+	(*ServerArtefactUpgradeNotification_Response)(nil), // 12: knockturnmc.ServerArtefactUpgradeNotification.Response
+	(*anypb.Any)(nil),                                  // 13: google.protobuf.Any
 }
 var file_proto_servers_proto_depIdxs = []int32{
-	11, // 0: knockturnmc.Message.payload:type_name -> google.protobuf.Any
+	13, // 0: knockturnmc.Message.payload:type_name -> google.protobuf.Any
 	0,  // 1: knockturnmc.ServerStatusRequest.Response.status:type_name -> knockturnmc.ServerStatus
-	6,  // 2: knockturnmc.ServerPlayerRequest.Response.players:type_name -> knockturnmc.Player
+	7,  // 2: knockturnmc.ServerPlayerRequest.Response.players:type_name -> knockturnmc.Player
 	3,  // [3:3] is the sub-list for method output_type
 	3,  // [3:3] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
@@ -567,7 +970,7 @@ func file_proto_servers_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_servers_proto_rawDesc), len(file_proto_servers_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
