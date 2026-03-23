@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ ! $(command -v ginkgo) ]; then
-  echo -e "\033[0;31mCannot find ginkgo executable required for testing!"
-  echo -e "\033[0;31mPlease install it using:"
-  echo -e "  go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo"
-  exit 1
-fi
-
 FLAGS=(
   -r
   -p
@@ -26,4 +19,4 @@ if [ ! -z ${COVERAGE+x} ]; then
   FLAGS+=("--cover")
 fi
 
-GO111MODULE=on ginkgo "${FLAGS[@]}" ./...
+GO111MODULE=on go run github.com/onsi/ginkgo/v2/ginkgo "${FLAGS[@]}" ./...
