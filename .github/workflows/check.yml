@@ -1,0 +1,53 @@
+name: 'check'
+on:
+  push: { }
+
+jobs:
+  check:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 0
+
+      - name: "Set up Go"
+        uses: "actions/setup-go@v6"
+        with:
+          go-version: '1.26'
+
+      - name: 'Install Protoc'
+        uses: 'arduino/setup-protoc@v3'
+        with:
+          version: "33.1"
+
+      - name: "Install protoc golang bindings"
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+
+      - name: "Install golangci-lint"
+        uses: 'golangci/golangci-lint-action@v9'
+        with:
+          install-mode: "binary"
+          install-only: true
+
+      - name: "Run GoReleaser to ensure project builds"
+        uses: "goreleaser/goreleaser-action@v6"
+        with:
+          distribution: "goreleaser"
+          version: '2.14.0'
+          args: "build --clean --snapshot"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Run formatter to ensure no files need formatting"
+        run: 'make format && git diff --exit-code'
+
+      - name: "Run linter to ensure no files fail it"
+        run: 'make lint'
+
+      - name: "Run code generation to ensure all code gen is up-to-date"
+        run: 'make generateCode && git diff --exit-code'
+
+      - name: 'Run tests'
+        run: 'make unittest functiontest'
