@@ -68,7 +68,7 @@ func (d DockerBasedManager) updateSingleDeployment(
 	ctx context.Context,
 	serverModel networkmodel.ServerModel,
 	update networkmodel.ArtefactVersionMissmatch,
-	failOnUnexpectedOldFilesOnDisk bool,
+	force bool,
 	serverIsRunning bool,
 ) error {
 	serverFolderLocation, err := d.computeServerFolderLocation(serverModel)
@@ -101,14 +101,14 @@ func (d DockerBasedManager) updateSingleDeployment(
 			serverFolderLocation,
 			d.FileEqualityRegistry,
 		); err != nil {
-			if failOnUnexpectedOldFilesOnDisk {
+			if force {
 				return fmt.Errorf("failed to validate old deployment hashes: %w", err)
-			} else {
-				logrus.Warning(
-					"found unexpected file of ", update.ArtefactIdentifier, " on server ", serverModel.Environment, "/", serverModel.Name+
-						" while upgrading from version ", artefactToUninstall.Version, " ", err,
-				)
 			}
+
+			logrus.Warning(
+				"found unexpected file of ", update.ArtefactIdentifier, " on server ", serverModel.Environment, "/", serverModel.Name+
+					" while upgrading from version ", artefactToUninstall.Version, " ", err,
+			)
 		}
 	}
 
@@ -122,7 +122,7 @@ func (d DockerBasedManager) updateSingleDeployment(
 	if artefactToUninstall != nil {
 		// Delete old artefact files after downloading the new one to fail before moving the server into a non-start-able state
 		// This needs further improvements down the line to do a proper rollback, for now this should be fine.
-		if err := d.deleteOldArtefact(artefactToUninstallManifest, serverFolderLocation, true); err != nil {
+		if err := d.deleteOldArtefact(artefactToUninstallManifest, serverFolderLocation, force); err != nil {
 			return fmt.Errorf("failed to delete old artefact from server folder: %w", err)
 		}
 	}
