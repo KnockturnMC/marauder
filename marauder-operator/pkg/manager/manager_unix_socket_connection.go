@@ -98,7 +98,7 @@ func writeProtoMessage[T proto.Message](writer io.Writer, outgoing T) error {
 
 	payload.TypeUrl = TypeURLPrefix + string(outgoing.ProtoReflect().Descriptor().FullName())
 
-	marshal, err := proto.Marshal(&marauderpb.Message{Payload: payload})
+	marshal, err := proto.Marshal(marauderpb.Message_builder{Payload: payload}.Build())
 	if err != nil {
 		return fmt.Errorf("failed to marshal outgoing message: %w", err)
 	}

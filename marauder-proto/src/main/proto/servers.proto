@@ -1,11 +1,10 @@
-edition = "2023";
+edition = "2024";
 package knockturnmc;
 
 import "google/protobuf/any.proto";
 
 option go_package = "./marauderpb";
 option java_package = "com.knockturnmc.marauder.protobuf";
-option java_multiple_files = true;
 option java_generate_equals_and_hash = true;
 
 message Message {
@@ -34,6 +33,17 @@ message ServerShutdownRequest {
 
 message ServerToggleSaveRequest {
 	bool save = 1;
+
+	message Response {
+
+	}
+}
+
+message ServerArtefactUpgradeNotification {
+	string artefact = 1;
+
+	string old_version = 2;
+	string new_version = 3;
 
 	message Response {
 

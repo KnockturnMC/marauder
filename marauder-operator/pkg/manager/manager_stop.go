@@ -76,7 +76,9 @@ func attemptShutdownViaManagementSocket(
 	serverName string,
 ) {
 	err := dockerBasedManager.ExchangeManagementMessage(
-		ctx, serverModel, &marauderpb.ServerShutdownRequest{Reason: new("Shutdown via marauder")}, &marauderpb.ServerShutdownRequest_Response{},
+		ctx, serverModel,
+		marauderpb.ServerShutdownRequest_builder{Reason: new("Shutdown via marauder")}.Build(),
+		marauderpb.ServerShutdownRequest_Response_builder{}.Build(),
 	)
 	if err != nil {
 		logrus.Warn("failed to stop server via management message ", err)
