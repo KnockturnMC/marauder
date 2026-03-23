@@ -9,22 +9,21 @@ import (
 	"github.com/google/uuid"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/utils"
-	"github.com/knockturnmc/marauder/marauder-proto/src/main/golang/marauderpb"
 )
 
 // ManageServerPlayers fetches the players currently on the server.
-func (h *HTTPClient) ManageServerPlayers(ctx context.Context, server uuid.UUID) ([]marauderpb.Player, error) {
-	artefacts, err := utils.HTTPGetAndBind(
+func (h *HTTPClient) ManageServerPlayers(ctx context.Context, server uuid.UUID) ([]networkmodel.ManagementPlayer, error) {
+	response, err := utils.HTTPGetAndBind(
 		ctx,
 		h.Client,
 		fmt.Sprintf("%s/operator/%s/proxy/server/%s/management/players", h.ControllerURL, server, server),
-		make([]marauderpb.Player, 0),
+		make([]networkmodel.ManagementPlayer, 0),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed http get: %w", err)
 	}
 
-	return artefacts, nil
+	return response, nil
 }
 
 // ManageServerToggleSave fetches all players currently on the passed server.

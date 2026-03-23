@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Goldziher/go-utils/sliceutils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
 	"github.com/knockturnmc/marauder/marauder-operator/pkg/manager"
 	"github.com/knockturnmc/marauder/marauder-proto/src/main/golang/marauderpb"
@@ -54,6 +56,14 @@ func ServerManagementPlayers(
 			return
 		}
 
-		context.JSONP(http.StatusOK, manageResponse.GetPlayers())
+		context.JSONP(http.StatusOK, sliceutils.Map(
+			manageResponse.GetPlayers(),
+			func(value *marauderpb.Player, index int, slice []*marauderpb.Player) networkmodel.ManagementPlayer {
+				return networkmodel.ManagementPlayer{
+					UUID: value.GetUuid(),
+					Name: value.GetName(),
+				}
+			},
+		))
 	}
 }

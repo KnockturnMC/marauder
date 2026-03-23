@@ -9,6 +9,9 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // ErrBadStatusCode is returned if the controller returned a bad status code.
@@ -39,8 +42,14 @@ func HTTPResponseBind[T any](resp *http.Response, bindTarget T) (T, error) {
 		return bindTarget, fmt.Errorf("failed to read body: %w", err)
 	}
 
-	if err := json.Unmarshal(body, &bindTarget); err != nil {
-		return bindTarget, fmt.Errorf("failed to bind response %s to bind target: %w", string(body), err)
+	if message, ok := any(bindTarget).(proto.Message); ok {
+		if err := protojson.Unmarshal(body, message); err != nil {
+			return bindTarget, fmt.Errorf("failed to bind response %s to proto bind target: %w", string(body), err)
+		}
+	} else {
+		if err := json.Unmarshal(body, &bindTarget); err != nil {
+			return bindTarget, fmt.Errorf("failed to bind response %s to bind target: %w", string(body), err)
+		}
 	}
 
 	return bindTarget, nil

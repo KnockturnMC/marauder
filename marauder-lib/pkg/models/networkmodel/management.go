@@ -4,3 +4,9 @@ package networkmodel
 type ManagementToggleSaveBody struct {
 	ShouldSave bool `json:"shouldSave"`
 }
+
+// ManagementPlayer is a single player instance.
+type ManagementPlayer struct {
+	UUID string `json:"uuid"`
+	Name string `json:"name"`
+}

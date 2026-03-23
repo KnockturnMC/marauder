@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gonvenience/bunt"
-	"github.com/knockturnmc/marauder/marauder-proto/src/main/golang/marauderpb"
+	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ func ManageServerPlayersCommand(
 			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
 
-		resultSlice := make([]marauderpb.Player, 0)
+		resultSlice := make([]networkmodel.ManagementPlayer, 0)
 
 		defer func() { printFetchResult(cmd, resultSlice) }()
 

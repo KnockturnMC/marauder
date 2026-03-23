@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/filemodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
-	"github.com/knockturnmc/marauder/marauder-proto/src/main/golang/marauderpb"
 	"github.com/samber/mo"
 )
 
@@ -50,7 +49,7 @@ type Client interface {
 	FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error)
 
 	// ManageServerPlayers fetches all players currently on the passed server.
-	ManageServerPlayers(ctx context.Context, server uuid.UUID) ([]marauderpb.Player, error)
+	ManageServerPlayers(ctx context.Context, server uuid.UUID) ([]networkmodel.ManagementPlayer, error)
 
 	// ManageServerToggleSave fetches all players currently on the passed server.
 	ManageServerToggleSave(ctx context.Context, server uuid.UUID, shouldSave bool) error
