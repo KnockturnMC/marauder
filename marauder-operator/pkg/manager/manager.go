@@ -70,6 +70,7 @@ type DockerBasedManager struct {
 func (d DockerBasedManager) FindDiskConfig(server networkmodel.ServerModel) (EnvironmentDiskConfig, error) {
 	pathsToQuery := []string{
 		fmt.Sprintf("%s/%s", server.Environment, server.Name),
+		fmt.Sprintf("*/%s", server.Name),
 		server.Environment,
 		"*",
 	}
