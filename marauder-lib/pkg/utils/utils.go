@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
 )
 
 // OrElse resolves a pointer to a type T to the value at the pointer or a default
@@ -47,6 +49,19 @@ func IntToByteSlice(i int32) []byte {
 		byte(i >> 8 & 0xFF),
 		byte(i & 0xFF),
 	}
+}
+
+func CleanPathAndJoin(parent, path string) string {
+	return filepath.Join(parent, filepath.FromSlash("/"+path))
+}
+
+func CleanPathWorkingDir(path string) string {
+	getwd, err := os.Getwd()
+	if err != nil {
+		logrus.Errorf("failed to retrieve current working directory: %s", err)
+		return "."
+	}
+	return CleanPathAndJoin(getwd, path)
 }
 
 func ByteSliceToInt(reader io.Reader) (int32, error) {

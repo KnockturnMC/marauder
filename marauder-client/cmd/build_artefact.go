@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -79,7 +78,7 @@ func buildArtefactInternalExecute(
 
 	// Create the output file
 	cmd.PrintErrln(bunt.Sprintf("Gray{creating output artefact tarball *%s*}", finalTarballName))
-	tarballFileRef, err := os.Create(filepath.Clean(finalTarballName))
+	tarballFileRef, err := os.Create(utils.CleanPathWorkingDir(finalTarballName))
 	if err != nil {
 		return fmt.Errorf("failed to open output tarball: %w", err)
 	}
@@ -109,7 +108,7 @@ func buildArtefactInternalExecute(
 
 // parseManifestFromDisk parses the manifest from the disk with the given name in the given work directory.
 func parseManifestFromDisk(cmd *cobra.Command, manifestFileLocation string, workDirectory string) (filemodel.Manifest, error) {
-	file, err := os.ReadFile(filepath.Clean(manifestFileLocation))
+	file, err := os.ReadFile(utils.CleanPathWorkingDir(manifestFileLocation))
 	if err != nil {
 		return filemodel.Manifest{}, fmt.Errorf("failed to read %s: %w", manifestFileLocation, err)
 	}

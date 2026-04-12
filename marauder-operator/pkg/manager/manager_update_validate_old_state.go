@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -56,7 +55,7 @@ func (d DockerBasedManager) validateOldDeploymentFilesOnDisk(
 		}
 
 		filePathInServerFolder, _ := strings.CutPrefix(header.Name, pkg.FileParentDirectoryInArtefact)
-		fullyQualifiedFilePath := path.Join(serverFolderLocation, path.Clean(filePathInServerFolder))
+		fullyQualifiedFilePath := utils.CleanPathAndJoin(serverFolderLocation, filePathInServerFolder)
 
 		fileOnDisk, err := os.Open(filepath.Clean(fullyQualifiedFilePath))
 		if err != nil {

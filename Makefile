@@ -1,5 +1,7 @@
 # A collection of all phony goals that are not cacheable.
-.PHONY: format lint unittest functiontest generateCode
+.PHONY: all format lint unittest functiontest generateCode
+
+all: format lint unittest functiontest generateCode
 
 format:
 	@scripts/format.sh

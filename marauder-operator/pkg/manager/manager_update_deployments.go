@@ -241,9 +241,9 @@ func (d DockerBasedManager) deleteOldFilesAndYieldParents(
 	// Delete all files
 	for filePathWithPrefix := range oldArtefact.Files.MatchedFilesToReferenceMap() {
 		filePathWithoutPrefix, _ := strings.CutPrefix(filePathWithPrefix, pkg.FileParentDirectoryInArtefact)
-		cleanedFilePathWithoutPrefix := path.Clean(filePathWithoutPrefix)
+		cleanedFilePathWithoutPrefix := utils.CleanPathAndJoin(".", filePathWithoutPrefix)
 
-		fullFilePath := path.Join(serverFolderLocation, cleanedFilePathWithoutPrefix)
+		fullFilePath := utils.CleanPathAndJoin(serverFolderLocation, filePathWithoutPrefix)
 		if err := os.Remove(fullFilePath); err != nil && os.IsNotExist(err) && errorOnMissingFiles {
 			return relativePotentiallyEmptyParentDirsAsMap, fmt.Errorf("failed to delete file %s: %w", filePathWithPrefix, err)
 		}
@@ -324,7 +324,7 @@ func (d DockerBasedManager) extractFileToServer(
 ) error {
 	filePathInServerFolder, _ := strings.CutPrefix(tarballHeader.Name, pkg.FileParentDirectoryInArtefact)
 	cleanedFilePathInServerFolder := path.Clean(filePathInServerFolder)
-	filePathOnSystem := path.Join(serverFolderLocation, cleanedFilePathInServerFolder)
+	filePathOnSystem := utils.CleanPathAndJoin(serverFolderLocation, cleanedFilePathInServerFolder)
 
 	if err := os.MkdirAll(path.Dir(filePathOnSystem), 0o700); err != nil {
 		return fmt.Errorf("failed to create parent directory for %s: %w", filePathOnSystem, err)
@@ -350,7 +350,8 @@ func (d DockerBasedManager) extractFileToServer(
 	if diskConfig.FolderOwner != nil {
 		chownedFilePath := cleanedFilePathInServerFolder
 		for chownedFilePath != "." {
-			if err := os.Chown(path.Join(serverFolderLocation, chownedFilePath), diskConfig.FolderOwner.UID, diskConfig.FolderOwner.GID); err != nil {
+			onDiskPath := utils.CleanPathAndJoin(serverFolderLocation, chownedFilePath)
+			if err := os.Chown(onDiskPath, diskConfig.FolderOwner.UID, diskConfig.FolderOwner.GID); err != nil {
 				return fmt.Errorf("failed to chown deployed file %s: %w", chownedFilePath, err)
 			}
 
