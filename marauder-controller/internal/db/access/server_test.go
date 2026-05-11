@@ -52,7 +52,8 @@ var _ = Describe("managing servers", Label("functiontest"), func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			var result networkmodel.ServerModel
-			err = databaseClient.GetContext(context.Background(), &result, `
+			err = databaseClient.GetContext(
+				context.Background(), &result, `
             SELECT * FROM server WHERE uuid = $1`,
 				insertedModel.UUID,
 			)

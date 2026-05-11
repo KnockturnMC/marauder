@@ -29,11 +29,13 @@ func OperationServerProxy(
 		// Fetch server
 		server, err := access.FetchServer(context, db, serverUUID)
 		if err != nil {
-			_ = context.Error(response.RestErrorFromKnownErr(
-				map[error]response.KnownErr{
-					sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: "could not find server " + serverUUID.String()},
-				},
-				fmt.Errorf("failed to fetch server %s: %w", serverUUID, err)),
+			_ = context.Error(
+				response.RestErrorFromKnownErr(
+					map[error]response.KnownErr{
+						sql.ErrNoRows: {ResponseCode: http.StatusNotFound, Description: "could not find server " + serverUUID.String()},
+					},
+					fmt.Errorf("failed to fetch server %s: %w", serverUUID, err),
+				),
 			)
 
 			return

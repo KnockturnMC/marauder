@@ -49,7 +49,8 @@ var _ = Describe("managing server state", Label("functiontest"), func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			var result networkmodel.ServerArtefactStateModel
-			err = databaseClient.GetContext(context.Background(), &result, `
+			err = databaseClient.GetContext(
+				context.Background(), &result, `
             SELECT * FROM server_state WHERE uuid = $1`,
 				insertedModel.UUID,
 			)

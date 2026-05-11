@@ -18,6 +18,9 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// NAN is a stand in value for strings that are not applicable.
+const NAN = "nan"
+
 type OutputNameData struct {
 	Identifier string
 	Version    string
@@ -121,12 +124,12 @@ func parseManifestFromDisk(cmd *cobra.Command, manifestFileLocation string, work
 		cmd.PrintErrln(bunt.Sprintf("Red{failed to parse build information, excluding them: %s}", err.Error()))
 		timestamp := time.Now()
 		buildInformation = filemodel.BuildInformation{
-			Repository:           "nan",
-			Branch:               "nan",
-			CommitUser:           "nan",
-			CommitEmail:          "nan",
-			CommitHash:           "nan",
-			CommitMessage:        "nan",
+			Repository:           NAN,
+			Branch:               NAN,
+			CommitUser:           NAN,
+			CommitEmail:          NAN,
+			CommitHash:           NAN,
+			CommitMessage:        NAN,
 			Timestamp:            timestamp,
 			BuildSpecificVersion: "t" + strconv.FormatInt(timestamp.Unix(), 10),
 		}

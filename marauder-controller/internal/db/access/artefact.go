@@ -55,7 +55,8 @@ func InsertArtefact(ctx context.Context, db *sqlm.DB, model networkmodel.Artefac
 	defer func() { _ = transaction.Rollback() }() // Rollback in case, this explodes. If Commit is called prior, this is a noop.
 
 	var result networkmodel.ArtefactModel
-	if err := transaction.NamedGetContext(ctx, &result, `
+	if err := transaction.NamedGetContext(
+		ctx, &result, `
         INSERT INTO artefact (identifier, version, upload_date, requires_restart)
         VALUES (:identifier, :version, :upload_date, :requires_restart)
         RETURNING *;`,
@@ -64,7 +65,8 @@ func InsertArtefact(ctx context.Context, db *sqlm.DB, model networkmodel.Artefac
 		return networkmodel.ArtefactModel{}, fmt.Errorf("failed to insert artefact: %w", err)
 	}
 
-	if _, err := transaction.ExecContext(ctx, `
+	if _, err := transaction.ExecContext(
+		ctx, `
         INSERT INTO artefact_file (artefact, tarball, hash) VALUES ($1, $2, $3);`,
 		result.UUID, model.TarballBlob, model.Hash,
 	); err != nil {

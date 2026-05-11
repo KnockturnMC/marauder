@@ -97,9 +97,11 @@ func updateOrInsertState(
 		Type:               state,
 	})
 	if err != nil {
-		_ = context.Error(response.RestErrorFromErr(
-			access.RestErrFromAccessErr(err),
-			fmt.Errorf("failed to update deployment for server %s/%s: %w", serverID, updateRequest.ArtefactIdentifier, err)),
+		_ = context.Error(
+			response.RestErrorFromErr(
+				access.RestErrFromAccessErr(err),
+				fmt.Errorf("failed to update deployment for server %s/%s: %w", serverID, updateRequest.ArtefactIdentifier, err),
+			),
 		)
 
 		return

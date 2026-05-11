@@ -244,8 +244,16 @@ func (d DockerBasedManager) deleteOldFilesAndYieldParents(
 		cleanedFilePathWithoutPrefix := utils.CleanPathAndJoin(".", filePathWithoutPrefix)
 
 		fullFilePath := utils.CleanPathAndJoin(serverFolderLocation, filePathWithoutPrefix)
-		if err := os.Remove(fullFilePath); err != nil && os.IsNotExist(err) && errorOnMissingFiles {
-			return relativePotentiallyEmptyParentDirsAsMap, fmt.Errorf("failed to delete file %s: %w", filePathWithPrefix, err)
+		if err := os.Remove(fullFilePath); err != nil {
+			if !os.IsNotExist(err) {
+				return relativePotentiallyEmptyParentDirsAsMap, fmt.Errorf("unexpected failure to delete file %s: %w", filePathWithPrefix, err)
+			}
+
+			if errorOnMissingFiles {
+				return relativePotentiallyEmptyParentDirsAsMap, fmt.Errorf("failed to delete file %s: %w", filePathWithPrefix, err)
+			}
+
+			logrus.Warnf("failed to delete file %s: %s", filePathWithPrefix, err)
 		}
 
 		for {
@@ -259,6 +267,8 @@ func (d DockerBasedManager) deleteOldFilesAndYieldParents(
 	}
 
 	// Collect protected dirs from file references
+	// The idea here is that a target of `plugins/Foo/bar` might collect a lot of files in nested folders, e.g. `plugins/Foo/bar/buzz/alice.txt`.
+	// We should  delete `buzz` but not `bar` as `bar` is the overall target.
 	protectedDirsSlice := sliceutils.Map(oldArtefact.Files, func(value filemodel.FileReference, index int, slice []filemodel.FileReference) string {
 		relativePath, _ := strings.CutPrefix(value.Target, "/")
 		return filepath.Dir(relativePath) // It's a file, return its dir name. Does not have a trailing slash either
