@@ -19,7 +19,7 @@ jobs:
       - name: 'Install Protoc'
         uses: 'arduino/setup-protoc@v3'
         with:
-          version: "33.1"
+          version: "35.0"
 
       - name: "Install protoc golang bindings"
         run: |
