@@ -92,6 +92,8 @@ $$ LANGUAGE plpgsql;
 
 --
 -- Function to query all artefacts older than the passed timestamp that are not either a TARGET or IS state.
+-- DEPRECATED: This function is faulty as it yields every artefact with a HISTORY state attached, not just artefacts with *ONLY* history states.
+-- It is replaced in 0005.
 --
 CREATE FUNCTION func_find_historic_artefacts_older_than(date TIMESTAMP)
 	RETURNS SETOF artefact
