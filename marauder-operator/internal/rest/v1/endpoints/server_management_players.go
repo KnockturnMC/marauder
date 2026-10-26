@@ -56,14 +56,18 @@ func ServerManagementPlayers(
 			return
 		}
 
-		context.JSONP(http.StatusOK, sliceutils.Map(
-			manageResponse.GetPlayers(),
-			func(value *marauderpb.Player, index int, slice []*marauderpb.Player) networkmodel.ManagementPlayer {
-				return networkmodel.ManagementPlayer{
-					UUID: value.GetUuid(),
-					Name: value.GetName(),
-				}
-			},
-		))
+		context.JSONP(http.StatusOK, networkmodel.ManagementPlayersResponse{
+			LastPlayerLoginTimestamp:  manageResponse.GetLastPlayerLoginTimestamp().AsTime(),
+			LastPlayerLogoutTimestamp: manageResponse.GetLastPlayerLogoutTimestamp().AsTime(),
+			Players: sliceutils.Map(
+				manageResponse.GetPlayers(),
+				func(value *marauderpb.Player, index int, slice []*marauderpb.Player) networkmodel.ManagementPlayer {
+					return networkmodel.ManagementPlayer{
+						UUID: value.GetUuid(),
+						Name: value.GetName(),
+					}
+				},
+			),
+		})
 	}
 }

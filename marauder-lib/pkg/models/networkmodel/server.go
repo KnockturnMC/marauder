@@ -46,6 +46,11 @@ type ServerModel struct {
 	HostPorts []HostPort `db:"-" json:"hostPorts"`
 }
 
+// FullyQualifiedName yields the fully qualified name of a server.
+func (s ServerModel) FullyQualifiedName() string {
+	return s.Environment + "/" + s.Name
+}
+
 // ServerOperator represents an operator of a single node that the server is hosted on.
 type ServerOperator struct {
 	// Identifier is a string based unique identifier of an operator.

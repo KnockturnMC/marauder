@@ -38,6 +38,9 @@ type Client interface {
 
 	// ScheduleCacheClear schedules the clearing of the caches on the operator for any cachable item older than the passed age.
 	ScheduleCacheClear(ctx context.Context, age time.Duration) error
+
+	// ManagementGetPlayers yields the players currently on the passed server
+	ManagementGetPlayers(ctx context.Context, serverUUID uuid.UUID) (networkmodel.ManagementPlayersResponse, error)
 }
 
 // HTTPClient implements the Client interface by using the operators rest API.
@@ -116,4 +119,18 @@ func (c HTTPClient) ScheduleCacheClear(ctx context.Context, age time.Duration) e
 	}
 
 	return nil
+}
+
+func (c HTTPClient) ManagementGetPlayers(ctx context.Context, serverUUID uuid.UUID) (networkmodel.ManagementPlayersResponse, error) {
+	result, err := utils.HTTPGetAndBind(
+		ctx,
+		c.Client,
+		fmt.Sprintf("%s/v1/server/%s/management/players", c.OperatorURL, serverUUID),
+		&networkmodel.ManagementPlayersResponse{},
+	)
+	if err != nil {
+		return networkmodel.ManagementPlayersResponse{}, fmt.Errorf("failed to perform http request: %w", err)
+	}
+
+	return *result, nil
 }

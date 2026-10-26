@@ -69,7 +69,7 @@ type DockerBasedManager struct {
 // FindDiskConfig locates the disk config for a specific environment.
 func (d DockerBasedManager) FindDiskConfig(server networkmodel.ServerModel) (EnvironmentDiskConfig, error) {
 	pathsToQuery := []string{
-		fmt.Sprintf("%s/%s", server.Environment, server.Name),
+		server.FullyQualifiedName(),
 		fmt.Sprintf("%s/%s", "*", server.Name),
 		server.Environment,
 		"*",

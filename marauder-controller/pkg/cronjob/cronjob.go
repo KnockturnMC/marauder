@@ -1,6 +1,7 @@
 package cronjob
 
 import (
+	"regexp"
 	"time"
 )
 
@@ -9,6 +10,7 @@ const (
 	RemoveHistoricIdentifier                   Type = "removeHistoric"
 	ClearOperatorCacheIdentifier               Type = "clearOperatorCaches"
 	ExecuteScheduledLifecycleActionsIdentifier Type = "executeScheduledLifecycleActions"
+	AutoUpdateOutdatedServersIdentifier        Type = "autoUpdateOutdatedServers"
 )
 
 // Type is a specific cronjob type runnable by marauder.
@@ -29,6 +31,7 @@ type CronjobsConfiguration struct {
 	RemoveHistoric                   *RemoveHistoric                   `yaml:"removeHistoric,omitempty"`
 	ClearOperatorCaches              *ClearOperatorCaches              `yaml:"clearOperatorCaches,omitempty"`
 	ExecuteScheduledLifecycleActions *ExecuteScheduledLifecycleActions `yaml:"executeScheduledLifecycleActions"`
+	AutoUpdateOutdatedServers        *AutoUpdateOutdatedServers        `yaml:"autoUpdateOutdatedServers"`
 }
 
 // BaseCronjobConfiguration defines a base struct for all cronjobs configurations.
@@ -60,6 +63,15 @@ type ClearOperatorCaches struct {
 // ExecuteScheduledLifecycleActions holds the configuration for the cronjob that is responsible for executing scheduled lifecycle actions.
 type ExecuteScheduledLifecycleActions struct {
 	BaseCronjobConfiguration `yaml:",inline"`
+}
+
+// AutoUpdateOutdatedServers holds the configuration for the cronjob that is responsible for automatically updating servers with outdated artefacts.
+type AutoUpdateOutdatedServers struct {
+	BaseCronjobConfiguration `yaml:",inline"`
+
+	ServerRegex               *regexp.Regexp `yaml:"serverRegex"`
+	MinimumTimeWithoutPlayers time.Duration  `yaml:"minimumTimeWithoutPlayers"`
+	Force                     bool           `yaml:"force"`
 }
 
 // Execution represents a cronjob the controller should execute on a regular basis.

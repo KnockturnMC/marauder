@@ -50,6 +50,13 @@ func defaultConfiguration() rest.ServerConfiguration {
 				},
 				RemoveAfter: 7 * 24 * time.Hour,
 			},
+			AutoUpdateOutdatedServers: &cronjob.AutoUpdateOutdatedServers{
+				BaseCronjobConfiguration: cronjob.BaseCronjobConfiguration{
+					Every: 10 * time.Minute,
+				},
+				MinimumTimeWithoutPlayers: time.Minute * 10,
+				Force:                     false,
+			},
 		},
 	}
 }

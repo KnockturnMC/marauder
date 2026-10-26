@@ -42,6 +42,9 @@ func ComputeCronjobMap(configuration cronjob.CronjobsConfiguration) map[cronjob.
 			configuration.ExecuteScheduledLifecycleActions.Every,
 		)
 	}
+	if configuration.AutoUpdateOutdatedServers != nil {
+		result[cronjob.AutoUpdateOutdatedServersIdentifier] = AutoUpdateOutdatedServers(*configuration.AutoUpdateOutdatedServers)
+	}
 
 	return result
 }

@@ -10,6 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -705,10 +706,12 @@ func (b0 ServerStatusRequest_Response_builder) Build() *ServerStatusRequest_Resp
 }
 
 type ServerPlayerRequest_Response struct {
-	state              protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Players *[]*Player             `protobuf:"bytes,1,rep,name=players"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state                                protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Players                   *[]*Player             `protobuf:"bytes,1,rep,name=players"`
+	xxx_hidden_LastPlayerLoginTimestamp  *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=last_player_login_timestamp,json=lastPlayerLoginTimestamp"`
+	xxx_hidden_LastPlayerLogoutTimestamp *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_player_logout_timestamp,json=lastPlayerLogoutTimestamp"`
+	unknownFields                        protoimpl.UnknownFields
+	sizeCache                            protoimpl.SizeCache
 }
 
 func (x *ServerPlayerRequest_Response) Reset() {
@@ -745,14 +748,60 @@ func (x *ServerPlayerRequest_Response) GetPlayers() []*Player {
 	return nil
 }
 
+func (x *ServerPlayerRequest_Response) GetLastPlayerLoginTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_LastPlayerLoginTimestamp
+	}
+	return nil
+}
+
+func (x *ServerPlayerRequest_Response) GetLastPlayerLogoutTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_LastPlayerLogoutTimestamp
+	}
+	return nil
+}
+
 func (x *ServerPlayerRequest_Response) SetPlayers(v []*Player) {
 	x.xxx_hidden_Players = &v
+}
+
+func (x *ServerPlayerRequest_Response) SetLastPlayerLoginTimestamp(v *timestamppb.Timestamp) {
+	x.xxx_hidden_LastPlayerLoginTimestamp = v
+}
+
+func (x *ServerPlayerRequest_Response) SetLastPlayerLogoutTimestamp(v *timestamppb.Timestamp) {
+	x.xxx_hidden_LastPlayerLogoutTimestamp = v
+}
+
+func (x *ServerPlayerRequest_Response) HasLastPlayerLoginTimestamp() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_LastPlayerLoginTimestamp != nil
+}
+
+func (x *ServerPlayerRequest_Response) HasLastPlayerLogoutTimestamp() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_LastPlayerLogoutTimestamp != nil
+}
+
+func (x *ServerPlayerRequest_Response) ClearLastPlayerLoginTimestamp() {
+	x.xxx_hidden_LastPlayerLoginTimestamp = nil
+}
+
+func (x *ServerPlayerRequest_Response) ClearLastPlayerLogoutTimestamp() {
+	x.xxx_hidden_LastPlayerLogoutTimestamp = nil
 }
 
 type ServerPlayerRequest_Response_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	Players []*Player
+	Players                   []*Player
+	LastPlayerLoginTimestamp  *timestamppb.Timestamp
+	LastPlayerLogoutTimestamp *timestamppb.Timestamp
 }
 
 func (b0 ServerPlayerRequest_Response_builder) Build() *ServerPlayerRequest_Response {
@@ -760,6 +809,8 @@ func (b0 ServerPlayerRequest_Response_builder) Build() *ServerPlayerRequest_Resp
 	b, x := &b0, m0
 	_, _ = b, x
 	x.xxx_hidden_Players = &b.Players
+	x.xxx_hidden_LastPlayerLoginTimestamp = b.LastPlayerLoginTimestamp
+	x.xxx_hidden_LastPlayerLogoutTimestamp = b.LastPlayerLogoutTimestamp
 	return m0
 }
 
@@ -896,15 +947,17 @@ var File_proto_servers_proto protoreflect.FileDescriptor
 
 const file_proto_servers_proto_rawDesc = "" +
 	"\n" +
-	"\x13proto/servers.proto\x12\vknockturnmc\x1a\x19google/protobuf/any.proto\"9\n" +
+	"\x13proto/servers.proto\x12\vknockturnmc\x1a\x19google/protobuf/any.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"9\n" +
 	"\aMessage\x12.\n" +
 	"\apayload\x18\x01 \x01(\v2\x14.google.protobuf.AnyR\apayload\"T\n" +
 	"\x13ServerStatusRequest\x1a=\n" +
 	"\bResponse\x121\n" +
-	"\x06status\x18\x01 \x01(\x0e2\x19.knockturnmc.ServerStatusR\x06status\"P\n" +
-	"\x13ServerPlayerRequest\x1a9\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x19.knockturnmc.ServerStatusR\x06status\"\x89\x02\n" +
+	"\x13ServerPlayerRequest\x1a\xf1\x01\n" +
 	"\bResponse\x12-\n" +
-	"\aplayers\x18\x01 \x03(\v2\x13.knockturnmc.PlayerR\aplayers\";\n" +
+	"\aplayers\x18\x01 \x03(\v2\x13.knockturnmc.PlayerR\aplayers\x12Y\n" +
+	"\x1blast_player_login_timestamp\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x18lastPlayerLoginTimestamp\x12[\n" +
+	"\x1clast_player_logout_timestamp\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x19lastPlayerLogoutTimestamp\";\n" +
 	"\x15ServerShutdownRequest\x12\x16\n" +
 	"\x06reason\x18\x01 \x01(\tR\x06reason\x1a\n" +
 	"\n" +
@@ -947,16 +1000,19 @@ var file_proto_servers_proto_goTypes = []any{
 	(*ServerToggleSaveRequest_Response)(nil),           // 11: knockturnmc.ServerToggleSaveRequest.Response
 	(*ServerArtefactUpgradeNotification_Response)(nil), // 12: knockturnmc.ServerArtefactUpgradeNotification.Response
 	(*anypb.Any)(nil),                                  // 13: google.protobuf.Any
+	(*timestamppb.Timestamp)(nil),                      // 14: google.protobuf.Timestamp
 }
 var file_proto_servers_proto_depIdxs = []int32{
 	13, // 0: knockturnmc.Message.payload:type_name -> google.protobuf.Any
 	0,  // 1: knockturnmc.ServerStatusRequest.Response.status:type_name -> knockturnmc.ServerStatus
 	7,  // 2: knockturnmc.ServerPlayerRequest.Response.players:type_name -> knockturnmc.Player
-	3,  // [3:3] is the sub-list for method output_type
-	3,  // [3:3] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	14, // 3: knockturnmc.ServerPlayerRequest.Response.last_player_login_timestamp:type_name -> google.protobuf.Timestamp
+	14, // 4: knockturnmc.ServerPlayerRequest.Response.last_player_logout_timestamp:type_name -> google.protobuf.Timestamp
+	5,  // [5:5] is the sub-list for method output_type
+	5,  // [5:5] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_proto_servers_proto_init() }

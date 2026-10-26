@@ -55,7 +55,7 @@ func (d DockerBasedManager) UpdateDeployments(
 			return fmt.Errorf("failed to update %s on %s: %w", update.ArtefactIdentifier, serverModel.UUID.String(), err)
 		}
 
-		logrus.Info("upgraded deployment ", update.ArtefactIdentifier, " on server ", serverModel.Environment, "/", serverModel.Name)
+		logrus.Info("upgraded deployment ", update.ArtefactIdentifier, " on server ", serverModel.FullyQualifiedName())
 	}
 
 	return nil
@@ -106,8 +106,8 @@ func (d DockerBasedManager) updateSingleDeployment(
 			}
 
 			logrus.Warning(
-				"found unexpected file of ", update.ArtefactIdentifier, " on server ", serverModel.Environment, "/", serverModel.Name+
-					" while upgrading from version ", artefactToUninstall.Version, " ", err,
+				"found unexpected file of ", update.ArtefactIdentifier, " on server ", serverModel.FullyQualifiedName(),
+				" while upgrading from version ", artefactToUninstall.Version, " ", err,
 			)
 		}
 	}

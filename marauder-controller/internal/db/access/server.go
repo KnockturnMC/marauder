@@ -22,6 +22,18 @@ func FetchServer(ctx context.Context, db *sqlm.DB, uuid uuid.UUID) (networkmodel
 	return fillServerModelRefs(ctx, db, result)
 }
 
+// FetchServers queries the database for a collection of all servers.
+func FetchServers(ctx context.Context, db *sqlm.DB) ([]networkmodel.ServerModel, error) {
+	result := make([]networkmodel.ServerModel, 0)
+	if err := db.SelectContext(ctx, &result, `
+    SELECT * FROM server
+    `); err != nil {
+		return result, fmt.Errorf("failed to find servers: %w", err)
+	}
+
+	return fillServerModelRefsSlice(ctx, db, result)
+}
+
 // FetchServerByNameAndEnv looks up a single server based on its name and environment.
 // sql.ErrNoRows is returned if no server exists with the passed name and environment.
 func FetchServerByNameAndEnv(ctx context.Context, db *sqlm.DB, name string, environment string) (networkmodel.ServerModel, error) {
