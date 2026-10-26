@@ -8,12 +8,18 @@ plugins {
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 tasks.compileJava.configure { options.release = 21 }
 
+val protobufVersion = "4.36.2"
+
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	api("com.google.protobuf:protobuf-java:4.34.0")
+	api("com.google.protobuf:protobuf-java:${protobufVersion}")
+}
+
+protobuf {
+	protoc { artifact = "com.google.protobuf:protoc:${protobufVersion}" }
 }
 
 publishing {
