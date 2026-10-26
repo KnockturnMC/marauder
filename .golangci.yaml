@@ -8,6 +8,7 @@ linters:
     - depguard # Defining go.mod again in a separate file is not smart.
     - dupl # Duplicates make sense given the logic might change in a but not in b.
     - exhaustruct
+    - exhaustruct_v5
     - godox # Lines that indicate todos or other future work are perfectly fine.
     - interfacebloat # Interfaces for highly abstracted logic is a pretty nice reason to have a lot of methods.
     - ireturn # While generally a useful linter, this linter is not ready for go 1.18 generic return types.
@@ -19,6 +20,8 @@ linters:
     # Linters disabled due to generic support missing
     - wastedassign
     - rowserrcheck
+    # Deprecated linters
+    - gomodguard
   settings:
     funlen:
       lines: 120  # 60 is a rather small line count for bigger reactor style taskimpl. Thank you go middleware handling and logging for that one!

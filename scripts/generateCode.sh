@@ -11,7 +11,7 @@ fi
 go list -f '{{.Dir}}' -m | while read module; do
   pushd "$module" >/dev/null
 
-  go run github.com/vektra/mockery/v3@v3.7.0
+  go run github.com/vektra/mockery/v3@v3.8.1
 
   popd >/dev/null
 done
