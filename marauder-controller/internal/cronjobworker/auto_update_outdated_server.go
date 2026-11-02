@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/bytedance/gopkg/util/logger"
@@ -28,43 +29,74 @@ func AutoUpdateOutdatedServers(configuration cronjob.AutoUpdateOutdatedServers) 
 			})
 
 			for _, server := range servers {
-				missMatch, err := access.FindServerTargetStateMissMatch(ctx, worker.DB, server.UUID, true)
-				if err != nil {
-					return fmt.Errorf("failed to fetch server missmatch for %s: %w", server.FullyQualifiedName(), err)
-				}
-
-				if len(missMatch) == 0 {
-					continue
-				}
-
-				operatorClient := worker.OperatorClientCache.GetOrCreateFromRef(server.OperatorRef)
-				response, err := operatorClient.ManagementGetPlayers(
-					ctx, server.UUID,
-				)
-				if err != nil {
-					logger.Warn("Failed to query player count of", server.FullyQualifiedName(), "for automated upgrade ", err)
-					continue
-				}
-				if len(response.Players) != 0 {
-					continue
-				}
-				if time.Since(response.LastPlayerLogoutTimestamp) < configuration.MinimumTimeWithoutPlayers {
-					continue
-				}
-
-				var action networkmodel.LifecycleAction
-				if configuration.Force {
-					action = networkmodel.ForceUpdateWithRestart
-				} else {
-					action = networkmodel.UpdateWithRestart
-				}
-
-				if err := operatorClient.ExecuteLifecycleAction(ctx, server.UUID, action); err != nil {
-					return fmt.Errorf("failed to update server %s: %w", server.FullyQualifiedName(), err)
+				if err := autoUpdateOutdatedServer(ctx, worker, configuration, server); err != nil {
+					return err
 				}
 			}
 
 			return nil
 		},
 	}
+}
+
+func autoUpdateOutdatedServer(
+	ctx context.Context,
+	worker *CronjobWorker,
+	configuration cronjob.AutoUpdateOutdatedServers,
+	server networkmodel.ServerModel,
+) error {
+	// Do not attempt to auto update servers for which we can not prove no players are online.
+	if strings.TrimSpace(server.ManagementSocketPath) == "" {
+		return nil
+	}
+
+	operatorClient := worker.OperatorClientCache.GetOrCreateFromRef(server.OperatorRef)
+
+	missMatch, err := access.FindServerTargetStateMissMatch(ctx, worker.DB, server.UUID, true)
+	if err != nil {
+		return fmt.Errorf("failed to fetch server missmatch for %s: %w", server.FullyQualifiedName(), err)
+	}
+
+	isRunningOutdatedImage := false
+	if strings.TrimSpace(server.Image) != "" {
+		imageDetails, err := operatorClient.ServerSystemImageDetails(ctx, server.UUID)
+		if err != nil {
+			return fmt.Errorf("failed to query server image details for %s: %w", server.FullyQualifiedName(), err)
+		}
+
+		isRunningOutdatedImage = imageDetails.LatestOperatorImageID != imageDetails.RunningServerImageID
+	}
+
+	if len(missMatch) == 0 && !isRunningOutdatedImage {
+		return nil
+	}
+
+	response, err := operatorClient.ManagementGetPlayers(
+		ctx, server.UUID,
+	)
+	if err != nil {
+		logger.Warn("Failed to query player count of", server.FullyQualifiedName(), "for automated upgrade ", err)
+		return nil
+	}
+
+	if len(response.Players) != 0 {
+		return nil
+	}
+
+	if time.Since(response.LastPlayerLogoutTimestamp) < configuration.MinimumTimeWithoutPlayers {
+		return nil
+	}
+
+	var action networkmodel.LifecycleAction
+	if configuration.Force {
+		action = networkmodel.ForceUpdateWithRestart
+	} else {
+		action = networkmodel.UpdateWithRestart
+	}
+
+	if err := operatorClient.ExecuteLifecycleAction(ctx, server.UUID, action); err != nil {
+		return fmt.Errorf("failed to update server %s: %w", server.FullyQualifiedName(), err)
+	}
+
+	return nil
 }

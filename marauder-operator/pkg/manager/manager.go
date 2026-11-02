@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 
+	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"google.golang.org/protobuf/proto"
 
 	dockerClient "github.com/docker/docker/client"
@@ -33,6 +36,12 @@ type Manager interface {
 		requiresRestart bool,
 		failOnUnexpectedOldFilesOnDisk bool,
 	) error
+
+	// FetchServerImageDetails fetches the server's image details.
+	FetchServerImageDetails(
+		ctx context.Context,
+		server networkmodel.ServerModel,
+	) (networkmodel.ServerImageDetails, error)
 
 	// ExchangeManagementMessage exchanges an outgoing message to a server with an incoming return message.
 	ExchangeManagementMessage(ctx context.Context, server networkmodel.ServerModel, outgoing proto.Message, response proto.Message) error
@@ -89,6 +98,44 @@ func (d DockerBasedManager) FindDiskConfig(server networkmodel.ServerModel) (Env
 	)
 }
 
+// FetchServerImageDetails fetches the server's image details.
+func (d DockerBasedManager) FetchServerImageDetails(
+	ctx context.Context,
+	server networkmodel.ServerModel,
+) (networkmodel.ServerImageDetails, error) {
+	imagePullReader, err := d.DockerClient.ImagePull(ctx, server.Image, image.PullOptions{
+		RegistryAuth: d.DockerEncodedAuth,
+	})
+	if err != nil {
+		return networkmodel.ServerImageDetails{}, fmt.Errorf("failed to pull newest image for %q: %w", server.FullyQualifiedName(), err)
+	}
+
+	_, _ = io.ReadAll(imagePullReader)
+	defer func() { _ = imagePullReader.Close() }()
+
+	pulledImageInfo, err := d.DockerClient.ImageInspect(ctx, server.Image)
+	if err != nil {
+		return networkmodel.ServerImageDetails{}, fmt.Errorf("failed to inspect pulled image %q: %w", server.Image, err)
+	}
+
+	containerInfo, err := d.retrieveContainerInfo(ctx, server)
+	if err != nil {
+		if utils.CheckDockerError(err, errdefs.IsNotFound) {
+			// A stopped container is always on latest by the next pull.
+			return networkmodel.ServerImageDetails{
+				RunningServerImageID:  pulledImageInfo.ID,
+				LatestOperatorImageID: pulledImageInfo.ID,
+			}, nil
+		}
+		return networkmodel.ServerImageDetails{}, fmt.Errorf("failed to retrieve live container info: %w", err)
+	}
+
+	return networkmodel.ServerImageDetails{
+		RunningServerImageID:  containerInfo.Image,
+		LatestOperatorImageID: pulledImageInfo.ID,
+	}, nil
+}
+
 // computeUniqueDockerContainerNameFor computes the unique docker container name for a given server managed by
 // the operator.
 func (d DockerBasedManager) computeUniqueDockerContainerNameFor(server networkmodel.ServerModel) string {
@@ -117,8 +164,6 @@ func (d DockerBasedManager) computeServerFolderLocation(server networkmodel.Serv
 }
 
 // retrieveContainerInfo retrieves the container json about a specific server models potential container.
-//
-//nolint:unparam
 func (d DockerBasedManager) retrieveContainerInfo(ctx context.Context, server networkmodel.ServerModel) (container.InspectResponse, error) {
 	identifier := d.computeUniqueDockerContainerNameFor(server)
 	inspectResponse, err := d.DockerClient.ContainerInspect(ctx, identifier)

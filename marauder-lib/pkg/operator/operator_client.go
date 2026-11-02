@@ -39,6 +39,9 @@ type Client interface {
 	// ScheduleCacheClear schedules the clearing of the caches on the operator for any cachable item older than the passed age.
 	ScheduleCacheClear(ctx context.Context, age time.Duration) error
 
+	// ServerSystemImageDetails fetches image details for a running server.
+	ServerSystemImageDetails(ctx context.Context, serverUUID uuid.UUID) (networkmodel.ServerImageDetails, error)
+
 	// ManagementGetPlayers yields the players currently on the passed server
 	ManagementGetPlayers(ctx context.Context, serverUUID uuid.UUID) (networkmodel.ManagementPlayersResponse, error)
 }
@@ -130,6 +133,20 @@ func (c HTTPClient) ManagementGetPlayers(ctx context.Context, serverUUID uuid.UU
 	)
 	if err != nil {
 		return networkmodel.ManagementPlayersResponse{}, fmt.Errorf("failed to perform http request: %w", err)
+	}
+
+	return *result, nil
+}
+
+func (c HTTPClient) ServerSystemImageDetails(ctx context.Context, serverUUID uuid.UUID) (networkmodel.ServerImageDetails, error) {
+	result, err := utils.HTTPGetAndBind(
+		ctx,
+		c.Client,
+		fmt.Sprintf("%s/v1/server/%s/system/image/details", c.OperatorURL, serverUUID),
+		&networkmodel.ServerImageDetails{},
+	)
+	if err != nil {
+		return networkmodel.ServerImageDetails{}, fmt.Errorf("failed to perform http request: %w", err)
 	}
 
 	return *result, nil

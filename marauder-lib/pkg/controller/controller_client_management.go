@@ -12,15 +12,15 @@ import (
 )
 
 // ManageServerPlayers fetches the players currently on the server.
-func (h *HTTPClient) ManageServerPlayers(ctx context.Context, server uuid.UUID) ([]networkmodel.ManagementPlayer, error) {
+func (h *HTTPClient) ManageServerPlayers(ctx context.Context, server uuid.UUID) (networkmodel.ManagementPlayersResponse, error) {
 	response, err := utils.HTTPGetAndBind(
 		ctx,
 		h.Client,
 		fmt.Sprintf("%s/operator/%s/proxy/server/%s/management/players", h.ControllerURL, server, server),
-		make([]networkmodel.ManagementPlayer, 0),
+		networkmodel.ManagementPlayersResponse{},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed http get: %w", err)
+		return networkmodel.ManagementPlayersResponse{}, fmt.Errorf("failed http get: %w", err)
 	}
 
 	return response, nil

@@ -61,3 +61,12 @@ type ServerArtefactStateModel struct {
 	// For more information, see ServerStateType and its respective values.
 	Type ServerStateType `db:"type" json:"type"`
 }
+
+// ServerImageDetails contains details about a running servers container image.
+type ServerImageDetails struct {
+	// RunningServerImageID holds the image id of the running server.
+	RunningServerImageID string `json:"runningServerImageId"`
+
+	// LatestOperatorImageID holds the latest id of the image that is available on the operator.
+	LatestOperatorImageID string `json:"latestOperatorImageId"`
+}

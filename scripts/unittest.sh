@@ -20,3 +20,7 @@ if [ ! -z ${COVERAGE+x} ]; then
 fi
 
 GO111MODULE=on go run github.com/onsi/ginkgo/v2/ginkgo "${FLAGS[@]}" ./...
+
+pushd "marauder-proto" &>/dev/null || exit 1
+./gradlew test
+popd &>/dev/null || exit 1

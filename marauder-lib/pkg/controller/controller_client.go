@@ -49,7 +49,7 @@ type Client interface {
 	FetchManifest(ctx context.Context, artefact uuid.UUID) (filemodel.Manifest, error)
 
 	// ManageServerPlayers fetches all players currently on the passed server.
-	ManageServerPlayers(ctx context.Context, server uuid.UUID) ([]networkmodel.ManagementPlayer, error)
+	ManageServerPlayers(ctx context.Context, server uuid.UUID) (networkmodel.ManagementPlayersResponse, error)
 
 	// ManageServerToggleSave fetches all players currently on the passed server.
 	ManageServerToggleSave(ctx context.Context, server uuid.UUID, shouldSave bool) error

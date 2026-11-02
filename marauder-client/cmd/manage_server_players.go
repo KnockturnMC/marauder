@@ -26,9 +26,8 @@ func ManageServerPlayersCommand(
 			cmd.PrintErrln(bunt.Sprintf("#c43f43{failed to enable tls: %s}", err))
 		}
 
-		resultSlice := make([]networkmodel.ManagementPlayer, 0)
-
-		defer func() { printFetchResult(cmd, resultSlice) }()
+		var result *networkmodel.ManagementPlayersResponse
+		defer func() { printFetchResult(cmd, result) }()
 
 		// Attempt to parse uuid.
 		serverUUID, err := client.ResolveServerReference(ctx, args[0])
@@ -38,12 +37,12 @@ func ManageServerPlayersCommand(
 
 		cmd.PrintErrln(bunt.Sprintf("Gray{requesting players for %s}", serverUUID))
 
-		artefacts, err := client.ManageServerPlayers(ctx, serverUUID)
+		managementPlayersResponse, err := client.ManageServerPlayers(ctx, serverUUID)
 		if err != nil {
 			return fmt.Errorf("failed to fetch server state for %s: %w", args[0], err)
 		}
 
-		resultSlice = append(resultSlice, artefacts...)
+		result = &managementPlayersResponse
 
 		return nil
 	}

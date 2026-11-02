@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Goldziher/go-utils/sliceutils"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/knockturnmc/marauder/marauder-lib/pkg/controller"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/models/networkmodel"
 	"github.com/knockturnmc/marauder/marauder-lib/pkg/rest/response"
 	"github.com/knockturnmc/marauder/marauder-operator/pkg/manager"
@@ -15,34 +12,12 @@ import (
 )
 
 func ServerManagementPlayers(
-	operatorIdentifier string,
-	controllerClient controller.Client,
 	serverManager manager.Manager,
 ) gin.HandlerFunc {
 	return func(context *gin.Context) {
-		serverUUIDAsString := context.Param("uuid")
-		serverUUID, err := uuid.Parse(serverUUIDAsString)
+		server, err := getServerModelKey(context)
 		if err != nil {
-			_ = context.Error(response.RestErrorFromDescription(http.StatusBadRequest, "could not parse uuid in url params"))
-			return
-		}
-
-		server, err := controllerClient.FetchServer(context, serverUUID)
-		if err != nil {
-			_ = context.Error(response.RestErrorFromErr(
-				http.StatusInternalServerError,
-				fmt.Errorf("failed to fetch server %s: %w", serverUUIDAsString, err),
-			))
-
-			return
-		}
-
-		if server.OperatorRef.Identifier != operatorIdentifier {
-			_ = context.Error(response.RestErrorFromDescription(
-				http.StatusBadRequest,
-				fmt.Sprintf("server %s is not managed by operator %s", serverUUID.String(), operatorIdentifier),
-			))
-
+			_ = context.Error(response.RestErrorFromErr(http.StatusInternalServerError, err))
 			return
 		}
 
@@ -50,24 +25,24 @@ func ServerManagementPlayers(
 		if err := serverManager.ExchangeManagementMessage(context, server, &marauderpb.ServerPlayerRequest{}, &manageResponse); err != nil {
 			_ = context.Error(response.RestErrorFromErr(
 				http.StatusInternalServerError,
-				fmt.Errorf("failed to request from server %s: %w", serverUUIDAsString, err),
+				fmt.Errorf("failed to request from server %s: %w", server.UUID, err),
 			))
 
 			return
 		}
 
+		mappedPlayers := make([]networkmodel.ManagementPlayer, 0, len(manageResponse.GetPlayers()))
+		for _, player := range manageResponse.GetPlayers() {
+			mappedPlayers = append(mappedPlayers, networkmodel.ManagementPlayer{
+				UUID: player.GetUuid(),
+				Name: player.GetName(),
+			})
+		}
+
 		context.JSONP(http.StatusOK, networkmodel.ManagementPlayersResponse{
 			LastPlayerLoginTimestamp:  manageResponse.GetLastPlayerLoginTimestamp().AsTime(),
 			LastPlayerLogoutTimestamp: manageResponse.GetLastPlayerLogoutTimestamp().AsTime(),
-			Players: sliceutils.Map(
-				manageResponse.GetPlayers(),
-				func(value *marauderpb.Player, index int, slice []*marauderpb.Player) networkmodel.ManagementPlayer {
-					return networkmodel.ManagementPlayer{
-						UUID: value.GetUuid(),
-						Name: value.GetName(),
-					}
-				},
-			),
+			Players:                   mappedPlayers,
 		})
 	}
 }
